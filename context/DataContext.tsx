@@ -3,6 +3,7 @@ import { AppData, Task, Note, PlannerEvent, FocusSession, FileMeta } from '../ty
 import { loadData, saveData } from '../utils/storage';
 import {
   addTaskToTree,
+  normalizeTasks,
   updateTaskInTree,
   deleteTaskFromTree,
   toggleTaskCompletion,
@@ -159,6 +160,7 @@ const loadDataFromImport = (parsed: Partial<AppData>): AppData => {
   return {
     ...loaded,
     ...parsed,
+    tasks: normalizeTasks(parsed.tasks),
     settings: { ...loaded.settings, ...(parsed.settings || {}) },
   };
 };

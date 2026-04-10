@@ -1,8 +1,16 @@
 import { Task } from '../types';
 
+const generateId = () => {
+  try {
+    return crypto.randomUUID();
+  } catch (e) {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  }
+};
+
 const createTaskNode = (title: string): Task => ({
-  id: crypto.randomUUID(),
-  title,
+  id: generateId(),
+  title: title || 'Untitled task',
   completed: false,
   priority: 'medium',
   createdAt: Date.now(),
@@ -49,6 +57,10 @@ export const createTaskWithNestedChildren = (
     const parent = stack[stack.length - 1]?.node ?? root;
     parent.children = [...parent.children, node];
     stack.push({ level, node });
+  }
+
+  if (root.children.length > 0) {
+    root.isExpanded = false;
   }
 
   return root;
@@ -205,16 +217,29 @@ const setAllChildrenStatus = (task: Task, status: boolean): Task => {
   };
 };
 
-// Ensure migration for old data
-export const normalizeTasks = (tasks: any[]): Task[] => {
+const normalizePriority = (value: unknown): Task['priority'] =>
+  value === 'low' || value === 'medium' || value === 'high' ? value : 'medium';
+
+const normalizeRecurring = (value: unknown): Task['recurring'] =>
+  value === 'daily' || value === 'weekly' || value === 'none' ? value : 'none';
+
+const normalizeTaskNode = (task: any): Task => ({
+  id: typeof task?.id === 'string' && task.id.trim() ? task.id : generateId(),
+  title: typeof task?.title === 'string' && task.title.trim() ? task.title : 'Untitled task',
+  completed: Boolean(task?.completed),
+  priority: normalizePriority(task?.priority),
+  dueDate: typeof task?.dueDate === 'string' && task.dueDate.trim() ? task.dueDate : undefined,
+  recurring: normalizeRecurring(task?.recurring),
+  createdAt: Number.isFinite(Number(task?.createdAt)) ? Number(task.createdAt) : Date.now(),
+  children: normalizeTasks(task?.children),
+  notes: typeof task?.notes === 'string' ? task.notes : '',
+  isExpanded: task?.isExpanded ?? true,
+});
+
+// Ensure migration for old or malformed data
+export const normalizeTasks = (tasks: unknown): Task[] => {
   if (!Array.isArray(tasks)) return [];
-  return tasks.map(t => ({
-    ...t,
-    children: normalizeTasks(t.children || []),
-    // Default optional fields
-    notes: t.notes || '',
-    recurring: t.recurring || 'none',
-    dueDate: t.dueDate || undefined,
-    isExpanded: t.isExpanded ?? true
-  }));
+  return tasks
+    .filter((task) => task && typeof task === 'object')
+    .map((task) => normalizeTaskNode(task));
 };

@@ -244,10 +244,21 @@ const MiniStat = ({
   </Card>
 );
 
-const matchesFilter = (task: Task, filter: 'open' | 'done' | 'high') => {
-  if (filter === 'open') return !task.completed;
-  if (filter === 'done') return task.completed;
-  if (filter === 'high') return task.priority === 'high' || task.children.some((child) => matchesFilter(child, filter));
+const matchesFilter = (task: Task, filter: 'open' | 'done' | 'high'): boolean => {
+  const children = Array.isArray(task.children) ? task.children : [];
+
+  if (filter === 'open') {
+    return !task.completed || children.some((child) => matchesFilter(child, filter));
+  }
+
+  if (filter === 'done') {
+    return task.completed || children.some((child) => matchesFilter(child, filter));
+  }
+
+  if (filter === 'high') {
+    return task.priority === 'high' || children.some((child) => matchesFilter(child, filter));
+  }
+
   return true;
 };
 
