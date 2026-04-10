@@ -214,10 +214,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
             rows={4}
             value={subtaskDraft}
             onChange={(event) => setSubtaskDraft(event.target.value)}
-            placeholder={`Add one or more subtasks
-- Review lecture slides
-  - Highlight key formulas
-- Solve practice set`}
+            placeholder="Add subtasks"
             onKeyDown={(event) => {
               if (event.key === 'Escape') setShowInput(false);
             }}

@@ -244,15 +244,6 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
               )}
             </div>
           </Card>
-
-          <Card>
-            <div className="space-y-3">
-              <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Setup note (Free AI)</div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Add <code>VITE_GEMINI_API_KEY</code> to your environment for live AI generation. You can get a <strong>free developer key</strong> at <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-cyan-600 underline dark:text-cyan-400">Google AI Studio</a>.
-              </p>
-            </div>
-          </Card>
         </div>
       </div>
 

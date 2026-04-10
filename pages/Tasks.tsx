@@ -106,16 +106,8 @@ const Tasks: React.FC = () => {
               rows={5}
               value={nestedText}
               onChange={(event) => setNestedText(event.target.value)}
-              placeholder={`Nested checklist (optional)
-- Gather sources
-  - Read chapter 4
-  - Bookmark references
-- Draft outline
-- Review and submit`}
+              placeholder="Add subtasks (optional)"
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Use one line per subtask. Indent by two spaces to create nested subtasks under the line above.
-            </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
