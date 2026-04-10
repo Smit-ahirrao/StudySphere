@@ -130,7 +130,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                   <AlertCircle size={16} />
                   AI study flow blocked
                 </div>
-                <p className="mt-2">{error}</p>
+                <p className="mt-2">{error.includes('VITE_GEMINI_API_KEY') ? 'Missing Gemini API Key. You can get one for free at Google AI Studio.' : error}</p>
               </div>
             ) : null}
 
@@ -247,9 +247,9 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
 
           <Card>
             <div className="space-y-3">
-              <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Setup note</div>
+              <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Setup note (Free AI)</div>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Add <code>VITE_OPENAI_API_KEY</code> to your environment for live AI generation. The UI still handles file parsing, weak-topic tracking, and output structure cleanly.
+                Add <code>VITE_GEMINI_API_KEY</code> to your environment for live AI generation. You can get a <strong>free developer key</strong> at <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-cyan-600 underline dark:text-cyan-400">Google AI Studio</a>.
               </p>
             </div>
           </Card>

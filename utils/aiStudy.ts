@@ -1,18 +1,70 @@
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { Flashcard, LearningMode, QuizQuestion, StudyPack } from '../types';
 
-const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-const DEFAULT_MODEL = 'gpt-4.1-mini';
-const MAX_SOURCE_LENGTH = 18000;
+const DEFAULT_MODEL = 'gemini-1.5-flash';
+const MAX_SOURCE_LENGTH = 30000;
 
-type OpenAIResponse = {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
-  }>;
-  error?: {
-    message?: string;
-  };
+const STUDY_PACK_SCHEMA = {
+  type: SchemaType.OBJECT,
+  properties: {
+    keyTopics: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+    difficulty: {
+      type: SchemaType.STRING,
+      enum: ['beginner', 'intermediate', 'advanced'],
+    },
+    summary: {
+      type: SchemaType.OBJECT,
+      properties: {
+        headline: { type: SchemaType.STRING },
+        concise: { type: SchemaType.STRING },
+        bullets: {
+          type: SchemaType.ARRAY,
+          items: { type: SchemaType.STRING },
+        },
+      },
+      required: ['headline', 'concise', 'bullets'],
+    },
+    flashcards: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          id: { type: SchemaType.STRING },
+          question: { type: SchemaType.STRING },
+          answer: { type: SchemaType.STRING },
+          topic: { type: SchemaType.STRING },
+        },
+        required: ['id', 'question', 'answer', 'topic'],
+      },
+    },
+    quiz: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          id: { type: SchemaType.STRING },
+          question: { type: SchemaType.STRING },
+          options: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+          },
+          correctAnswer: { type: SchemaType.STRING },
+          explanation: { type: SchemaType.STRING },
+          topic: { type: SchemaType.STRING },
+          difficulty: {
+            type: SchemaType.STRING,
+            enum: ['easy', 'medium', 'hard'],
+          },
+          suggestedSeconds: { type: SchemaType.NUMBER },
+        },
+        required: ['id', 'question', 'options', 'correctAnswer', 'explanation', 'topic', 'difficulty', 'suggestedSeconds'],
+      },
+    },
+  },
+  required: ['keyTopics', 'difficulty', 'summary', 'flashcards', 'quiz'],
 };
 
 export const isStudySupportedFile = (file: File | { name: string; type: string }) => {
@@ -74,16 +126,24 @@ export const generateStudyPack = async ({
   fileName: string;
   mode: LearningMode;
 }): Promise<StudyPack> => {
-  const apiKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_OPENAI_API_KEY;
-  const model = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_OPENAI_MODEL || DEFAULT_MODEL;
+  const apiKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('Missing AI configuration. Add VITE_OPENAI_API_KEY to use the Smart Study Pipeline.');
+    throw new Error('Missing AI configuration. Add VITE_GEMINI_API_KEY to use the Smart Study Pipeline (Free Tier available at Google AI Studio).');
   }
 
   if (!text.trim()) {
     throw new Error('No readable study text was found in this file.');
   }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: DEFAULT_MODEL,
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: STUDY_PACK_SCHEMA,
+    },
+  });
 
   const prompt = buildPrompt({
     fileName,
@@ -91,112 +151,20 @@ export const generateStudyPack = async ({
     text: text.slice(0, MAX_SOURCE_LENGTH),
   });
 
-  const response = await fetch(OPENAI_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'study_pack',
-          schema: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              keyTopics: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-              difficulty: {
-                type: 'string',
-                enum: ['beginner', 'intermediate', 'advanced'],
-              },
-              summary: {
-                type: 'object',
-                additionalProperties: false,
-                properties: {
-                  headline: { type: 'string' },
-                  concise: { type: 'string' },
-                  bullets: {
-                    type: 'array',
-                    items: { type: 'string' },
-                  },
-                },
-                required: ['headline', 'concise', 'bullets'],
-              },
-              flashcards: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  additionalProperties: false,
-                  properties: {
-                    id: { type: 'string' },
-                    question: { type: 'string' },
-                    answer: { type: 'string' },
-                    topic: { type: 'string' },
-                  },
-                  required: ['id', 'question', 'answer', 'topic'],
-                },
-              },
-              quiz: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  additionalProperties: false,
-                  properties: {
-                    id: { type: 'string' },
-                    question: { type: 'string' },
-                    options: {
-                      type: 'array',
-                      items: { type: 'string' },
-                    },
-                    correctAnswer: { type: 'string' },
-                    explanation: { type: 'string' },
-                    topic: { type: 'string' },
-                    difficulty: {
-                      type: 'string',
-                      enum: ['easy', 'medium', 'hard'],
-                    },
-                    suggestedSeconds: { type: 'number' },
-                  },
-                  required: ['id', 'question', 'options', 'correctAnswer', 'explanation', 'topic', 'difficulty', 'suggestedSeconds'],
-                },
-              },
-            },
-            required: ['keyTopics', 'difficulty', 'summary', 'flashcards', 'quiz'],
-          },
-        },
-      },
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a precise study assistant. Return only valid JSON that follows the requested schema.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    }),
-  });
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rawContent = response.text();
+    
+    if (!rawContent) {
+      throw new Error('AI generation returned an empty response.');
+    }
 
-  const payload = (await response.json()) as OpenAIResponse;
-
-  if (!response.ok) {
-    throw new Error(payload.error?.message || 'AI generation failed. Please try again.');
+    return normalizeStudyPack(JSON.parse(rawContent));
+  } catch (error) {
+    console.error('Gemini generation failed:', error);
+    throw new Error(error instanceof Error ? error.message : 'AI generation failed. Please try again.');
   }
-
-  const rawContent = payload.choices?.[0]?.message?.content;
-  if (!rawContent) {
-    throw new Error('AI generation returned an empty response.');
-  }
-
-  return normalizeStudyPack(JSON.parse(rawContent));
 };
 
 const buildPrompt = ({ fileName, mode, text }: { fileName: string; mode: LearningMode; text: string }) => {
