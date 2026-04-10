@@ -1,4 +1,4 @@
-import { AppData, FileMeta, Note, PlannerEvent } from '../types';
+import { AppData, FileMeta, Note, PlannerEvent, WeakArea } from '../types';
 import { normalizeTasks } from './taskHelpers';
 
 const STORAGE_KEY = 'studysphere_data_v2';
@@ -9,6 +9,7 @@ const DEFAULT_DATA: AppData = {
   planner: [],
   focusHistory: [],
   files: [],
+  weakAreas: [],
   settings: {
     theme: 'light',
     focusDuration: 25,
@@ -64,6 +65,17 @@ const normalizeFiles = (files: unknown): FileMeta[] => {
   }));
 };
 
+const normalizeWeakAreas = (weakAreas: unknown): WeakArea[] => {
+  if (!Array.isArray(weakAreas)) return [];
+  return weakAreas
+    .map((item: any) => ({
+      topic: typeof item?.topic === 'string' ? item.topic : '',
+      misses: Math.max(1, Number(item?.misses || 1)),
+      lastMissedAt: Number(item?.lastMissedAt || Date.now()),
+    }))
+    .filter((item) => item.topic.trim().length > 0);
+};
+
 export const loadData = (): AppData => {
   try {
     const serialized = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('studysphere_data_v1');
@@ -78,6 +90,7 @@ export const loadData = (): AppData => {
       planner: normalizePlanner(parsed.planner),
       files: [], // Files are strictly managed via IndexedDB in Files.tsx
       focusHistory: Array.isArray(parsed.focusHistory) ? parsed.focusHistory : [],
+      weakAreas: normalizeWeakAreas(parsed.weakAreas),
       settings: { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) },
     };
   } catch (error) {

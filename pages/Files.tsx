@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Download, Edit3, FileText, FolderPlus, Grid2X2, List, Search, Share2, Star, Trash2, Upload } from 'lucide-react';
+import AIStudyTool from '../components/ai-study/AIStudyTool';
 import { useData } from '../context/DataContext';
 import { Badge, Button, Card, Input, SectionHeading, Textarea } from '../components/UI';
 
@@ -134,7 +135,7 @@ const Files: React.FC = () => {
     saveFolderNames(uniqueFolders.filter((folder) => folder !== 'all'));
   };
 
-  const importFiles = async (list: FileList | null) => {
+  const importFiles = async (list: FileList | File[] | null) => {
     if (!list) return;
     const imported: StoredFile[] = [];
 
@@ -285,13 +286,27 @@ const Files: React.FC = () => {
     alert('A local file reference summary was copied. Public link sharing is not supported because files stay on your device.');
   };
 
+  const studyFiles = useMemo(
+    () =>
+      files.map((file) => ({
+        id: file.id,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        file: file.blob instanceof File ? file.blob : new File([file.blob], file.name, { type: file.type, lastModified: file.uploadedAt }),
+      })),
+    [files]
+  );
+
   return (
     <div className="space-y-8">
       <SectionHeading
         eyebrow="Resource Vault"
         title="Store materials in a way that feels intentional"
-        description="The file area now feels like a real study resource center instead of an empty upload box."
+        description="Manage resources, then turn the right document into a summary, flashcards, and quiz without leaving the workspace."
       />
+
+      <AIStudyTool files={studyFiles} onImportFiles={importFiles} />
 
       <div className="grid gap-6 xl:grid-cols-[280px_1fr]">
         <Card title="Folders">

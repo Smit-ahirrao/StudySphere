@@ -27,6 +27,8 @@ interface DataContextType {
   addFile: (file: FileMeta) => void;
   updateFile: (file: FileMeta) => void;
   deleteFile: (id: string) => void;
+  recordWeakTopics: (topics: string[]) => void;
+  clearWeakArea: (topic: string) => void;
   updateSettings: (settings: AppData['settings']) => void;
   importBackup: (jsonData: string) => boolean;
 }
@@ -110,6 +112,38 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       files: prev.files.filter((file) => file.id !== id),
     }));
 
+  const recordWeakTopics = (topics: string[]) =>
+    setData((prev) => {
+      if (topics.length === 0) return prev;
+
+      const now = Date.now();
+      const topicMap = new Map(prev.weakAreas.map((area) => [area.topic.toLowerCase(), area]));
+
+      topics
+        .map((topic) => topic.trim())
+        .filter(Boolean)
+        .forEach((topic) => {
+          const key = topic.toLowerCase();
+          const existing = topicMap.get(key);
+          topicMap.set(key, {
+            topic: existing?.topic || topic,
+            misses: (existing?.misses || 0) + 1,
+            lastMissedAt: now,
+          });
+        });
+
+      return {
+        ...prev,
+        weakAreas: Array.from(topicMap.values()).sort((a, b) => b.lastMissedAt - a.lastMissedAt),
+      };
+    });
+
+  const clearWeakArea = (topic: string) =>
+    setData((prev) => ({
+      ...prev,
+      weakAreas: prev.weakAreas.filter((area) => area.topic.toLowerCase() !== topic.toLowerCase()),
+    }));
+
   const updateSettings = (settings: AppData['settings']) => setData((prev) => ({ ...prev, settings }));
 
   const importBackup = (jsonData: string): boolean => {
@@ -146,6 +180,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addFile,
         updateFile,
         deleteFile,
+        recordWeakTopics,
+        clearWeakArea,
         updateSettings,
         importBackup,
       }}

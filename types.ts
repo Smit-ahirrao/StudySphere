@@ -1,6 +1,7 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type PlannerLabel = 'study' | 'break' | 'personal';
 export type PlannerRepeat = 'none' | 'daily' | 'weekly' | 'monthly';
+export type LearningMode = 'quick-revision' | 'exam-mode' | 'deep-learning';
 
 export interface Task {
   id: string;
@@ -61,12 +62,51 @@ export interface FileMeta {
   notes?: string;
 }
 
+export interface StudySummary {
+  headline: string;
+  concise: string;
+  bullets: string[];
+}
+
+export interface Flashcard {
+  id: string;
+  question: string;
+  answer: string;
+  topic: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  topic: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  suggestedSeconds?: number;
+}
+
+export interface StudyPack {
+  keyTopics: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  summary: StudySummary;
+  flashcards: Flashcard[];
+  quiz: QuizQuestion[];
+}
+
+export interface WeakArea {
+  topic: string;
+  misses: number;
+  lastMissedAt: number;
+}
+
 export interface AppData {
   tasks: Task[];
   notes: Note[];
   planner: PlannerEvent[];
   focusHistory: FocusSession[];
   files: FileMeta[];
+  weakAreas: WeakArea[];
   settings: {
     theme: 'light' | 'dark';
     focusDuration: number;

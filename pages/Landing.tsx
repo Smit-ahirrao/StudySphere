@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
+  BrainCircuit,
   CalendarDays,
   BookOpen,
   CheckCheck,
@@ -43,6 +44,12 @@ const Landing: React.FC = () => {
       path: '/focus',
     },
     {
+      icon: BrainCircuit,
+      title: 'AI study pipeline',
+      description: 'Upload a study file and turn it into a summary, flashcards, and quiz in one clean flow.',
+      path: '/files',
+    },
+    {
       icon: FolderOpen,
       title: 'Resource hub for files',
       description: 'Keep documents, slides, and references organized with search, pinning, preview, and notes.',
@@ -56,9 +63,9 @@ const Landing: React.FC = () => {
   ];
 
   const highlights = [
-    'Unified workflow instead of scattered tabs',
-    'Designed for clarity under deadline pressure',
-    'Looks polished enough for demos and judging',
+    'One workflow for planning, studying, and revision',
+    'AI study support without leaving your workspace',
+    'Polished enough for judges, useful enough for daily use',
   ];
 
   return (
@@ -68,10 +75,10 @@ const Landing: React.FC = () => {
           <Badge color="cyan">Competition-ready student productivity platform</Badge>
           <div className="space-y-5">
             <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-6xl">
-              The study dashboard that makes you look organized before the semester gets messy.
+              The student workspace that helps you plan, focus, and revise from the same place.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              StudySphere brings planning, task execution, note-taking, focus rituals, and resource management into one elegant interface that feels useful from the first click.
+              StudySphere combines tasks, notes, planner, focus, files, and an AI study pipeline into one calm interface built for real academic work.
             </p>
           </div>
 
@@ -107,8 +114,8 @@ const Landing: React.FC = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl border border-white/80 bg-white/80 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/70">
                 <div className="text-sm text-slate-500 dark:text-slate-300">Productivity stack</div>
-                <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">5-in-1</div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, files</div>
+                <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">6-in-1</div>
+                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, files, AI study</div>
               </div>
               <div className="rounded-3xl border border-cyan-100 bg-gradient-to-br from-cyan-100 via-cyan-50 to-emerald-50 p-5 dark:border-cyan-300/10 dark:bg-gradient-to-br dark:from-cyan-500/18 dark:via-sky-500/10 dark:to-emerald-400/12">
                 <div className="text-sm text-cyan-700 dark:text-cyan-200">Experience quality</div>
@@ -125,11 +132,11 @@ const Landing: React.FC = () => {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">All-in-one workflow</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Tasks, notes, planner, focus, and files work together instead of feeling scattered across different apps.</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Tasks, notes, planner, focus, files, and revision outputs stay connected instead of scattered across tabs.</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
-                  <div className="text-base font-semibold text-slate-900 dark:text-white">Smarter task execution</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Nested subtasks make large assignments easier to break down, track, and complete step by step.</p>
+                  <div className="text-base font-semibold text-slate-900 dark:text-white">AI-ready revision</div>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Turn uploaded study material into summaries, flashcards, and quizzes without leaving the platform.</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">Focus that feels modern</div>
