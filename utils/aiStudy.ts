@@ -5,10 +5,11 @@ const MAX_SOURCE_LENGTH = 30000;
 
 // We use an array of potential model names to handle regional availability and retirements automatically
 const MODEL_CANDIDATES = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
   'gemini-1.5-flash',
-  'gemini-1.5-flash-latest',
+  'gemini-flash-latest',
   'gemini-1.5-flash-8b',
-  'gemini-2.0-flash-exp',
 ];
 
 const STUDY_PACK_SCHEMA = {
