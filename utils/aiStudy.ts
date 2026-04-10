@@ -1,8 +1,15 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType, GenerationConfig } from '@google/generative-ai';
 import { Flashcard, LearningMode, QuizQuestion, StudyPack } from '../types';
 
-const DEFAULT_MODEL = 'gemini-1.5-flash';
 const MAX_SOURCE_LENGTH = 30000;
+
+// We use an array of potential model names to handle regional availability and retirements automatically
+const MODEL_CANDIDATES = [
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash-8b',
+  'gemini-2.0-flash-exp',
+];
 
 const STUDY_PACK_SCHEMA = {
   type: SchemaType.OBJECT,
@@ -126,7 +133,7 @@ export const generateStudyPack = async ({
   fileName: string;
   mode: LearningMode;
 }): Promise<StudyPack> => {
-  const apiKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error('Missing AI configuration. Add VITE_GEMINI_API_KEY to use the Smart Study Pipeline (Free Tier available at Google AI Studio).');
@@ -137,34 +144,48 @@ export const generateStudyPack = async ({
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: DEFAULT_MODEL,
-    generationConfig: {
-      responseMimeType: 'application/json',
-      responseSchema: STUDY_PACK_SCHEMA,
-    },
-  });
-
   const prompt = buildPrompt({
     fileName,
     mode,
     text: text.slice(0, MAX_SOURCE_LENGTH),
   });
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const rawContent = response.text();
-    
-    if (!rawContent) {
-      throw new Error('AI generation returned an empty response.');
-    }
+  // Try each model candidate until one works
+  let lastError: Error | null = null;
+  
+  for (const modelName of MODEL_CANDIDATES) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: STUDY_PACK_SCHEMA,
+        } as GenerationConfig,
+      });
 
-    return normalizeStudyPack(JSON.parse(rawContent));
-  } catch (error) {
-    console.error('Gemini generation failed:', error);
-    throw new Error(error instanceof Error ? error.message : 'AI generation failed. Please try again.');
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const rawContent = response.text();
+      
+      if (!rawContent) continue;
+
+      return normalizeStudyPack(JSON.parse(rawContent));
+    } catch (error) {
+      console.warn(`Generation failed with model ${modelName}, trying next...`, error);
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // If it's a quota issue (429), or a 404, we continue to the next model
+      const errorMsg = lastError.message.toLowerCase();
+      if (errorMsg.includes('429') || errorMsg.includes('404') || errorMsg.includes('not found') || errorMsg.includes('quota')) {
+        continue;
+      }
+      
+      // If it's a different kind of error (like safety block), we might want to stop, 
+      // but for robustness in this study tool, we'll keep trying candidates.
+    }
   }
+
+  throw new Error(`AI generation failed. ${lastError?.message || 'Please check your API key and connection.'}`);
 };
 
 const buildPrompt = ({ fileName, mode, text }: { fileName: string; mode: LearningMode; text: string }) => {
