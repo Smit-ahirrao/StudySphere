@@ -148,11 +148,13 @@ const Dashboard: React.FC = () => {
             ) : (
               urgentTasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/50">
-                  <div>
-                    <div className="font-medium text-slate-900 dark:text-white">{task.title}</div>
-                    <div className="mt-1 text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">{task.priority} priority</div>
+                  <div className="min-w-0 flex-1 pr-3">
+                    <div className="truncate font-medium text-slate-900 dark:text-white">{task.title}</div>
+                    <div className="mt-1 truncate text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">{task.priority} priority</div>
                   </div>
-                  <Badge color={task.priority === 'high' ? 'red' : task.priority === 'medium' ? 'yellow' : 'gray'}>{task.completed ? 'Done' : 'Open'}</Badge>
+                  <div className="shrink-0">
+                    <Badge color={task.priority === 'high' ? 'red' : task.priority === 'medium' ? 'yellow' : 'gray'}>{task.completed ? 'Done' : 'Open'}</Badge>
+                  </div>
                 </div>
               ))
             )}
@@ -165,9 +167,9 @@ const Dashboard: React.FC = () => {
               <EmptyMessage title="No notes captured" description="Your freshest ideas, summaries, and revision notes will appear here." />
             ) : (
               recentNotes.map((note) => (
-                <div key={note.id} className="rounded-3xl border border-slate-100 bg-white/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/55">
-                  <div className="font-medium text-slate-900 dark:text-white">{note.title}</div>
-                  <p className="mt-2 max-h-12 overflow-hidden text-sm text-slate-600 dark:text-slate-400">{stripHtml(note.content) || 'Empty note'}</p>
+                <div key={note.id} className="rounded-3xl border border-slate-100 bg-white/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/55 min-w-0">
+                  <div className="truncate font-medium text-slate-900 dark:text-white">{note.title}</div>
+                  <p className="mt-2 line-clamp-2 overflow-hidden text-sm text-slate-600 dark:text-slate-400">{stripHtml(note.content) || 'Empty note'}</p>
                 </div>
               ))
             )}
