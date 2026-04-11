@@ -7,6 +7,7 @@ import {
   BookOpen,
   CheckCheck,
   Clock3,
+  Download,
   FolderOpen,
   NotebookPen,
   ShieldCheck,
@@ -14,9 +15,29 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { Badge, Button, Card, SectionHeading } from '../components/UI';
+import { useEffect, useState } from 'react';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const features = [
     {
@@ -90,6 +111,17 @@ const Landing: React.FC = () => {
             <Button size="lg" variant="secondary" onClick={() => navigate('/tasks')}>
               Explore product
             </Button>
+            {deferredPrompt && (
+              <Button size="lg" variant="secondary" className="bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20" onClick={handleInstall}>
+                <Download size={18} />
+                Download App
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-cyan-100 bg-cyan-50/40 px-4 py-3 text-sm text-cyan-800 shadow-sm dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-300">
+            <Badge color="cyan">New</Badge>
+            <span>For the best experience, click the install icon in your browser's address bar to download StudySphere as a native app!</span>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
