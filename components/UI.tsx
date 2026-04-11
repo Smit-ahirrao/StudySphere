@@ -54,10 +54,10 @@ export const Card: React.FC<{
   action?: React.ReactNode;
 }> = ({ children, className = '', title, action }) => (
   <div
-    className={`rounded-[28px] border border-white/70 bg-white/88 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.42)] backdrop-blur-xl dark:border-slate-800/90 dark:bg-slate-950/78 ${className}`}
+    className={`rounded-[28px] border border-white/70 bg-white/88 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.42)] backdrop-blur-xl dark:border-slate-800/90 dark:bg-slate-950/78 overflow-hidden ${className}`}
   >
     {(title || action) && (
-      <div className="flex items-center justify-between border-b border-slate-100/80 px-5 py-4 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100/80 px-5 py-4 dark:border-slate-800">
         {title ? <h3 className="text-lg font-semibold text-slate-950 dark:text-white">{title}</h3> : <div />}
         {action}
       </div>
