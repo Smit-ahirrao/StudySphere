@@ -184,13 +184,13 @@ const Dashboard: React.FC = () => {
                     <div
                       key={day.key}
                       title={`${day.label}: ${day.minutes} focus min`}
-                      className={`h-3.5 w-3.5 rounded-[4px] ${
+                      className={`h-3.5 w-3.5 rounded-[4px] border border-white/70 shadow-sm dark:border-slate-950/50 ${
                         day.intensity === 'none'
-                          ? 'bg-slate-100 dark:bg-slate-800'
+                          ? 'bg-slate-200 dark:bg-slate-800'
                           : day.intensity === 'low'
-                          ? 'bg-sky-200 dark:bg-sky-900/40'
+                          ? 'bg-sky-300 dark:bg-sky-900/55'
                           : day.intensity === 'mid'
-                          ? 'bg-sky-400 dark:bg-sky-700'
+                          ? 'bg-sky-500 dark:bg-sky-700'
                           : 'bg-sky-600 dark:bg-sky-500'
                       }`}
                     />
@@ -200,10 +200,10 @@ const Dashboard: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <span>Less</span>
-                  <span className="h-3 w-3 rounded-[4px] bg-slate-100 dark:bg-slate-800" />
-                  <span className="h-3 w-3 rounded-[4px] bg-sky-200 dark:bg-sky-900/40" />
-                  <span className="h-3 w-3 rounded-[4px] bg-sky-400 dark:bg-sky-700" />
-                  <span className="h-3 w-3 rounded-[4px] bg-sky-600 dark:bg-sky-500" />
+                  <span className="h-3 w-3 rounded-[4px] border border-white/70 bg-slate-200 shadow-sm dark:border-slate-950/50 dark:bg-slate-800" />
+                  <span className="h-3 w-3 rounded-[4px] border border-white/70 bg-sky-300 shadow-sm dark:border-slate-950/50 dark:bg-sky-900/55" />
+                  <span className="h-3 w-3 rounded-[4px] border border-white/70 bg-sky-500 shadow-sm dark:border-slate-950/50 dark:bg-sky-700" />
+                  <span className="h-3 w-3 rounded-[4px] border border-white/70 bg-sky-600 shadow-sm dark:border-slate-950/50 dark:bg-sky-500" />
                   <span>More</span>
                 </div>
                 <span>{heatmapDays.filter((day) => day.minutes > 0).length} active days</span>
