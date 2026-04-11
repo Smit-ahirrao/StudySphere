@@ -1,18 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronDown, ChevronRight, Flag, Plus, Repeat, StickyNote, Trash2 } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronRight, Flag, Focus, Plus, Repeat, StickyNote, Trash2 } from 'lucide-react';
 import { Task } from '../types';
 import { Badge, Button, Input, Textarea } from './UI';
 
 interface Props {
   task: Task;
   onAddSubtask: (parentId: string, title: string) => void;
+  onFocusTask: (taskId: string) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (task: Task) => void;
   level?: number;
 }
 
-export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpdate, level = 0 }: Props) {
+export default function TaskNode({ task, onAddSubtask, onFocusTask, onToggle, onDelete, onUpdate, level = 0 }: Props) {
   if (!task) return null;
   const safeChildren = Array.isArray(task.children) ? task.children : [];
   const [expanded, setExpanded] = useState(task.isExpanded ?? true);
@@ -21,6 +22,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
   const [showMeta, setShowMeta] = useState(Boolean(task.dueDate) || (task.recurring && task.recurring !== 'none'));
   const [titleText, setTitleText] = useState(task.title);
   const [subtaskDraft, setSubtaskDraft] = useState('');
+  const [noteDraft, setNoteDraft] = useState(task.notes || '');
 
   useEffect(() => {
     setTitleText(task.title);
@@ -29,6 +31,10 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
   useEffect(() => {
     setExpanded(task.isExpanded ?? true);
   }, [task.isExpanded]);
+
+  useEffect(() => {
+    setNoteDraft(task.notes || '');
+  }, [task.notes]);
 
   const progress = useMemo(() => getProgress(task), [task]);
   const percent = progress.total === 0 ? 0 : Math.round((progress.done / progress.total) * 100);
@@ -85,7 +91,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
             onClick={hasChildren ? toggleExpanded : undefined}
             className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-2xl border transition ${
               hasChildren
-                ? 'border-cyan-200 bg-cyan-50 text-cyan-700 hover:border-cyan-300 hover:bg-cyan-100 dark:border-cyan-900/80 dark:bg-cyan-950/45 dark:text-cyan-300 dark:hover:bg-cyan-950'
+                ? 'border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-300 hover:bg-sky-100 dark:border-sky-900/80 dark:bg-sky-950/45 dark:text-sky-300 dark:hover:bg-sky-950'
                 : 'border-transparent bg-transparent text-transparent'
             }`}
             aria-label="Toggle subtasks"
@@ -97,7 +103,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
             type="checkbox"
             checked={task.completed}
             onChange={() => onToggle(task.id)}
-            className="mt-1 h-4.5 w-4.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900"
+            className="mt-1 h-4.5 w-4.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-900"
           />
 
           <div className="min-w-0 flex-1 space-y-2.5">
@@ -157,6 +163,10 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
                   <Plus size={13} />
                   Subtask
                 </Button>
+                <Button size="sm" variant="secondary" className="px-3 py-2 text-[12px]" onClick={() => onFocusTask(task.id)}>
+                  <Focus size={13} />
+                  Focus
+                </Button>
                 <Button size="sm" variant="ghost" className="px-2.5 py-2 text-[12px] text-rose-600 dark:text-rose-300" onClick={() => onDelete(task.id)}>
                   <Trash2 size={13} />
                   Delete
@@ -165,18 +175,26 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
             </div>
 
             <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-              <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-600 transition-all" style={{ width: `${percent}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 transition-all" style={{ width: `${percent}%` }} />
             </div>
 
             {showNotes ? (
               <div className="rounded-[18px] border border-slate-200/80 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
                 <Textarea
                   rows={3}
-                  value={task.notes || ''}
-                  onChange={(event) => onUpdate({ ...task, notes: event.target.value })}
+                  value={noteDraft}
+                  onChange={(event) => setNoteDraft(event.target.value)}
                   placeholder="Add context, links, or revision notes for this task..."
                   className="border-none bg-transparent px-0 py-0 shadow-none focus:ring-0"
                 />
+                <div className="mt-3 flex gap-2">
+                  <Button size="sm" onClick={() => onUpdate({ ...task, notes: noteDraft.trim() || undefined })}>
+                    Save note
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setNoteDraft(task.notes || '')}>
+                    Reset
+                  </Button>
+                </div>
               </div>
             ) : null}
 
@@ -194,7 +212,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
                   <select
                     value={task.recurring || 'none'}
                     onChange={(event) => onUpdate({ ...task, recurring: event.target.value as Task['recurring'] })}
-                    className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-cyan-500 dark:focus:ring-cyan-950"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950"
                   >
                     <option value="none">No repeat</option>
                     <option value="daily">Daily</option>
@@ -209,7 +227,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
       </div>
 
       {showInput ? (
-        <div className="ml-12 rounded-[20px] border border-dashed border-cyan-200 bg-cyan-50/60 p-3 dark:border-cyan-900/70 dark:bg-cyan-950/15">
+        <div className="ml-12 rounded-[20px] border border-dashed border-sky-200 bg-sky-50/60 p-3 dark:border-sky-900/70 dark:bg-sky-950/15">
           <Textarea
             rows={4}
             value={subtaskDraft}
@@ -238,6 +256,7 @@ export default function TaskNode({ task, onAddSubtask, onToggle, onDelete, onUpd
               task={child}
               level={level + 1}
               onAddSubtask={onAddSubtask}
+              onFocusTask={onFocusTask}
               onToggle={onToggle}
               onDelete={onDelete}
               onUpdate={onUpdate}

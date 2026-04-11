@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Bell, CalendarDays, ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Bell, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { PlannerEvent, PlannerLabel, PlannerRepeat } from '../types';
 import { Badge, Button, Card, Input, SectionHeading, Select, Textarea } from '../components/UI';
@@ -19,7 +19,7 @@ const emptyComposer = {
   title: '',
   notes: '',
   startTime: 9,
-  duration: 2,
+  duration: 60,
   label: 'study' as PlannerLabel,
   repeat: 'none' as PlannerRepeat,
   color: 'cyan' as ColorTone,
@@ -31,6 +31,7 @@ const Planner: React.FC = () => {
   const [month, setMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showComposer, setShowComposer] = useState(false);
+  const [showColorPalette, setShowColorPalette] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [composer, setComposer] = useState(emptyComposer);
   const scheduledRef = useRef<number[]>([]);
@@ -190,8 +191,8 @@ const Planner: React.FC = () => {
                     onClick={() => setSelectedDate(day)}
                     className={`rounded-[24px] border p-4 text-left transition ${
                       active
-                        ? 'border-cyan-400 bg-slate-950 text-white shadow-lg dark:bg-cyan-400 dark:text-slate-950'
-                        : 'border-slate-200 bg-white/70 hover:border-cyan-200 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-cyan-700'
+                        ? 'border-sky-400 bg-slate-950 text-white shadow-lg dark:bg-sky-400 dark:text-slate-950'
+                        : 'border-slate-200 bg-white/70 hover:border-sky-200 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-sky-700'
                     }`}
                   >
                     <div className="text-sm font-medium">{day.getDate()}</div>
@@ -222,7 +223,11 @@ const Planner: React.FC = () => {
                           {event.reminder ? <Bell size={14} /> : null}
                         </div>
                         <div className="mt-1 text-sm opacity-75">
-                          {event.startTime}:00 for {event.duration}h
+                          {formatStartTime(event.startTime)} for {formatDuration(event.duration)}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Badge color={event.label === 'study' ? 'blue' : event.label === 'personal' ? 'yellow' : 'green'}>{event.label || 'study'}</Badge>
+                          {event.repeat && event.repeat !== 'none' ? <Badge color="gray">{event.repeat}</Badge> : null}
                         </div>
                         {event.notes ? <p className="mt-3 text-sm opacity-80">{event.notes}</p> : null}
                       </div>
@@ -247,13 +252,17 @@ const Planner: React.FC = () => {
                 <p className="text-sm text-slate-500 dark:text-slate-400">Nothing scheduled yet.</p>
               ) : (
                 upcoming.map((event) => (
-                  <div key={event.id} className="rounded-3xl border border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/55">
+                  <div key={event.id} className={`rounded-3xl border px-4 py-4 ${EVENT_COLORS[event.color || 'cyan']}`}>
                     <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-white">
                       {event.title}
-                      {event.reminder ? <Bell size={14} className="text-cyan-500" /> : null}
+                      {event.reminder ? <Bell size={14} className="text-sky-500" /> : null}
                     </div>
-                    <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                      {event.day} at {event.startTime}:00
+                    <div className="mt-1 text-sm opacity-75">
+                      {event.day} at {formatStartTime(event.startTime)}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge color={event.label === 'study' ? 'blue' : event.label === 'personal' ? 'yellow' : 'green'}>{event.label || 'study'}</Badge>
+                      {event.repeat && event.repeat !== 'none' ? <Badge color="gray">{event.repeat}</Badge> : null}
                     </div>
                   </div>
                 ))
@@ -276,34 +285,46 @@ const Planner: React.FC = () => {
               <Textarea value={composer.notes} onChange={(event) => setComposer((current) => ({ ...current, notes: event.target.value }))} rows={4} placeholder="Optional notes, agenda, or learning goal" />
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <Select value={String(composer.startTime)} onChange={(event) => setComposer((current) => ({ ...current, startTime: Number(event.target.value) }))}>
-                  {HOURS.map((hour) => (
-                    <option key={hour} value={hour}>
-                      {hour}:00
-                    </option>
-                  ))}
-                </Select>
-                <Select value={String(composer.duration)} onChange={(event) => setComposer((current) => ({ ...current, duration: Number(event.target.value) }))}>
-                  {[1, 2, 3, 4].map((hours) => (
-                    <option key={hours} value={hours}>
-                      {hours} hour{hours > 1 ? 's' : ''}
-                    </option>
-                  ))}
-                </Select>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Start time</label>
+                  <Select value={String(composer.startTime)} onChange={(event) => setComposer((current) => ({ ...current, startTime: Number(event.target.value) }))}>
+                    {HOURS.map((hour) => (
+                      <option key={hour} value={hour}>
+                        {formatStartTime(hour)}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Duration</label>
+                  <Select value={String(composer.duration)} onChange={(event) => setComposer((current) => ({ ...current, duration: Number(event.target.value) }))}>
+                    {[30, 45, 60, 90, 120, 180].map((minutes) => (
+                      <option key={minutes} value={minutes}>
+                        {formatDuration(minutes)}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <Select value={composer.label} onChange={(event) => setComposer((current) => ({ ...current, label: event.target.value as PlannerLabel }))}>
-                  <option value="study">Study</option>
-                  <option value="break">Break</option>
-                  <option value="personal">Personal</option>
-                </Select>
-                <Select value={composer.repeat} onChange={(event) => setComposer((current) => ({ ...current, repeat: event.target.value as PlannerRepeat }))}>
-                  <option value="none">No repeat</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </Select>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Session type</label>
+                  <Select value={composer.label} onChange={(event) => setComposer((current) => ({ ...current, label: event.target.value as PlannerLabel }))}>
+                    <option value="study">Study</option>
+                    <option value="break">Break</option>
+                    <option value="personal">Personal</option>
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Repeat</label>
+                  <Select value={composer.repeat} onChange={(event) => setComposer((current) => ({ ...current, repeat: event.target.value as PlannerRepeat }))}>
+                    <option value="none">No repeat</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </Select>
+                </div>
               </div>
 
               <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
@@ -311,17 +332,30 @@ const Planner: React.FC = () => {
                 Enable local reminder notification 10 minutes before the session
               </label>
 
-              <div className="flex gap-2">
-                {(['cyan', 'amber', 'emerald', 'violet'] as const).map((tone) => (
-                  <button
-                    key={tone}
-                    type="button"
-                    onClick={() => setComposer((current) => ({ ...current, color: tone }))}
-                    className={`h-10 w-10 rounded-full border-2 ${tone === 'cyan' ? 'bg-cyan-400' : tone === 'amber' ? 'bg-amber-400' : tone === 'emerald' ? 'bg-emerald-400' : 'bg-violet-400'} ${
-                      composer.color === tone ? 'border-slate-950 dark:border-white' : 'border-transparent'
-                    }`}
-                  />
-                ))}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowColorPalette((value) => !value)}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-300"
+                >
+                  Session color
+                  <ChevronDown size={14} className={`transition ${showColorPalette ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showColorPalette ? (
+                  <div className="flex gap-3">
+                    {(['cyan', 'amber', 'emerald', 'violet'] as const).map((tone) => (
+                      <button
+                        key={tone}
+                        type="button"
+                        onClick={() => setComposer((current) => ({ ...current, color: tone }))}
+                        className={`h-10 w-10 rounded-full border-2 ${tone === 'cyan' ? 'bg-sky-400' : tone === 'amber' ? 'bg-amber-400' : tone === 'emerald' ? 'bg-emerald-400' : 'bg-violet-400'} ${
+                          composer.color === tone ? 'border-slate-950 dark:border-white' : 'border-transparent'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex justify-end gap-2">
@@ -377,6 +411,23 @@ const getReminderTimestamp = (event: PlannerEvent) => {
   const [year, month, day] = event.day.split('-').map(Number);
   const date = new Date(year, month - 1, day, event.startTime, 0, 0, 0);
   return date.getTime();
+};
+
+const formatDuration = (minutes: number) => {
+  if (minutes < 60) return `${minutes} min`;
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return `${hours}h ${remainder}m`;
+};
+
+const formatStartTime = (hour: number) => {
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const normalized = hour % 12 === 0 ? 12 : hour % 12;
+  return `${normalized}:00 ${period}`;
 };
 
 export default Planner;

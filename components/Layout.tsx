@@ -17,9 +17,13 @@ import {
 import { useData } from '../context/DataContext';
 import { Button, Badge } from './UI';
 
+const SPOTIFY_STORAGE_KEY = 'studysphere_spotify_embed_v1';
+
 const Layout: React.FC = () => {
   const { data, updateSettings } = useData();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [spotifyEmbed, setSpotifyEmbed] = useState('');
+  const [spotifyCollapsed, setSpotifyCollapsed] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -29,6 +33,20 @@ const Layout: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [data.settings.theme]);
+
+  useEffect(() => {
+    const syncSpotify = () => {
+      setSpotifyEmbed(localStorage.getItem(SPOTIFY_STORAGE_KEY) || '');
+    };
+
+    syncSpotify();
+    window.addEventListener('storage', syncSpotify);
+    window.addEventListener('studysphere-spotify-updated', syncSpotify as EventListener);
+    return () => {
+      window.removeEventListener('storage', syncSpotify);
+      window.removeEventListener('studysphere-spotify-updated', syncSpotify as EventListener);
+    };
+  }, []);
 
   const navItems = useMemo(
     () => [
@@ -143,6 +161,48 @@ const Layout: React.FC = () => {
       <main className={`relative z-10 mx-auto w-full px-4 pb-12 pt-8 sm:px-6 lg:px-8 ${isLanding ? 'max-w-7xl' : 'max-w-7xl'}`}>
         <Outlet />
       </main>
+
+      {spotifyEmbed ? (
+        <div className={`fixed bottom-5 right-5 z-40 overflow-hidden rounded-[28px] border border-white/70 bg-white/92 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl transition dark:border-slate-800/90 dark:bg-slate-950/88 ${spotifyCollapsed ? 'w-[220px]' : 'w-[340px]'}`}>
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+            <div>
+              <div className="text-sm font-semibold text-slate-950 dark:text-white">Spotify player</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">Stays available while you use the app</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSpotifyCollapsed((value) => !value)}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+              >
+                {spotifyCollapsed ? 'Expand' : 'Minimize'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem(SPOTIFY_STORAGE_KEY);
+                  window.dispatchEvent(new Event('studysphere-spotify-updated'));
+                }}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+          {!spotifyCollapsed ? (
+            <iframe
+              src={spotifyEmbed}
+              width="100%"
+              height="352"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              className="block"
+            />
+          ) : (
+            <div className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">Music keeps playing while the player stays docked.</div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 };

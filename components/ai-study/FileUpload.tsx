@@ -26,7 +26,7 @@ const FileUpload: React.FC<Props> = ({ files, selectedFileId, onSelectFile, onUp
             <BrainCircuit size={20} />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-slate-950 dark:text-white">AI Study Tool</h3>
+            <h3 className="text-xl font-semibold text-slate-950 dark:text-white">AI Study Lab</h3>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Step 1: choose a PDF, DOCX, or TXT file to convert into revision-ready outputs.
             </p>

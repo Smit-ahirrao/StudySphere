@@ -301,9 +301,9 @@ const Files: React.FC = () => {
   return (
     <div className="space-y-8">
       <SectionHeading
-        eyebrow="Resource Vault"
-        title="Store materials in a way that feels intentional"
-        description="Manage resources, then turn the right document into a summary, flashcards, and quiz without leaving the workspace."
+        eyebrow="Study Lab"
+        title="Manage resources and generate revision packs in one flow"
+        description="Organize study material, then turn the right document into structured revision content without wasting space."
       />
 
       <AIStudyTool files={studyFiles} onImportFiles={importFiles} />
@@ -317,7 +317,7 @@ const Files: React.FC = () => {
                   key={folder}
                   className={`rounded-2xl px-3 py-2 transition ${
                     activeFolder === folder
-                      ? 'bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950'
+                      ? 'bg-slate-950 text-white dark:bg-sky-400 dark:text-slate-950'
                       : 'bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300'
                   }`}
                 >
@@ -408,7 +408,7 @@ const Files: React.FC = () => {
                 event.preventDefault();
                 importFiles(event.dataTransfer.files);
               }}
-              className="mt-5 rounded-[28px] border border-dashed border-cyan-200 bg-cyan-50/50 px-6 py-8 text-center dark:border-cyan-900 dark:bg-cyan-950/10"
+              className="mt-5 rounded-[28px] border border-dashed border-sky-200 bg-sky-50/50 px-6 py-8 text-center dark:border-sky-900 dark:bg-sky-950/10"
             >
               <p className="font-medium text-slate-900 dark:text-white">Drag and drop files here</p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Upload notes, slides, handouts, diagrams, or reference images.</p>

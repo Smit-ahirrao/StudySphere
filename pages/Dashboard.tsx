@@ -1,17 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  Download,
-  FileText,
-  NotebookPen,
-  Sparkles,
-  Target,
-  Upload,
-} from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Download, FileText, NotebookPen, Target, Upload } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useData } from '../context/DataContext';
 import { Badge, Button, Card, SectionHeading } from '../components/UI';
@@ -107,7 +96,7 @@ const Dashboard: React.FC = () => {
         <MetricCard icon={CalendarDays} label="Planned today" value={String(stats.plannerToday.length)} caption="Sessions on your current schedule" accent="violet" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
         <Card
           title="Focus momentum"
           action={<Badge color="cyan">Last 7 days</Badge>}
@@ -140,19 +129,6 @@ const Dashboard: React.FC = () => {
         </Card>
 
         <div className="space-y-6">
-          <Card className="bg-slate-950 text-white dark:bg-slate-900">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Badge color="cyan">Judge-ready angle</Badge>
-                <Sparkles className="text-cyan-300" size={18} />
-              </div>
-              <h2 className="text-2xl font-semibold">StudySphere now tells a stronger product story.</h2>
-              <p className="text-sm leading-7 text-slate-300">
-                The app is no longer just a collection of pages. It reads like a complete student operating system with visible progress, clear workflows, and a more premium interface.
-              </p>
-            </div>
-          </Card>
-
           <Card title="Quick launch">
             <div className="grid gap-3">
               <QuickLink icon={CheckCircle2} title="Capture a task" subtitle="Turn coursework into a visible plan" onClick={() => navigate('/tasks')} />
@@ -251,10 +227,10 @@ const QuickLink = ({
   <button
     type="button"
     onClick={onClick}
-    className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50/70 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-cyan-700 dark:hover:bg-slate-900"
+    className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50/70 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-sky-700 dark:hover:bg-slate-900"
   >
     <div className="flex items-center gap-3">
-      <div className="rounded-2xl bg-white p-3 text-cyan-700 shadow-sm dark:bg-slate-800 dark:text-cyan-300">
+      <div className="rounded-2xl bg-white p-3 text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300">
         <Icon size={18} />
       </div>
       <div>

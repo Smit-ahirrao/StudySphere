@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Bell, Clock3, Maximize2, Music4, Pause, Play, RotateCcw } from 'lucide-react';
+import { Bell, Clock3, ExternalLink, Maximize2, Music4, Pause, Play, Plus, RotateCcw } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Badge, Button, Card, Input, SectionHeading, Select } from '../components/UI';
 import { Task } from '../types';
@@ -19,6 +20,9 @@ const AMBIENT = {
 };
 
 const SPOTIFY_STORAGE_KEY = 'studysphere_spotify_embed_v1';
+const SPOTIFY_PLAYLISTS_KEY = 'studysphere_spotify_saved_v1';
+const DAILY_GOAL_KEY = 'studysphere_focus_daily_goal_v1';
+const ALARM_STORAGE_KEY = 'studysphere_focus_alarms_v1';
 const SPOTIFY_PRESETS = [
   {
     label: 'Deep Focus',
@@ -43,6 +47,7 @@ type AmbientKey = keyof typeof AMBIENT;
 
 const Focus: React.FC = () => {
   const { data, addFocusSession, updateSettings, setTaskComplete } = useData();
+  const location = useLocation();
   const { focusDuration, shortBreakDuration, longBreakDuration } = data.settings;
 
   const [mode, setMode] = useState<TimerMode>('focus');
@@ -54,11 +59,16 @@ const Focus: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState('');
   const [ambient, setAmbient] = useState<AmbientKey>('none');
   const [completeLinkedTask, setCompleteLinkedTask] = useState(false);
-  const [spotifyOpen, setSpotifyOpen] = useState(false);
   const [spotifyInput, setSpotifyInput] = useState('');
   const [spotifyEmbed, setSpotifyEmbed] = useState(SPOTIFY_PRESETS[0].value);
+  const [savedPlaylists, setSavedPlaylists] = useState<Array<{ label: string; value: string }>>([]);
+  const [showAlarmMenu, setShowAlarmMenu] = useState(false);
+  const [alarmMinutes, setAlarmMinutes] = useState('25');
+  const [alarmLabel, setAlarmLabel] = useState('Next revision check');
+  const [alarms, setAlarms] = useState<Array<{ id: string; label: string; triggerAt: number }>>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const ambientCleanupRef = useRef<(() => void) | null>(null);
+  const alarmTimersRef = useRef<number[]>([]);
   const [ambientStatus, setAmbientStatus] = useState('Ambient off');
   const taskOptions = useMemo(() => buildTaskOptions(data.tasks), [data.tasks]);
 
@@ -98,7 +108,48 @@ const Focus: React.FC = () => {
     } else {
       setSpotifyInput(SPOTIFY_PRESETS[0].value);
     }
+    setSavedPlaylists(loadSavedPlaylists());
+    setAlarms(loadAlarms());
+    const storedDailyGoal = Number(localStorage.getItem(DAILY_GOAL_KEY));
+    if (Number.isFinite(storedDailyGoal) && storedDailyGoal > 0) {
+      setDailyGoal(storedDailyGoal);
+    }
   }, []);
+
+  useEffect(() => {
+    const taskFromQuery = new URLSearchParams(location.search).get('task');
+    if (taskFromQuery && taskOptions.some((task) => task.id === taskFromQuery)) {
+      setSelectedTask(taskFromQuery);
+    }
+  }, [location.search, taskOptions]);
+
+  useEffect(() => {
+    localStorage.setItem(DAILY_GOAL_KEY, String(dailyGoal));
+  }, [dailyGoal]);
+
+  useEffect(() => {
+    localStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify(alarms));
+    alarmTimersRef.current.forEach((id) => window.clearTimeout(id));
+    alarmTimersRef.current = [];
+
+    alarms.forEach((alarm) => {
+      const delay = alarm.triggerAt - Date.now();
+      if (delay <= 0) return;
+      const timeoutId = window.setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification(`StudySphere alarm: ${alarm.label}`);
+        }
+        playCompletionChime(audioContextRef).catch(() => undefined);
+        setAlarms((current) => current.filter((item) => item.id !== alarm.id));
+      }, delay);
+      alarmTimersRef.current.push(timeoutId);
+    });
+
+    return () => {
+      alarmTimersRef.current.forEach((id) => window.clearTimeout(id));
+      alarmTimersRef.current = [];
+    };
+  }, [alarms]);
 
   const completedToday = data.focusHistory.filter(
     (session) => getLocalDateKey(new Date(session.completedAt)) === getLocalDateKey(new Date()) && session.mode === 'focus'
@@ -131,15 +182,18 @@ const Focus: React.FC = () => {
   }, [data.focusHistory]);
 
   const weeklyHeatmap = useMemo(() => {
-    const result: { day: string; count: number }[] = [];
+    const result: { day: string; count: number; minutes: number }[] = [];
     for (let offset = 6; offset >= 0; offset -= 1) {
       const date = new Date();
       date.setDate(date.getDate() - offset);
       const key = getLocalDateKey(date);
-      const count = data.focusHistory.filter((session) => getLocalDateKey(new Date(session.completedAt)) === key).length;
+      const sessions = data.focusHistory.filter((session) => getLocalDateKey(new Date(session.completedAt)) === key && session.mode === 'focus');
+      const count = sessions.length;
+      const minutes = sessions.reduce((sum, session) => sum + session.duration, 0);
       result.push({
         day: date.toLocaleDateString(undefined, { weekday: 'short' }),
         count,
+        minutes,
       });
     }
     return result;
@@ -211,6 +265,33 @@ const Focus: React.FC = () => {
     setSpotifyEmbed(embedUrl);
     setSpotifyInput(value);
     localStorage.setItem(SPOTIFY_STORAGE_KEY, embedUrl);
+    window.dispatchEvent(new Event('studysphere-spotify-updated'));
+  };
+
+  const savePlaylist = () => {
+    const embedUrl = getSpotifyEmbedUrl(spotifyInput);
+    if (!embedUrl) return;
+    const label = prompt('Name this playlist shortcut')?.trim();
+    if (!label) return;
+    const next = [...savedPlaylists.filter((item) => item.value !== embedUrl), { label, value: embedUrl }];
+    setSavedPlaylists(next);
+    localStorage.setItem(SPOTIFY_PLAYLISTS_KEY, JSON.stringify(next));
+    applySpotifySource(embedUrl);
+  };
+
+  const createAlarm = () => {
+    const minutes = Number(alarmMinutes);
+    if (!Number.isFinite(minutes) || minutes <= 0) return;
+    setAlarms((current) => [
+      ...current,
+      {
+        id: uuidv4(),
+        label: alarmLabel.trim() || 'Study alarm',
+        triggerAt: Date.now() + minutes * 60 * 1000,
+      },
+    ]);
+    setAlarmMinutes('25');
+    setAlarmLabel('Next revision check');
   };
 
   return (
@@ -288,9 +369,9 @@ const Focus: React.FC = () => {
                 <Maximize2 size={18} />
                 Fullscreen
               </Button>
-              <Button variant="secondary" size="lg" onClick={() => Notification.requestPermission()}>
+              <Button variant="secondary" size="lg" onClick={() => setShowAlarmMenu((value) => !value)}>
                 <Bell size={18} />
-                Alerts
+                Alarms
               </Button>
             </div>
           </div>
@@ -333,19 +414,51 @@ const Focus: React.FC = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-medium text-slate-900 dark:text-white">Spotify mini player</div>
-                    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Open a compact player for focus playlists, albums, or tracks.</div>
+                    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose a playlist and keep it playing from the dock while you move across the app.</div>
                   </div>
-                  <Button size="sm" variant="secondary" onClick={() => setSpotifyOpen(true)}>
+                  <Button size="sm" variant="secondary" onClick={() => applySpotifySource(spotifyInput || spotifyEmbed)}>
                     <Music4 size={14} />
-                    Open player
+                    Open dock
                   </Button>
+                </div>
+                <div className="mt-4 grid gap-3">
+                  <Select
+                    value={spotifyEmbed}
+                    onChange={(event) => {
+                      applySpotifySource(event.target.value);
+                    }}
+                  >
+                    {[...SPOTIFY_PRESETS, ...savedPlaylists].map((preset) => (
+                      <option key={preset.value} value={preset.value}>
+                        {preset.label}
+                      </option>
+                    ))}
+                  </Select>
+                  <Input
+                    value={spotifyInput}
+                    onChange={(event) => setSpotifyInput(event.target.value)}
+                    placeholder="https://open.spotify.com/playlist/..."
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" onClick={() => applySpotifySource(spotifyInput)}>
+                      Load source
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={savePlaylist}>
+                      <Plus size={14} />
+                      Save playlist
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => window.open(spotifyEmbed, 'studysphere-spotify', 'width=420,height=720')}>
+                      <ExternalLink size={14} />
+                      Pop-out
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <Input type="number" min={1} value={focusDuration} onChange={(event) => updateSettings({ ...data.settings, focusDuration: Number(event.target.value) })} label="Focus (min)" />
-                <Input type="number" min={1} value={shortBreakDuration} onChange={(event) => updateSettings({ ...data.settings, shortBreakDuration: Number(event.target.value) })} label="Short break" />
-                <Input type="number" min={1} value={longBreakDuration} onChange={(event) => updateSettings({ ...data.settings, longBreakDuration: Number(event.target.value) })} label="Long break" />
+                <Input type="number" min={1} step={1} value={focusDuration} onChange={(event) => updateSettings({ ...data.settings, focusDuration: clampMinutes(event.target.value, focusDuration) })} label="Focus (min)" />
+                <Input type="number" min={1} step={1} value={shortBreakDuration} onChange={(event) => updateSettings({ ...data.settings, shortBreakDuration: clampMinutes(event.target.value, shortBreakDuration) })} label="Short break" />
+                <Input type="number" min={1} step={1} value={longBreakDuration} onChange={(event) => updateSettings({ ...data.settings, longBreakDuration: clampMinutes(event.target.value, longBreakDuration) })} label="Long break" />
               </div>
 
               <div className="flex flex-wrap gap-5 text-sm text-slate-600 dark:text-slate-400">
@@ -362,6 +475,50 @@ const Focus: React.FC = () => {
                   Complete linked task after focus
                 </label>
               </div>
+
+              {showAlarmMenu ? (
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/70">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-white">Alarm center</div>
+                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Set a timed reminder for breaks, revision checks, or session restarts.</div>
+                    </div>
+                    <Button size="sm" variant="secondary" onClick={() => Notification.requestPermission()}>
+                      Allow alerts
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-[120px_1fr_auto]">
+                    <Input value={alarmMinutes} onChange={(event) => setAlarmMinutes(event.target.value)} type="number" min={1} step={1} label="In minutes" />
+                    <Input value={alarmLabel} onChange={(event) => setAlarmLabel(event.target.value)} label="Label" />
+                    <div className="flex items-end">
+                      <Button onClick={createAlarm}>Set alarm</Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {alarms.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                        No alarms set yet.
+                      </div>
+                    ) : (
+                      alarms
+                        .sort((a, b) => a.triggerAt - b.triggerAt)
+                        .map((alarm) => (
+                          <div key={alarm.id} className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950/60">
+                            <div>
+                              <div className="font-medium text-slate-900 dark:text-white">{alarm.label}</div>
+                              <div className="text-slate-500 dark:text-slate-400">{formatAlarmTime(alarm.triggerAt)}</div>
+                            </div>
+                            <Button size="sm" variant="ghost" onClick={() => setAlarms((current) => current.filter((item) => item.id !== alarm.id))}>
+                              Remove
+                            </Button>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </Card>
 
@@ -369,84 +526,59 @@ const Focus: React.FC = () => {
             <StatCard label="Completed today" value={String(completedToday)} />
             <StatCard label="Current streak" value={String(streak)} />
             <StatCard label="Focus badge" value={badge} />
-            <StatCard label="Daily goal" value={`${dailyGoal}`} />
+            <div>
+              <Card>
+                <div className="text-center">
+                  <div className="text-sm text-slate-500 dark:text-slate-400">Daily goal</div>
+                  <Input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={dailyGoal}
+                    onChange={(event) => setDailyGoal(Math.max(1, Number(event.target.value) || 1))}
+                    className="mt-3 text-center"
+                  />
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
 
       <Card title="Weekly consistency map">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
+            {weeklyHeatmap.reduce((sum, item) => sum + item.minutes, 0)} focused minutes in the last 7 days
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span>Light</span>
+            <span className="h-3 w-3 rounded bg-emerald-200 dark:bg-emerald-900" />
+            <span className="h-3 w-3 rounded bg-emerald-400" />
+            <span className="h-3 w-3 rounded bg-emerald-600" />
+            <span>Strong</span>
+          </div>
+        </div>
         <div className="grid gap-3 sm:grid-cols-7">
           {weeklyHeatmap.map((item) => (
             <div key={item.day} className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 text-center dark:border-slate-800 dark:bg-slate-900/60">
               <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.day}</div>
               <div
                 className={`mx-auto mt-4 h-14 w-14 rounded-2xl ${
-                  item.count === 0
+                  item.minutes === 0
                     ? 'bg-slate-200 dark:bg-slate-800'
-                    : item.count < 2
+                    : item.minutes < focusDuration
                     ? 'bg-emerald-300'
-                    : item.count < 4
+                    : item.minutes < focusDuration * 2
                     ? 'bg-emerald-500'
                     : 'bg-emerald-700'
                 }`}
               />
-              <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">{item.count} sessions</div>
+              <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">{item.minutes} min</div>
+              <div className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">{item.count} session{item.count === 1 ? '' : 's'}</div>
             </div>
           ))}
         </div>
       </Card>
-
-      {spotifyOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4">
-          <Card className="w-full max-w-md">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-xl font-semibold text-slate-950 dark:text-white">Spotify player</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Paste a Spotify playlist, album, track, or episode link.</p>
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => setSpotifyOpen(false)}>
-                  Close
-                </Button>
-              </div>
-
-              <Select
-                value={spotifyEmbed}
-                onChange={(event) => {
-                  applySpotifySource(event.target.value);
-                }}
-              >
-                {SPOTIFY_PRESETS.map((preset) => (
-                  <option key={preset.value} value={preset.value}>
-                    {preset.label}
-                  </option>
-                ))}
-              </Select>
-
-              <Input
-                value={spotifyInput}
-                onChange={(event) => setSpotifyInput(event.target.value)}
-                placeholder="https://open.spotify.com/playlist/..."
-              />
-
-              <div className="flex justify-end">
-                <Button size="sm" onClick={() => applySpotifySource(spotifyInput)}>
-                  Load source
-                </Button>
-              </div>
-
-              <iframe
-                src={spotifyEmbed}
-                width="100%"
-                height="352"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-                className="rounded-3xl border border-slate-200 dark:border-slate-800"
-              />
-            </div>
-          </Card>
-        </div>
-      ) : null}
     </div>
   );
 };
@@ -531,6 +663,37 @@ const getSpotifyEmbedUrl = (value: string) => {
   if (!match) return null;
 
   return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
+};
+
+const loadSavedPlaylists = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SPOTIFY_PLAYLISTS_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((item): item is { label: string; value: string } => Boolean(item?.label && item?.value)) : [];
+  } catch {
+    return [];
+  }
+};
+
+const loadAlarms = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ALARM_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is { id: string; label: string; triggerAt: number } => Boolean(item?.id && item?.label && Number.isFinite(item?.triggerAt)))
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const formatAlarmTime = (timestamp: number) => {
+  const date = new Date(timestamp);
+  return `Rings at ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+};
+
+const clampMinutes = (value: string, fallback: number) => {
+  const next = Number(value);
+  if (!Number.isFinite(next) || next < 1) return fallback;
+  return Math.round(next);
 };
 
 const buildAmbientScene = (context: AudioContext, mode: AmbientKey) => {

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CalendarDays, CheckCircle2, ListTodo, Repeat, Sparkles, Target } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import TaskNode from '../components/TaskNode';
@@ -8,6 +9,7 @@ import { countCompletedTasks, countTasks, createTaskWithNestedChildren, flattenT
 
 const Tasks: React.FC = () => {
   const { data, addTask, deleteTask, toggleTask, updateTask } = useData();
+  const navigate = useNavigate();
   const [text, setText] = useState('');
   const [nestedText, setNestedText] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -65,6 +67,10 @@ const Tasks: React.FC = () => {
     if (!firstLine) return;
 
     addTask(createTaskWithNestedChildren(firstLine.trim(), rest.join('\n')), parentId);
+  };
+
+  const focusLinkedTask = (taskId: string) => {
+    navigate(`/focus?task=${encodeURIComponent(taskId)}`);
   };
 
   return (
@@ -202,6 +208,7 @@ const Tasks: React.FC = () => {
             <TaskNode
               key={task.id}
               task={task}
+              onFocusTask={focusLinkedTask}
               onAddSubtask={handleAddSubtask}
               onToggle={toggleTask}
               onDelete={deleteTask}
@@ -229,7 +236,7 @@ const MiniStat = ({
         <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
         <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{value}</p>
       </div>
-      <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300">
+      <div className="rounded-2xl bg-sky-50 p-3 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
         <Icon size={18} />
       </div>
     </div>

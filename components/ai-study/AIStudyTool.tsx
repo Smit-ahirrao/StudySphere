@@ -34,6 +34,10 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
   const [studyPack, setStudyPack] = useState<StudyPack | null>(null);
   const [activeTab, setActiveTab] = useState<StudyOutputTab>('summary');
   const [answerMap, setAnswerMap] = useState<Record<string, string>>({});
+  const [flashcardCount, setFlashcardCount] = useState(6);
+  const [quizCount, setQuizCount] = useState(5);
+  const [quizDifficulty, setQuizDifficulty] = useState<'mixed' | 'easy' | 'medium' | 'hard'>('mixed');
+  const [showWeaknessReport, setShowWeaknessReport] = useState(false);
 
   const supportedFiles = useMemo(() => files.filter((file) => isStudySupportedFile(file.file)), [files]);
   const selectedFile = supportedFiles.find((file) => file.id === selectedFileId) || null;
@@ -77,6 +81,9 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
         text,
         fileName: selectedFile.name,
         mode,
+        flashcardCount,
+        quizCount,
+        quizDifficulty,
       });
 
       setStudyPack(generated);
@@ -121,10 +128,42 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
         busy={loading}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <Card>
           <div className="space-y-5">
             <ModeSelector value={mode} onChange={setMode} />
+
+            <div className="grid gap-3 rounded-[24px] border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/60 md:grid-cols-3">
+              <div>
+                <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Flashcards</div>
+                <select value={flashcardCount} onChange={(event) => setFlashcardCount(Number(event.target.value))} className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950">
+                  {[4, 6, 8, 10, 12].map((count) => (
+                    <option key={count} value={count}>
+                      {count} cards
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Quiz length</div>
+                <select value={quizCount} onChange={(event) => setQuizCount(Number(event.target.value))} className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950">
+                  {[3, 5, 8, 10].map((count) => (
+                    <option key={count} value={count}>
+                      {count} questions
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Quiz difficulty</div>
+                <select value={quizDifficulty} onChange={(event) => setQuizDifficulty(event.target.value as 'mixed' | 'easy' | 'medium' | 'hard')} className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950">
+                  <option value="mixed">Mixed</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={handleGenerate} disabled={loading || !selectedFile}>
@@ -176,7 +215,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 <OutputTabs activeTab={activeTab} onChange={setActiveTab} />
 
                 {activeTab === 'summary' ? (
-                  <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+                  <div className="grid max-h-[720px] gap-4 overflow-y-auto pr-1 xl:grid-cols-[0.9fr_1.1fr]">
                     <Card className="h-full">
                       <div className="space-y-3">
                         <div className="text-sm uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">Concise summary</div>
@@ -261,7 +300,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 ) : null}
 
                 {activeTab === 'flashcards' ? (
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid max-h-[720px] gap-4 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
                     {studyPack.flashcards.map((card) => (
                       <FlashcardCard key={card.id} card={card} />
                     ))}
@@ -269,7 +308,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 ) : null}
 
                 {activeTab === 'quiz' ? (
-                  <div className="space-y-4">
+                  <div className="max-h-[720px] space-y-4 overflow-y-auto pr-1">
                     <div className="grid gap-4 md:grid-cols-3">
                       <Card>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Answered</div>
@@ -301,7 +340,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
           </div>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-6 xl:sticky xl:top-24">
           <Card>
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">
@@ -322,7 +361,15 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 </div>
               ) : null}
 
-              {weakAreas.length === 0 ? (
+              <Button size="sm" variant="secondary" onClick={() => setShowWeaknessReport((value) => !value)}>
+                {showWeaknessReport ? 'Hide report' : 'Show report'}
+              </Button>
+
+              {!showWeaknessReport ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                  Open the report only when you want a focused review view.
+                </div>
+              ) : weakAreas.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
                   No weak areas tracked yet. Start a quiz and miss a question to build this view.
                 </div>

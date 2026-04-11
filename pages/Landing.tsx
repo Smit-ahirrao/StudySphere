@@ -21,51 +21,51 @@ const Landing: React.FC = () => {
   const features = [
     {
       icon: CheckCheck,
-      title: 'Execution-driven task workspace',
-      description: 'Break assignments into nested action plans with priority, progress, and fast status updates.',
+      title: 'Task system that feels actionable',
+      description: 'Break work down fast and keep progress visible.',
       path: '/tasks',
     },
     {
       icon: BookOpen,
-      title: 'Notes built for study flow',
-      description: 'Capture structured notes, pin important material, color-code topics, and keep context close.',
+      title: 'Notes that stay organized',
+      description: 'Capture ideas, revision notes, and study material in one place.',
       path: '/notes',
     },
     {
       icon: CalendarDays,
-      title: 'Planner for time-blocking',
-      description: 'Turn vague intentions into scheduled study sessions with recurring events and daily visibility.',
+      title: 'Planner for real routines',
+      description: 'Turn intentions into scheduled study blocks.',
       path: '/planner',
     },
     {
       icon: Clock3,
-      title: 'Focus system with momentum',
-      description: 'Run Pomodoro sessions, attach them to tasks, track streaks, and build better study consistency.',
+      title: 'Focus mode with momentum',
+      description: 'Stay locked in with timers, alerts, and consistency tracking.',
       path: '/focus',
     },
     {
       icon: BrainCircuit,
-      title: 'AI study pipeline',
-      description: 'Upload a study file and turn it into a summary, flashcards, and quiz in one clean flow.',
+      title: 'AI study generation',
+      description: 'Turn files into summaries, flashcards, and quizzes.',
       path: '/files',
     },
     {
       icon: FolderOpen,
-      title: 'Resource hub for files',
-      description: 'Keep documents, slides, and references organized with search, pinning, preview, and notes.',
+      title: 'Study resources in one vault',
+      description: 'Keep documents, slides, and references easy to reach.',
       path: '/files',
     },
     {
       icon: ShieldCheck,
-      title: 'Offline-first and private',
-      description: 'Your work stays local in the browser so the app feels fast, dependable, and personal.',
+      title: 'Private and fast',
+      description: 'Your workspace stays personal and responsive.',
     },
   ];
 
   const highlights = [
-    'One workflow for planning, studying, and revision',
-    'AI study support without leaving your workspace',
-    'Polished enough for judges, useful enough for daily use',
+    'Plan, study, revise, and track progress from one workspace',
+    'Every tool is built to push you toward action, not setup',
+    'Clean enough to impress, practical enough to use every day',
   ];
 
   return (
@@ -78,7 +78,7 @@ const Landing: React.FC = () => {
               The student workspace that helps you plan, focus, and revise from the same place.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              StudySphere combines tasks, notes, planner, focus, files, and an AI study pipeline into one calm interface built for real academic work.
+              StudySphere gives students one place to plan work, manage notes, stay focused, and generate revision material without bouncing between apps.
             </p>
           </div>
 
@@ -115,12 +115,12 @@ const Landing: React.FC = () => {
               <div className="rounded-3xl border border-white/80 bg-white/80 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/70">
                 <div className="text-sm text-slate-500 dark:text-slate-300">Productivity stack</div>
                 <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">6-in-1</div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, files, AI study</div>
+                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, study lab, and revision AI</div>
               </div>
               <div className="rounded-3xl border border-cyan-100 bg-gradient-to-br from-cyan-100 via-cyan-50 to-emerald-50 p-5 dark:border-cyan-300/10 dark:bg-gradient-to-br dark:from-cyan-500/18 dark:via-sky-500/10 dark:to-emerald-400/12">
                 <div className="text-sm text-cyan-700 dark:text-cyan-200">Experience quality</div>
                 <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">Pro</div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">Modern UI, stronger empty states, better storytelling</div>
+                <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">Clear structure, stronger workflow, and smarter revision support</div>
               </div>
             </div>
 
@@ -132,19 +132,19 @@ const Landing: React.FC = () => {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">All-in-one workflow</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Tasks, notes, planner, focus, files, and revision outputs stay connected instead of scattered across tabs.</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Plan work, collect notes, schedule sessions, and revise without context switching.</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">AI-ready revision</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Turn uploaded study material into summaries, flashcards, and quizzes without leaving the platform.</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Convert real study material into ready-to-use revision assets in a few clicks.</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">Focus that feels modern</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Built-in ambient sounds and Spotify support create a stronger study environment without leaving the app.</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Focus sessions, music support, and progress tracking make staying locked in easier.</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">Polished and practical</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">The interface is clean enough for presentation and useful enough for everyday student productivity.</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">The product feels presentation-ready while still being useful for everyday student work.</p>
                 </div>
               </div>
             </div>

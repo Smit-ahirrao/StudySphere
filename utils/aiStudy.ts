@@ -145,10 +145,16 @@ export const generateStudyPack = async ({
   text,
   fileName,
   mode,
+  flashcardCount = 6,
+  quizCount = 5,
+  quizDifficulty = 'mixed',
 }: {
   text: string;
   fileName: string;
   mode: LearningMode;
+  flashcardCount?: number;
+  quizCount?: number;
+  quizDifficulty?: 'mixed' | 'easy' | 'medium' | 'hard';
 }): Promise<StudyPack> => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -165,6 +171,9 @@ export const generateStudyPack = async ({
     fileName,
     mode,
     text: text.slice(0, MAX_SOURCE_LENGTH),
+    flashcardCount,
+    quizCount,
+    quizDifficulty,
   });
 
   // Try each model candidate until one works
@@ -205,7 +214,21 @@ export const generateStudyPack = async ({
   throw new Error(`AI generation failed. ${lastError?.message || 'Please check your API key and connection.'}`);
 };
 
-const buildPrompt = ({ fileName, mode, text }: { fileName: string; mode: LearningMode; text: string }) => {
+const buildPrompt = ({
+  fileName,
+  mode,
+  text,
+  flashcardCount,
+  quizCount,
+  quizDifficulty,
+}: {
+  fileName: string;
+  mode: LearningMode;
+  text: string;
+  flashcardCount: number;
+  quizCount: number;
+  quizDifficulty: 'mixed' | 'easy' | 'medium' | 'hard';
+}) => {
   const modeGuide =
     mode === 'quick-revision'
       ? 'Quick Revision: create compressed revision material, practical recall prompts, compact summaries, and rapid-fire quiz checks.'
@@ -224,9 +247,10 @@ Instructions:
 - Create 5 to 8 bullet points focused only on what is genuinely worth remembering for revision.
 - Create 3 memory hooks that help recall the material quickly. Use analogies, distinctions, or compact cues.
 - Create 3 exam signals that tell the student what is likely to be tested, misunderstood, or confused.
-- Create 6 flashcards with strong prompts. Questions should be specific enough that a student can truly self-test.
-- Create 5 quiz questions with 4 plausible options each. Distractors should be believable, not obviously wrong.
+- Create exactly ${flashcardCount} flashcards with strong prompts. Questions should be specific enough that a student can truly self-test.
+- Create exactly ${quizCount} quiz questions with 4 plausible options each. Distractors should be believable, not obviously wrong.
 - Every quiz question must include the exact correct answer, a short explanation, a topic label, a realistic difficulty, and a suggestedSeconds value.
+- Target quiz difficulty: ${quizDifficulty}.
 - Create a short study plan with 4 actionable next steps ordered from foundation to reinforcement.
 - Create 3 concept check prompts for self-testing that require explanation, comparison, or application.
 - Keep wording precise, student friendly, and non-generic.
