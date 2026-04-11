@@ -12,6 +12,12 @@ const EVENT_COLORS: Record<string, string> = {
   emerald: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100',
   violet: 'border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-100',
 };
+const CALENDAR_TONES: Record<ColorTone, string> = {
+  cyan: 'border-sky-200 bg-sky-50/85 text-sky-900 hover:border-sky-300 dark:border-sky-900/70 dark:bg-sky-950/22 dark:text-sky-100',
+  amber: 'border-amber-200 bg-amber-50/85 text-amber-900 hover:border-amber-300 dark:border-amber-900/70 dark:bg-amber-950/22 dark:text-amber-100',
+  emerald: 'border-emerald-200 bg-emerald-50/85 text-emerald-900 hover:border-emerald-300 dark:border-emerald-900/70 dark:bg-emerald-950/22 dark:text-emerald-100',
+  violet: 'border-violet-200 bg-violet-50/85 text-violet-900 hover:border-violet-300 dark:border-violet-900/70 dark:bg-violet-950/22 dark:text-violet-100',
+};
 
 type ColorTone = 'cyan' | 'amber' | 'emerald' | 'violet';
 
@@ -165,7 +171,15 @@ const Planner: React.FC = () => {
                 <Button variant="secondary" size="sm" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
                   <ChevronLeft size={14} />
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => setMonth(new Date())}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    const today = new Date();
+                    setMonth(today);
+                    setSelectedDate(today);
+                  }}
+                >
                   Today
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
@@ -178,11 +192,15 @@ const Planner: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-7 gap-3">
-              {monthDays.map((day) => {
+            <div className="overflow-x-auto pb-1">
+              <div className="grid min-w-[680px] grid-cols-7 gap-3">
+                {monthDays.map((day) => {
                 const key = dateKey(day);
-                const count = data.planner.filter((event) => isEventOnDate(event, day)).length;
+                const dayEvents = data.planner.filter((event) => isEventOnDate(event, day));
+                const count = dayEvents.length;
                 const active = key === selectedKey;
+                const hasSessions = count > 0;
+                const tone = getCalendarTone(dayEvents);
 
                 return (
                   <button
@@ -192,22 +210,47 @@ const Planner: React.FC = () => {
                     className={`rounded-[24px] border p-4 text-left transition ${
                       active
                         ? 'border-sky-400 bg-slate-950 text-white shadow-lg dark:bg-sky-400 dark:text-slate-950'
+                        : hasSessions
+                        ? CALENDAR_TONES[tone]
                         : 'border-slate-200 bg-white/70 hover:border-sky-200 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-sky-700'
                     }`}
                   >
-                    <div className="text-sm font-medium">{day.getDate()}</div>
-                    <div className={`mt-3 text-xs ${active ? 'text-white/75 dark:text-slate-900/70' : 'text-slate-500 dark:text-slate-400'}`}>
-                      {count === 0 ? 'Free' : `${count} item${count > 1 ? 's' : ''}`}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-sm font-medium">{day.getDate()}</div>
+                      {hasSessions ? (
+                        <span
+                          className={`inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-2 text-[11px] font-semibold ${
+                            active
+                              ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                              : 'bg-white/75 text-slate-700 dark:bg-slate-950/40 dark:text-white'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {hasSessions ? (
+                        dayEvents.slice(0, 3).map((event, index) => (
+                          <span
+                            key={`${event.id}-${index}`}
+                            className={`h-2.5 w-2.5 rounded-full ${event.color === 'amber' ? 'bg-amber-400' : event.color === 'emerald' ? 'bg-emerald-400' : event.color === 'violet' ? 'bg-violet-400' : 'bg-sky-400'}`}
+                          />
+                        ))
+                      ) : (
+                        <span className={`h-2.5 w-10 rounded-full ${active ? 'bg-white/20 dark:bg-slate-950/20' : 'bg-slate-100 dark:bg-slate-800'}`} />
+                      )}
                     </div>
                   </button>
                 );
-              })}
+                })}
+              </div>
             </div>
           </div>
         </Card>
 
         <div className="space-y-6">
-          <Card title={selectedDate.toDateString()} action={<Badge color="gray">{selectedEvents.length} planned</Badge>}>
+          <Card title={selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} action={<Badge color="gray">{selectedEvents.length} planned</Badge>}>
             <div className="space-y-3">
               {selectedEvents.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
@@ -411,6 +454,13 @@ const getReminderTimestamp = (event: PlannerEvent) => {
   const [year, month, day] = event.day.split('-').map(Number);
   const date = new Date(year, month - 1, day, event.startTime, 0, 0, 0);
   return date.getTime();
+};
+
+const getCalendarTone = (events: PlannerEvent[]): ColorTone => {
+  if (events.some((event) => event.color === 'amber')) return 'amber';
+  if (events.some((event) => event.color === 'emerald')) return 'emerald';
+  if (events.some((event) => event.color === 'violet')) return 'violet';
+  return 'cyan';
 };
 
 const formatDuration = (minutes: number) => {
