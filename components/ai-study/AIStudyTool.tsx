@@ -38,6 +38,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
   const [quizCount, setQuizCount] = useState(5);
   const [quizDifficulty, setQuizDifficulty] = useState<'mixed' | 'easy' | 'medium' | 'hard'>('mixed');
   const [showWeaknessReport, setShowWeaknessReport] = useState(false);
+  const [flashcardIndex, setFlashcardIndex] = useState(0);
 
   const supportedFiles = useMemo(() => files.filter((file) => isStudySupportedFile(file.file)), [files]);
   const selectedFile = supportedFiles.find((file) => file.id === selectedFileId) || null;
@@ -74,6 +75,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
     setLoading(true);
     setError('');
     setAnswerMap({});
+    setFlashcardIndex(0);
 
     try {
       const text = await extractTextFromStudyFile(selectedFile.file);
@@ -300,10 +302,14 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 ) : null}
 
                 {activeTab === 'flashcards' ? (
-                  <div className="grid max-h-[720px] gap-4 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
-                    {studyPack.flashcards.map((card) => (
-                      <FlashcardCard key={card.id} card={card} />
-                    ))}
+                  <div className="max-h-[720px] overflow-y-auto pr-1">
+                    <FlashcardCard
+                      key={studyPack.flashcards[flashcardIndex]?.id || 'flashcard'}
+                      card={studyPack.flashcards[flashcardIndex]}
+                      currentIndex={flashcardIndex}
+                      total={studyPack.flashcards.length}
+                      onNext={() => setFlashcardIndex((current) => (current + 1) % studyPack.flashcards.length)}
+                    />
                   </div>
                 ) : null}
 
