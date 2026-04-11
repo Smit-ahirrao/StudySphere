@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
 import Layout from './components/Layout';
@@ -9,10 +9,14 @@ import Notes from './pages/Notes';
 import Planner from './pages/Planner';
 import Focus from './pages/Focus';
 import Files from './pages/Files';
+import SplashScreen from './components/SplashScreen';
 
 const App: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+
   return (
     <DataProvider>
+      {loading && <SplashScreen onComplete={() => setLoading(false)} />}
       <HashRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
