@@ -144,7 +144,7 @@ const Notes: React.FC = () => {
         description="Keep study notes clean, searchable, and presentation-ready with a richer editor and a calmer workspace."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[340px_1fr]">
         <Card className="h-[calc(100vh-15rem)] overflow-hidden">
           <div className="flex h-full flex-col">
             <div className="space-y-4 border-b border-slate-100 pb-4 dark:border-slate-800">
@@ -197,7 +197,7 @@ const Notes: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="min-h-[calc(100vh-15rem)]">
+        <Card className="min-h-[calc(100vh-15rem)] min-w-0 flex flex-col">
           {!activeNote ? (
             <div className="flex h-full min-h-[480px] flex-col items-center justify-center text-center">
               <h3 className="text-2xl font-semibold text-slate-950 dark:text-white">Select a note or create a new one</h3>
@@ -378,7 +378,7 @@ const Notes: React.FC = () => {
                   contentEditable
                   suppressContentEditableWarning
                   onInput={syncEditor}
-                  className="min-h-[420px] outline-none [&_h1]:mb-3 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:min-h-[1.5rem]"
+                  className="min-h-[420px] max-w-full overflow-x-hidden break-words whitespace-pre-wrap outline-none [&_h1]:mb-3 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:min-h-[1.5rem]"
                   style={{ fontFamily: 'Inter, ui-sans-serif, system-ui' }}
                 />
               </div>

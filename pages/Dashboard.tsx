@@ -90,18 +90,18 @@ const Dashboard: React.FC = () => {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={Target} label="Task completion" value={`${stats.completionRate}%`} caption={`${stats.completedTasks} of ${stats.totalTasks} finished`} accent="cyan" />
         <MetricCard icon={NotebookPen} label="Active notes" value={String(stats.notesCount)} caption="Knowledge captured and ready" accent="amber" />
         <MetricCard icon={Clock3} label="Focused today" value={`${stats.focusedToday}m`} caption="Tracked through the focus timer" accent="emerald" />
         <MetricCard icon={CalendarDays} label="Planned today" value={String(stats.plannerToday.length)} caption="Sessions on your current schedule" accent="violet" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
         <Card
           title="Focus momentum"
           action={<Badge color="cyan">Last 7 days</Badge>}
-          className="min-h-[360px]"
+          className="min-h-[360px] min-w-0"
         >
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
         <Card title="Priority queue" action={<Button variant="ghost" size="sm" onClick={() => navigate('/tasks')}>Open tasks <ArrowRight size={14} /></Button>}>
           <div className="space-y-3">
             {urgentTasks.length === 0 ? (
