@@ -1,12 +1,18 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Download, FileText, NotebookPen, Target, Upload } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Download, FileText, NotebookPen, Sparkles, Target, Upload } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { Badge, Button, Card, SectionHeading } from '../components/UI';
 import { exportData } from '../utils/storage';
 import { countCompletedTasks, countTasks, flattenTasks } from '../utils/taskHelpers';
-import { formatDisplayDate, getLast7Days, getLocalDateKey } from '../utils/date';
+import { getLocalDateKey } from '../utils/date';
+
+const RANKS = [
+  { name: 'Novice', minXp: 0, nextXp: 500 },
+  { name: 'Apprentice', minXp: 500, nextXp: 2000 },
+  { name: 'Adept', minXp: 2000, nextXp: 5000 },
+  { name: 'Scholar', minXp: 5000, nextXp: Infinity },
+] as const;
 
 const Dashboard: React.FC = () => {
   const { data, importBackup } = useData();
@@ -23,17 +29,6 @@ const Dashboard: React.FC = () => {
       .reduce((sum, session) => sum + session.duration, 0);
     const plannerToday = data.planner.filter((event) => event.day === todayKey);
 
-    const focusTrend = getLast7Days().map((dateKey) => {
-      const minutes = data.focusHistory
-        .filter((session) => getLocalDateKey(new Date(session.completedAt)) === dateKey && session.mode === 'focus')
-        .reduce((sum, session) => sum + session.duration, 0);
-
-      return {
-        label: formatDisplayDate(dateKey),
-        minutes,
-      };
-    });
-
     return {
       totalTasks,
       completedTasks,
@@ -41,9 +36,53 @@ const Dashboard: React.FC = () => {
       notesCount: notes.length,
       focusedToday,
       plannerToday,
-      focusTrend,
     };
   }, [data]);
+
+  const focusXp = useMemo(() => {
+    const focusMinutes = data.focusHistory.filter((session) => session.mode === 'focus').reduce((sum, session) => sum + session.duration, 0);
+    const totalXp = focusMinutes * 10;
+    const currentRank =
+      [...RANKS].reverse().find((rank) => totalXp >= rank.minXp) || RANKS[0];
+    const nextRank = RANKS.find((rank) => rank.minXp > currentRank.minXp) || null;
+    const xpIntoRank = totalXp - currentRank.minXp;
+    const xpSpan = nextRank ? nextRank.minXp - currentRank.minXp : 1;
+    const progress = nextRank ? Math.min(100, Math.round((xpIntoRank / xpSpan) * 100)) : 100;
+
+    return {
+      totalXp,
+      focusMinutes,
+      currentRank,
+      nextRank,
+      progress,
+      xpIntoRank,
+      xpToNext: nextRank ? Math.max(0, nextRank.minXp - totalXp) : 0,
+    };
+  }, [data.focusHistory]);
+
+  const heatmapDays = useMemo(() => {
+    const minutesByDate = new Map<string, number>();
+    data.focusHistory.forEach((session) => {
+      if (session.mode !== 'focus') return;
+      const key = getLocalDateKey(new Date(session.completedAt));
+      minutesByDate.set(key, (minutesByDate.get(key) || 0) + session.duration);
+    });
+
+    return Array.from({ length: 90 }, (_, index) => {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - (89 - index));
+      const key = getLocalDateKey(date);
+      const minutes = minutesByDate.get(key) || 0;
+      return {
+        key,
+        label: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        minutes,
+        intensity:
+          minutes === 0 ? 'none' : minutes <= 25 ? 'low' : minutes <= 60 ? 'mid' : 'high',
+      };
+    });
+  }, [data.focusHistory]);
 
   const flattenedTasks = flattenTasks(data.tasks);
   const urgentTasks = flattenedTasks
@@ -98,36 +137,80 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 min-w-0 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card
-          title="Focus momentum"
-          action={<Badge color="cyan">Last 7 days</Badge>}
-          className="min-h-[360px] min-w-0"
-        >
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stats.focusTrend}>
-                <defs>
-                  <linearGradient id="focusFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.45} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: '18px',
-                    border: '1px solid rgba(226,232,240,0.85)',
-                    background: 'rgba(255,255,255,0.92)',
-                    boxShadow: '0 20px 40px rgba(15,23,42,0.08)',
-                  }}
-                />
-                <Area type="monotone" dataKey="minutes" stroke="#0891b2" strokeWidth={3} fill="url(#focusFill)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+        <div className="space-y-6 min-w-0 overflow-hidden">
+          <Card className="min-w-0 overflow-hidden border-none bg-[linear-gradient(145deg,rgba(14,165,233,0.12),rgba(99,102,241,0.12),rgba(255,255,255,0.9))] dark:bg-[linear-gradient(145deg,rgba(14,165,233,0.18),rgba(79,70,229,0.16),rgba(2,6,23,0.92))]">
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">
+                    <Sparkles size={15} />
+                    Scholar Level
+                  </div>
+                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">{focusXp.currentRank.name}</h2>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    {focusXp.totalXp.toLocaleString()} XP earned from {focusXp.focusMinutes} minutes of deep work.
+                  </p>
+                </div>
+                <Badge color="blue">{focusXp.nextRank ? `${focusXp.xpToNext} XP to ${focusXp.nextRank.name}` : 'Top rank reached'}</Badge>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+                  <span>{focusXp.currentRank.name}</span>
+                  <span>{focusXp.nextRank ? focusXp.nextRank.name : 'Maxed out'}</span>
+                </div>
+                <div className="h-4 overflow-hidden rounded-full bg-white/75 shadow-inner dark:bg-slate-900/80">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-500 transition-all duration-700"
+                    style={{ width: `${focusXp.progress}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.22em] text-slate-400">
+                  <span>{focusXp.xpIntoRank.toLocaleString()} XP in this rank</span>
+                  <span>{focusXp.progress}% complete</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Focus heatmap" action={<Badge color="cyan">Last 90 days</Badge>} className="min-w-0 overflow-hidden">
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                A brighter grid means stronger study consistency. Keep the chain alive.
+              </p>
+              <div className="overflow-x-auto pb-2">
+                <div className="grid min-w-max grid-flow-col grid-rows-7 gap-2">
+                  {heatmapDays.map((day) => (
+                    <div
+                      key={day.key}
+                      title={`${day.label}: ${day.minutes} focus min`}
+                      className={`h-3.5 w-3.5 rounded-[4px] ${
+                        day.intensity === 'none'
+                          ? 'bg-slate-100 dark:bg-slate-800'
+                          : day.intensity === 'low'
+                          ? 'bg-sky-200 dark:bg-sky-900/40'
+                          : day.intensity === 'mid'
+                          ? 'bg-sky-400 dark:bg-sky-700'
+                          : 'bg-sky-600 dark:bg-sky-500'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span>Less</span>
+                  <span className="h-3 w-3 rounded-[4px] bg-slate-100 dark:bg-slate-800" />
+                  <span className="h-3 w-3 rounded-[4px] bg-sky-200 dark:bg-sky-900/40" />
+                  <span className="h-3 w-3 rounded-[4px] bg-sky-400 dark:bg-sky-700" />
+                  <span className="h-3 w-3 rounded-[4px] bg-sky-600 dark:bg-sky-500" />
+                  <span>More</span>
+                </div>
+                <span>{heatmapDays.filter((day) => day.minutes > 0).length} active days</span>
+              </div>
+            </div>
+          </Card>
+        </div>
 
         <div className="space-y-6">
           <Card title="Quick launch">
