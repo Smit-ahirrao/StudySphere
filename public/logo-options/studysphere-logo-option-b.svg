@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260" role="img" aria-label="StudySphere Logo Option B">
+  <defs>
+    <linearGradient id="bMarkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="bAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="260" rx="34" fill="#f8fafc"/>
+  <g transform="translate(32 30)">
+    <rect x="0" y="0" width="196" height="196" rx="52" fill="url(#bMarkBg)"/>
+    <circle cx="98" cy="98" r="67" fill="none" stroke="url(#bAccent)" stroke-width="11"/>
+    <path d="M63 83c0-18 15-32 35-32h35v27h-35c-4 0-8 4-8 8 0 4 4 8 8 8h27c18 0 33 15 33 33s-15 32-33 32H90v-27h35c4 0 8-4 8-8 0-4-4-8-8-8H98c-19 0-35-15-35-33Z" fill="url(#bAccent)"/>
+  </g>
+  <g transform="translate(260 88)">
+    <text x="0" y="54" fill="#020617" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="64" font-weight="800" letter-spacing="-1">StudySphere</text>
+    <text x="2" y="94" fill="#475569" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="28" font-weight="500" letter-spacing="2.2">Your academic command center</text>
+  </g>
+</svg>

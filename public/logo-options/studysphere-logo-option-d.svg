@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260" role="img" aria-label="StudySphere Logo Option D">
+  <defs>
+    <linearGradient id="dMarkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="dAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="260" rx="34" fill="#f8fafc"/>
+  <g transform="translate(32 30)">
+    <rect x="0" y="0" width="196" height="196" rx="52" fill="url(#dMarkBg)"/>
+    <path d="M98 44 45 71v41c0 44 24 75 53 90 29-15 53-46 53-90V71L98 44Z" fill="url(#dAccent)"/>
+    <path d="M98 63 63 81v28c0 30 16 52 35 63 19-11 35-33 35-63V81L98 63Z" fill="#f8fafc"/>
+    <path d="M98 76 78 86l20 11 20-11-20-10Z" fill="#0f172a"/>
+    <path d="M81 89v11c0 5 8 10 17 10s17-5 17-10V89l-17 9-17-9Z" fill="#0f172a"/>
+  </g>
+  <g transform="translate(260 88)">
+    <text x="0" y="54" fill="#020617" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="64" font-weight="800" letter-spacing="-1">StudySphere</text>
+    <text x="2" y="94" fill="#475569" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="28" font-weight="500" letter-spacing="2.4">Discipline made visual.</text>
+  </g>
+</svg>

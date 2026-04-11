@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260" role="img" aria-label="StudySphere Logo Option C">
+  <defs>
+    <linearGradient id="cAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="cAccentTwo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="260" rx="34" fill="#f8fafc"/>
+  <g transform="translate(32 30)">
+    <rect x="0" y="0" width="196" height="196" rx="52" fill="#ffffff" stroke="#dbeafe" stroke-width="6"/>
+    <circle cx="98" cy="98" r="66" fill="none" stroke="url(#cAccent)" stroke-width="11"/>
+    <circle cx="98" cy="98" r="47" fill="none" stroke="url(#cAccentTwo)" stroke-width="8" stroke-dasharray="220 60" transform="rotate(-18 98 98)"/>
+    <circle cx="98" cy="98" r="9" fill="url(#cAccent)"/>
+    <path d="M98 65 70 79l28 14 28-14-28-14Z" fill="#0f172a"/>
+    <path d="M74 83v16c0 8 10 14 24 14s24-6 24-14V83l-24 12-24-12Z" fill="#0f172a"/>
+  </g>
+  <g transform="translate(260 88)">
+    <text x="0" y="54" fill="#0f172a" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="64" font-weight="800" letter-spacing="-1">StudySphere</text>
+    <text x="2" y="94" fill="#475569" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="28" font-weight="500" letter-spacing="2.2">Learn with structure. Win with consistency.</text>
+  </g>
+</svg>
