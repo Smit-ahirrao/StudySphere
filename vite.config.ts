@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.png'],
+      includeAssets: ['brand-mark.svg', 'icon-64.png', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png'],
       manifest: {
         name: 'StudySphere',
         short_name: 'StudySphere',
@@ -18,17 +18,22 @@ export default defineConfig({
         orientation: 'portrait-primary',
         icons: [
           {
-            src: 'icon.png',
+            src: 'icon-64.png',
             sizes: '64x64',
             type: 'image/png'
           },
           {
-            src: 'icon.png',
+            src: 'pwa-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'icon.png',
+            src: 'pwa-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

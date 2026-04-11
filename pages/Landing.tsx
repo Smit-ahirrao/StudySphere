@@ -17,25 +17,51 @@ import {
 import { Badge, Button, Card, SectionHeading } from '../components/UI';
 import { useEffect, useState } from 'react';
 
+interface DeferredPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 const Landing: React.FC = () => {
   const navigate = useNavigate();
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<DeferredPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+      (window.navigator as any).standalone === true;
+    setIsInstalled(standalone);
+
     const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as DeferredPromptEvent);
     };
+
+    const onInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
+    if (!deferredPrompt) {
+      window.alert('Use your browser menu and choose "Install app" to add StudySphere to your device.');
+      return;
+    }
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
+      setIsInstalled(true);
     }
   };
 
@@ -111,17 +137,21 @@ const Landing: React.FC = () => {
             <Button size="lg" variant="secondary" onClick={() => navigate('/tasks')}>
               Explore product
             </Button>
-            {deferredPrompt && (
-              <Button size="lg" variant="secondary" className="bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20" onClick={handleInstall}>
-                <Download size={18} />
-                Download App
-              </Button>
-            )}
+            <Button
+              size="lg"
+              variant="secondary"
+              className="border-sky-300/60 bg-sky-500/10 text-sky-700 hover:bg-sky-500/15 dark:border-sky-500/40 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/20"
+              onClick={handleInstall}
+              disabled={isInstalled}
+            >
+              <Download size={18} />
+              {isInstalled ? 'Installed' : 'Download app'}
+            </Button>
           </div>
 
           <div className="flex items-center gap-3 rounded-2xl border border-cyan-100 bg-cyan-50/40 px-4 py-3 text-sm text-cyan-800 shadow-sm dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-300">
             <Badge color="cyan">New</Badge>
-            <span>For the best experience, click the install icon in your browser's address bar to download StudySphere as a native app!</span>
+            <span>Install StudySphere on mobile or desktop for a full-screen app experience with faster launch.</span>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">

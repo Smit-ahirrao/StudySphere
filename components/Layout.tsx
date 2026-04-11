@@ -4,8 +4,8 @@ import {
   Calendar,
   CheckSquare,
   Clock3,
+  Download,
   FolderOpen,
-  GraduationCap,
   Home,
   Menu,
   Moon,
@@ -19,11 +19,18 @@ import { Button, Badge } from './UI';
 
 const SPOTIFY_STORAGE_KEY = 'studysphere_spotify_embed_v1';
 
+interface DeferredPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 const Layout: React.FC = () => {
   const { data, updateSettings } = useData();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [spotifyEmbed, setSpotifyEmbed] = useState('');
   const [spotifyCollapsed, setSpotifyCollapsed] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<DeferredPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -45,6 +52,31 @@ const Layout: React.FC = () => {
     return () => {
       window.removeEventListener('storage', syncSpotify);
       window.removeEventListener('studysphere-spotify-updated', syncSpotify as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+      (window.navigator as any).standalone === true;
+    setIsInstalled(standalone);
+
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as DeferredPromptEvent);
+    };
+
+    const onAppInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    window.addEventListener('appinstalled', onAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', onAppInstalled);
     };
   }, []);
 
@@ -76,6 +108,19 @@ const Layout: React.FC = () => {
     });
   };
 
+  const handleInstall = async () => {
+    if (!installPrompt) {
+      window.alert('Use your browser menu and choose "Install app" to add StudySphere to your device.');
+      return;
+    }
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.10),_transparent_22%),linear-gradient(180deg,_#f7fafc_0%,_#edf3f8_48%,_#f5f7fb_100%)] text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.10),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(20,184,166,0.08),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0b1120_45%,_#111827_100%)] dark:text-slate-100">
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] dark:bg-[linear-gradient(180deg,rgba(8,15,35,0.72),transparent)]" />
@@ -84,8 +129,8 @@ const Layout: React.FC = () => {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <NavLink to="/" className="flex items-center gap-3" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-sky-500 to-teal-500 text-white shadow-lg shadow-sky-500/20">
-                <GraduationCap size={22} />
+              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-sky-500/20 ring-1 ring-white/20 dark:ring-slate-700/60">
+                <img src="/brand-mark.svg" alt="StudySphere logo" className="h-full w-full object-cover" />
               </div>
               <div>
                 <div className="text-lg font-semibold tracking-tight">StudySphere</div>
@@ -119,6 +164,12 @@ const Layout: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-2">
+            {!isInstalled ? (
+              <Button variant="secondary" size="sm" onClick={handleInstall} className="hidden sm:inline-flex">
+                <Download size={16} />
+                Install app
+              </Button>
+            ) : null}
             <Button variant="secondary" size="sm" onClick={toggleTheme} aria-label="Toggle theme">
               {data.settings.theme === 'dark' ? <SunMedium size={16} /> : <Moon size={16} />}
               <span className="hidden sm:inline">{data.settings.theme === 'dark' ? 'Light' : 'Dark'}</span>
@@ -136,6 +187,12 @@ const Layout: React.FC = () => {
         {isMobileMenuOpen ? (
           <div className="border-t border-white/60 bg-white/90 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/90 xl:hidden">
             <div className="grid gap-2">
+              {!isInstalled ? (
+                <Button variant="secondary" onClick={handleInstall} className="justify-start rounded-2xl px-4 py-3 text-sm">
+                  <Download size={18} />
+                  Install app
+                </Button>
+              ) : null}
               {navItems.map((item) => (
                 <NavLink
                   key={item.path}
