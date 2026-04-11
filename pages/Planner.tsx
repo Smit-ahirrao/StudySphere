@@ -192,9 +192,8 @@ const Planner: React.FC = () => {
               </Button>
             </div>
 
-            <div className="overflow-x-auto pb-1">
-              <div className="grid min-w-[680px] grid-cols-7 gap-3">
-                {monthDays.map((day) => {
+            <div className="grid grid-cols-4 gap-2 sm:hidden">
+              {monthDays.map((day) => {
                 const key = dateKey(day);
                 const dayEvents = data.planner.filter((event) => isEventOnDate(event, day));
                 const count = dayEvents.length;
@@ -207,7 +206,7 @@ const Planner: React.FC = () => {
                     key={key}
                     type="button"
                     onClick={() => setSelectedDate(day)}
-                    className={`rounded-[24px] border p-4 text-left transition ${
+                    className={`min-h-[78px] rounded-[18px] border px-3 py-3 text-left transition ${
                       active
                         ? 'border-sky-400 bg-slate-950 text-white shadow-lg dark:bg-sky-400 dark:text-slate-950'
                         : hasSessions
@@ -216,10 +215,10 @@ const Planner: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="text-sm font-medium">{day.getDate()}</div>
+                      <div className="text-sm font-semibold">{day.getDate()}</div>
                       {hasSessions ? (
                         <span
-                          className={`inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-2 text-[11px] font-semibold ${
+                          className={`inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-semibold ${
                             active
                               ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
                               : 'bg-white/75 text-slate-700 dark:bg-slate-950/40 dark:text-white'
@@ -229,20 +228,74 @@ const Planner: React.FC = () => {
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-1.5">
+                    <div className="mt-3 flex flex-wrap gap-1">
                       {hasSessions ? (
                         dayEvents.slice(0, 3).map((event, index) => (
                           <span
                             key={`${event.id}-${index}`}
-                            className={`h-2.5 w-2.5 rounded-full ${event.color === 'amber' ? 'bg-amber-400' : event.color === 'emerald' ? 'bg-emerald-400' : event.color === 'violet' ? 'bg-violet-400' : 'bg-sky-400'}`}
+                            className={`h-2 w-2 rounded-full ${event.color === 'amber' ? 'bg-amber-400' : event.color === 'emerald' ? 'bg-emerald-400' : event.color === 'violet' ? 'bg-violet-400' : 'bg-sky-400'}`}
                           />
                         ))
                       ) : (
-                        <span className={`h-2.5 w-10 rounded-full ${active ? 'bg-white/20 dark:bg-slate-950/20' : 'bg-slate-100 dark:bg-slate-800'}`} />
+                        <span className={`h-2 w-6 rounded-full ${active ? 'bg-white/20 dark:bg-slate-950/20' : 'bg-slate-100 dark:bg-slate-800'}`} />
                       )}
                     </div>
                   </button>
                 );
+              })}
+            </div>
+
+            <div className="hidden sm:block">
+              <div className="grid grid-cols-7 gap-3">
+                {monthDays.map((day) => {
+                  const key = dateKey(day);
+                  const dayEvents = data.planner.filter((event) => isEventOnDate(event, day));
+                  const count = dayEvents.length;
+                  const active = key === selectedKey;
+                  const hasSessions = count > 0;
+                  const tone = getCalendarTone(dayEvents);
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedDate(day)}
+                      className={`rounded-[24px] border p-4 text-left transition ${
+                        active
+                          ? 'border-sky-400 bg-slate-950 text-white shadow-lg dark:bg-sky-400 dark:text-slate-950'
+                          : hasSessions
+                          ? CALENDAR_TONES[tone]
+                          : 'border-slate-200 bg-white/70 hover:border-sky-200 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-sky-700'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="text-sm font-medium">{day.getDate()}</div>
+                        {hasSessions ? (
+                          <span
+                            className={`inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-2 text-[11px] font-semibold ${
+                              active
+                                ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                                : 'bg-white/75 text-slate-700 dark:bg-slate-950/40 dark:text-white'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {hasSessions ? (
+                          dayEvents.slice(0, 3).map((event, index) => (
+                            <span
+                              key={`${event.id}-${index}`}
+                              className={`h-2.5 w-2.5 rounded-full ${event.color === 'amber' ? 'bg-amber-400' : event.color === 'emerald' ? 'bg-emerald-400' : event.color === 'violet' ? 'bg-violet-400' : 'bg-sky-400'}`}
+                            />
+                          ))
+                        ) : (
+                          <span className={`h-2.5 w-10 rounded-full ${active ? 'bg-white/20 dark:bg-slate-950/20' : 'bg-slate-100 dark:bg-slate-800'}`} />
+                        )}
+                      </div>
+                    </button>
+                  );
                 })}
               </div>
             </div>
