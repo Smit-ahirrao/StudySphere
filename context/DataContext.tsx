@@ -27,7 +27,7 @@ interface DataContextType {
   addFile: (file: FileMeta) => void;
   updateFile: (file: FileMeta) => void;
   deleteFile: (id: string) => void;
-  recordWeakTopics: (topics: string[]) => void;
+  recordQuizOutcome: (payload: { topic: string; correct: boolean; question?: string; explanation?: string }) => void;
   clearWeakArea: (topic: string) => void;
   updateSettings: (settings: AppData['settings']) => void;
   importBackup: (jsonData: string) => boolean;
@@ -112,29 +112,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       files: prev.files.filter((file) => file.id !== id),
     }));
 
-  const recordWeakTopics = (topics: string[]) =>
+  const recordQuizOutcome = ({ topic, correct, question, explanation }: { topic: string; correct: boolean; question?: string; explanation?: string }) =>
     setData((prev) => {
-      if (topics.length === 0) return prev;
-
       const now = Date.now();
       const topicMap = new Map(prev.weakAreas.map((area) => [area.topic.toLowerCase(), area]));
+      const normalizedTopic = topic.trim();
+      if (!normalizedTopic) return prev;
 
-      topics
-        .map((topic) => topic.trim())
-        .filter(Boolean)
-        .forEach((topic) => {
-          const key = topic.toLowerCase();
-          const existing = topicMap.get(key);
-          topicMap.set(key, {
-            topic: existing?.topic || topic,
-            misses: (existing?.misses || 0) + 1,
-            lastMissedAt: now,
-          });
-        });
+      const key = normalizedTopic.toLowerCase();
+      const existing = topicMap.get(key);
+      topicMap.set(key, {
+        topic: existing?.topic || normalizedTopic,
+        misses: correct ? existing?.misses || 0 : (existing?.misses || 0) + 1,
+        corrects: correct ? (existing?.corrects || 0) + 1 : existing?.corrects || 0,
+        lastMissedAt: correct ? existing?.lastMissedAt || now : now,
+        lastPracticedAt: now,
+        lastQuestion: question || existing?.lastQuestion || '',
+        lastExplanation: explanation || existing?.lastExplanation || '',
+      });
 
       return {
         ...prev,
-        weakAreas: Array.from(topicMap.values()).sort((a, b) => b.lastMissedAt - a.lastMissedAt),
+        weakAreas: Array.from(topicMap.values()).sort((a, b) => b.lastPracticedAt - a.lastPracticedAt),
       };
     });
 
@@ -180,7 +179,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addFile,
         updateFile,
         deleteFile,
-        recordWeakTopics,
+        recordQuizOutcome,
         clearWeakArea,
         updateSettings,
         importBackup,

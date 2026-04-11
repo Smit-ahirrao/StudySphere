@@ -71,7 +71,11 @@ const normalizeWeakAreas = (weakAreas: unknown): WeakArea[] => {
     .map((item: any) => ({
       topic: typeof item?.topic === 'string' ? item.topic : '',
       misses: Math.max(1, Number(item?.misses || 1)),
+      corrects: Math.max(0, Number(item?.corrects || 0)),
       lastMissedAt: Number(item?.lastMissedAt || Date.now()),
+      lastPracticedAt: Number(item?.lastPracticedAt || item?.lastMissedAt || Date.now()),
+      lastQuestion: typeof item?.lastQuestion === 'string' ? item.lastQuestion : '',
+      lastExplanation: typeof item?.lastExplanation === 'string' ? item.lastExplanation : '',
     }))
     .filter((item) => item.topic.trim().length > 0);
 };

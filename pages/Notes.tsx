@@ -1,11 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Download, Pin, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { Note } from '../types';
 import { Badge, Button, Card, Input, SectionHeading, Textarea } from '../components/UI';
+import NotePreview from '../components/notes/NotePreview';
+import NoteToolbar from '../components/notes/NoteToolbar';
+import { applyNoteFormat, NoteFormatAction } from '../utils/noteFormatting';
 
-const COLORS = ['#ffffff', '#fef3c7', '#dbeafe', '#dcfce7', '#fce7f3', '#ede9fe'];
+const COLORS = ['#ffffff', '#f8fafc', '#eff6ff', '#ecfeff', '#f0fdf4', '#fef3c7'];
 
 const Notes: React.FC = () => {
   const { data, addNote, updateNote } = useData();
@@ -14,6 +17,8 @@ const Notes: React.FC = () => {
   const [showTrash, setShowTrash] = useState(false);
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [editorMode, setEditorMode] = useState<'write' | 'preview' | 'split'>('split');
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
 
   const filteredNotes = useMemo(
     () =>
@@ -74,6 +79,23 @@ const Notes: React.FC = () => {
     setTagInput('');
   };
 
+  const formatNote = (action: NoteFormatAction) => {
+    if (!activeNote || !editorRef.current) return;
+
+    const { nextValue, nextSelectionStart, nextSelectionEnd } = applyNoteFormat({
+      value: activeNote.content,
+      selectionStart: editorRef.current.selectionStart,
+      selectionEnd: editorRef.current.selectionEnd,
+      action,
+    });
+
+    patchActiveNote({ content: nextValue });
+    window.requestAnimationFrame(() => {
+      editorRef.current?.focus();
+      editorRef.current?.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+    });
+  };
+
   return (
     <div className="space-y-8">
       <SectionHeading
@@ -120,7 +142,7 @@ const Notes: React.FC = () => {
                     onClick={() => setActiveNoteId(note.id)}
                     style={{ background: note.color }}
                     className={`w-full rounded-[24px] border p-4 text-left shadow-sm transition ${
-                      activeNote?.id === note.id ? 'border-cyan-400 ring-4 ring-cyan-100 dark:ring-cyan-950' : 'border-slate-200 hover:border-cyan-200'
+                      activeNote?.id === note.id ? 'border-sky-400 ring-4 ring-sky-100 dark:ring-sky-950' : 'border-slate-200 hover:border-sky-200'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -153,7 +175,7 @@ const Notes: React.FC = () => {
                     className="w-full bg-transparent text-3xl font-semibold tracking-tight text-slate-950 outline-none dark:text-white"
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge color="cyan">{activeNoteWords} words</Badge>
+                    <Badge color="blue">{activeNoteWords} words</Badge>
                     <Badge color="gray">{Math.max(1, Math.ceil(activeNoteWords / 200))} min read</Badge>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{saving ? 'Saving...' : 'Saved locally'}</span>
                   </div>
@@ -182,7 +204,7 @@ const Notes: React.FC = () => {
                     type="button"
                     onClick={() => patchActiveNote({ color })}
                     style={{ background: color }}
-                    className={`h-9 w-9 rounded-full border shadow-sm ${activeNote.color === color ? 'ring-4 ring-cyan-100 dark:ring-cyan-950' : 'border-slate-200'}`}
+                    className={`h-9 w-9 rounded-full border shadow-sm ${activeNote.color === color ? 'ring-4 ring-sky-100 dark:ring-sky-950' : 'border-slate-200'}`}
                   />
                 ))}
               </div>
@@ -221,13 +243,50 @@ const Notes: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-5 flex-1">
-                <Textarea
-                  value={activeNote.content}
-                  onChange={(event) => patchActiveNote({ content: event.target.value })}
-                  placeholder="Write lecture summaries, revision points, formulas, or quick ideas..."
-                  className="h-full min-h-[420px] resize-none border-none bg-transparent px-0 py-2 text-base leading-8 shadow-none focus:ring-0"
-                />
+              <div className="mt-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <NoteToolbar onAction={formatNote} />
+                  <div className="flex flex-wrap gap-2">
+                    {(['write', 'preview', 'split'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setEditorMode(mode)}
+                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                          editorMode === mode
+                            ? 'bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {mode === 'write' ? 'Write' : mode === 'preview' ? 'Preview' : 'Split'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={`grid gap-4 ${editorMode === 'split' ? 'xl:grid-cols-2' : ''}`}>
+                  {editorMode !== 'preview' ? (
+                    <div className="rounded-[24px] border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+                      <Textarea
+                        ref={editorRef}
+                        value={activeNote.content}
+                        onChange={(event) => patchActiveNote({ content: event.target.value })}
+                        placeholder="Write lecture summaries, revision points, formulas, or quick ideas..."
+                        className="h-full min-h-[420px] resize-none border-none bg-transparent px-0 py-0 text-base leading-8 shadow-none focus:ring-0"
+                      />
+                    </div>
+                  ) : null}
+
+                  {editorMode !== 'write' ? (
+                    <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">Formatted preview</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Headings, callouts, highlights, code, and lists render here.</div>
+                      </div>
+                      <NotePreview content={activeNote.content} />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           )}

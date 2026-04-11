@@ -47,8 +47,8 @@ const QuizCard: React.FC<Props> = ({ question, selectedAnswer, onAnswer }) => {
                     : isWrongSelection
                     ? 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200'
                     : isSelected
-                    ? 'border-cyan-300 bg-cyan-50 dark:border-cyan-800 dark:bg-cyan-950/30'
-                    : 'border-slate-200 bg-white/80 hover:border-cyan-200 hover:bg-cyan-50 dark:border-slate-800 dark:bg-slate-950/70 dark:hover:border-cyan-800 dark:hover:bg-slate-900'
+                    ? 'border-sky-300 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/30'
+                    : 'border-slate-200 bg-white/80 hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950/70 dark:hover:border-sky-800 dark:hover:bg-slate-900'
                 }`}
               >
                 {option}

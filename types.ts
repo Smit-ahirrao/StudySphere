@@ -66,6 +66,8 @@ export interface StudySummary {
   headline: string;
   concise: string;
   bullets: string[];
+  memoryHooks?: string[];
+  examSignals?: string[];
 }
 
 export interface Flashcard {
@@ -92,12 +94,18 @@ export interface StudyPack {
   summary: StudySummary;
   flashcards: Flashcard[];
   quiz: QuizQuestion[];
+  studyPlan: string[];
+  conceptChecks: string[];
 }
 
 export interface WeakArea {
   topic: string;
   misses: number;
+  corrects: number;
   lastMissedAt: number;
+  lastPracticedAt: number;
+  lastQuestion?: string;
+  lastExplanation?: string;
 }
 
 export interface AppData {

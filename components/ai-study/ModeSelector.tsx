@@ -37,7 +37,7 @@ const ModeSelector: React.FC<Props> = ({ value, onChange }) => (
   <div className="space-y-3">
     <div>
       <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Step 2: choose a learning mode</div>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Each mode changes the depth, flashcards, and quiz style without changing the layout.</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Each mode tunes the summary depth, recall style, and quiz pressure while keeping the interface calm.</p>
     </div>
 
     <div className="grid gap-3 md:grid-cols-3">
@@ -50,12 +50,12 @@ const ModeSelector: React.FC<Props> = ({ value, onChange }) => (
             onClick={() => onChange(mode.id)}
             className={`rounded-[24px] border p-4 text-left transition ${
               active
-                ? 'border-cyan-400 bg-slate-950 text-white shadow-lg shadow-cyan-500/10 dark:bg-cyan-400 dark:text-slate-950'
-                : 'border-slate-200 bg-white/80 hover:border-cyan-200 hover:bg-cyan-50 dark:border-slate-800 dark:bg-slate-950/70 dark:hover:border-cyan-800 dark:hover:bg-slate-900'
+                ? 'border-sky-400 bg-slate-950 text-white shadow-lg shadow-sky-500/10 dark:bg-sky-400 dark:text-slate-950'
+                : 'border-slate-200 bg-white/80 hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950/70 dark:hover:border-sky-800 dark:hover:bg-slate-900'
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`rounded-2xl p-3 ${active ? 'bg-white/15 dark:bg-slate-950/15' : 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300'}`}>
+              <div className={`rounded-2xl p-3 ${active ? 'bg-white/15 dark:bg-slate-950/15' : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'}`}>
                 <mode.icon size={18} />
               </div>
               <div>

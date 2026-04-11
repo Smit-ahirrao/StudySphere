@@ -19,11 +19,11 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     primary:
-      'bg-slate-950 text-white shadow-lg shadow-cyan-500/20 hover:-translate-y-0.5 hover:bg-slate-900 focus:ring-cyan-500 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300',
+      'bg-slate-950 text-white shadow-lg shadow-sky-500/15 hover:-translate-y-0.5 hover:bg-slate-900 focus:ring-sky-500 dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300',
     secondary:
-      'border border-slate-200 bg-white/80 text-slate-700 backdrop-blur hover:border-cyan-200 hover:bg-cyan-50 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:border-cyan-700 dark:hover:bg-slate-800',
+      'border border-slate-200/90 bg-white/88 text-slate-700 backdrop-blur hover:border-sky-200 hover:bg-sky-50/70 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:border-sky-800 dark:hover:bg-slate-800',
     ghost:
-      'text-slate-600 hover:bg-slate-100 hover:text-slate-950 focus:ring-cyan-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
+      'text-slate-600 hover:bg-slate-100 hover:text-slate-950 focus:ring-sky-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
     danger:
       'bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500',
   };
@@ -54,7 +54,7 @@ export const Card: React.FC<{
   action?: React.ReactNode;
 }> = ({ children, className = '', title, action }) => (
   <div
-    className={`rounded-[28px] border border-white/60 bg-white/85 shadow-[0_20px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/75 ${className}`}
+    className={`rounded-[28px] border border-white/70 bg-white/88 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.42)] backdrop-blur-xl dark:border-slate-800/90 dark:bg-slate-950/78 ${className}`}
   >
     {(title || action) && (
       <div className="flex items-center justify-between border-b border-slate-100/80 px-5 py-4 dark:border-slate-800">
@@ -71,27 +71,33 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }) => (
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ label, error, className = '', ...props }, ref) => (
   <div className="w-full">
     {label ? <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label> : null}
     <input
-      className={`w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-cyan-500 dark:focus:ring-cyan-950 ${error ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950' : ''} ${className}`}
+      ref={ref}
+      className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/82 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${error ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950' : ''} ${className}`}
       {...props}
     />
     {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
   </div>
-);
+));
 
-export const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({ className = '', ...props }) => (
+Input.displayName = 'Input';
+
+export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className = '', ...props }, ref) => (
   <textarea
-    className={`w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-cyan-500 dark:focus:ring-cyan-950 ${className}`}
+    ref={ref}
+    className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/82 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${className}`}
     {...props}
   />
-);
+));
+
+Textarea.displayName = 'Textarea';
 
 export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ className = '', children, ...props }) => (
   <select
-    className={`w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-cyan-500 dark:focus:ring-cyan-950 ${className}`}
+    className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/82 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${className}`}
     {...props}
   >
     {children}
@@ -107,8 +113,8 @@ export const Badge: React.FC<{
     red: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-200',
     yellow: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-200',
     green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200',
-    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-200',
-    cyan: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-200',
+    blue: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-200',
+    cyan: 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-200',
   };
 
   return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${colors[color]}`}>{children}</span>;
@@ -122,7 +128,7 @@ export const SectionHeading: React.FC<{
 }> = ({ eyebrow, title, description, action }) => (
   <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
     <div className="space-y-2">
-      {eyebrow ? <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-600 dark:text-cyan-300">{eyebrow}</p> : null}
+      {eyebrow ? <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-300">{eyebrow}</p> : null}
       <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">{title}</h1>
       {description ? <p className="max-w-2xl text-sm text-slate-600 dark:text-slate-400 sm:text-base">{description}</p> : null}
     </div>

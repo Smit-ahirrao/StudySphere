@@ -59,14 +59,14 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(6,182,212,0.18),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(251,191,36,0.16),_transparent_22%),linear-gradient(180deg,_#f8fbff_0%,_#eef4ff_50%,_#f7f8fc_100%)] text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.14),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(45,212,191,0.12),_transparent_20%),linear-gradient(180deg,_#020617_0%,_#0f172a_52%,_#111827_100%)] dark:text-slate-100">
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),transparent)] dark:bg-[linear-gradient(180deg,rgba(8,15,35,0.78),transparent)]" />
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.10),_transparent_22%),linear-gradient(180deg,_#f7fafc_0%,_#edf3f8_48%,_#f5f7fb_100%)] text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.10),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(20,184,166,0.08),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0b1120_45%,_#111827_100%)] dark:text-slate-100">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] dark:bg-[linear-gradient(180deg,rgba(8,15,35,0.72),transparent)]" />
 
-      <header className="sticky top-0 z-50 border-b border-white/60 bg-white/70 backdrop-blur-2xl dark:border-slate-800 dark:bg-slate-950/70">
+      <header className="sticky top-0 z-50 border-b border-white/70 bg-white/72 backdrop-blur-2xl dark:border-slate-800/90 dark:bg-slate-950/72">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <NavLink to="/" className="flex items-center gap-3" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-700 text-white shadow-lg shadow-cyan-500/25">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-sky-500 to-teal-500 text-white shadow-lg shadow-sky-500/20">
                 <GraduationCap size={22} />
               </div>
               <div>
@@ -76,7 +76,7 @@ const Layout: React.FC = () => {
             </NavLink>
 
             <div className="hidden items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 lg:flex">
-              <Badge color="cyan">{totalTasks === 0 ? 'Fresh Start' : `${completedTasks}/${totalTasks} Tasks`}</Badge>
+                <Badge color="blue">{totalTasks === 0 ? 'Fresh Start' : `${completedTasks}/${totalTasks} Tasks`}</Badge>
               <span className="text-sm text-slate-600 dark:text-slate-300">{focusMinutesToday} min focused today</span>
             </div>
           </div>
@@ -89,7 +89,7 @@ const Layout: React.FC = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
                     isActive
-                      ? 'bg-slate-950 text-white shadow-lg shadow-cyan-500/15 dark:bg-cyan-400 dark:text-slate-950'
+                      ? 'bg-slate-950 text-white shadow-lg shadow-sky-500/10 dark:bg-sky-400 dark:text-slate-950'
                       : 'text-slate-600 hover:bg-white hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white'
                   }`
                 }
@@ -126,7 +126,7 @@ const Layout: React.FC = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                       isActive
-                        ? 'bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950'
+                        ? 'bg-slate-950 text-white dark:bg-sky-400 dark:text-slate-950'
                         : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900'
                     }`
                   }

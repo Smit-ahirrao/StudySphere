@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Loader2, Sparkles, TrendingUp } from 'lucide-react';
+import { AlertCircle, Brain, CheckCircle2, Loader2, Sparkles, Target, TrendingUp } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { LearningMode, QuizQuestion, StudyPack } from '../../types';
 import { extractTextFromStudyFile, generateStudyPack, isStudySupportedFile } from '../../utils/aiStudy';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
-  const { data, recordWeakTopics, clearWeakArea } = useData();
+  const { data, recordQuizOutcome, clearWeakArea } = useData();
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedFileId, setSelectedFileId] = useState('');
@@ -37,7 +37,18 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
 
   const supportedFiles = useMemo(() => files.filter((file) => isStudySupportedFile(file.file)), [files]);
   const selectedFile = supportedFiles.find((file) => file.id === selectedFileId) || null;
-  const weakAreas = useMemo(() => [...data.weakAreas].sort((a, b) => b.misses - a.misses).slice(0, 5), [data.weakAreas]);
+  const weakAreas = useMemo(() => [...data.weakAreas].sort((a, b) => (b.misses - b.corrects) - (a.misses - a.corrects)).slice(0, 5), [data.weakAreas]);
+  const weakestTopic = weakAreas[0] || null;
+  const quizStats = useMemo(() => {
+    if (!studyPack) return { answered: 0, correct: 0, incorrect: 0 };
+    const answeredQuestions = studyPack.quiz.filter((question) => Boolean(answerMap[question.id]));
+    const correct = answeredQuestions.filter((question) => answerMap[question.id] === question.correctAnswer).length;
+    return {
+      answered: answeredQuestions.length,
+      correct,
+      incorrect: answeredQuestions.length - correct,
+    };
+  }, [studyPack, answerMap]);
 
   useEffect(() => {
     if (supportedFiles.length === 0) {
@@ -79,9 +90,12 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
 
   const handleAnswer = (question: QuizQuestion, answer: string) => {
     setAnswerMap((current) => ({ ...current, [question.id]: answer }));
-    if (answer !== question.correctAnswer) {
-      recordWeakTopics([question.topic]);
-    }
+    recordQuizOutcome({
+      topic: question.topic,
+      correct: answer === question.correctAnswer,
+      question: question.question,
+      explanation: question.explanation,
+    });
   };
 
   const handleUpload = async (list: FileList | null) => {
@@ -130,7 +144,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                   <AlertCircle size={16} />
                   AI study flow blocked
                 </div>
-                <p className="mt-2">{error.includes('VITE_GEMINI_API_KEY') ? 'Missing Gemini API Key. You can get one for free at Google AI Studio.' : error}</p>
+                <p className="mt-2">{error.includes('VITE_GEMINI_API_KEY') ? 'Missing Gemini API key. Add it in your environment to enable live generation.' : error}</p>
               </div>
             ) : null}
 
@@ -162,26 +176,87 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 <OutputTabs activeTab={activeTab} onChange={setActiveTab} />
 
                 {activeTab === 'summary' ? (
-                  <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                  <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
                     <Card className="h-full">
                       <div className="space-y-3">
-                        <div className="text-sm uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Concise summary</div>
+                        <div className="text-sm uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">Concise summary</div>
                         <div className="text-2xl font-semibold text-slate-950 dark:text-white">{studyPack.summary.headline}</div>
                         <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">{studyPack.summary.concise}</p>
-                      </div>
-                    </Card>
-                    <Card className="h-full">
-                      <div className="space-y-3">
-                        <div className="text-sm uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Key points</div>
-                        <div className="grid gap-2">
-                          {studyPack.summary.bullets.map((bullet) => (
-                            <div key={bullet} className="rounded-2xl bg-slate-50/85 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
-                              {bullet}
+                        {studyPack.summary.memoryHooks?.length ? (
+                          <div className="space-y-2 pt-2">
+                            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Memory hooks</div>
+                            <div className="grid gap-2">
+                              {studyPack.summary.memoryHooks.map((item) => (
+                                <div key={item} className="rounded-2xl bg-slate-50/85 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                                  {item}
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ) : null}
                       </div>
                     </Card>
+                    <div className="grid gap-4">
+                      <Card className="h-full">
+                        <div className="space-y-3">
+                          <div className="text-sm uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">Key points</div>
+                          <div className="grid gap-2">
+                            {studyPack.summary.bullets.map((bullet) => (
+                              <div key={bullet} className="rounded-2xl bg-slate-50/85 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                                {bullet}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <Card>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-sky-600 dark:text-sky-300">
+                              <Target size={14} />
+                              Exam signals
+                            </div>
+                            <div className="grid gap-2">
+                              {studyPack.summary.examSignals?.map((item) => (
+                                <div key={item} className="rounded-2xl bg-slate-50/85 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                                  {item}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </Card>
+                        <Card>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-sky-600 dark:text-sky-300">
+                              <Brain size={14} />
+                              Study plan
+                            </div>
+                            <div className="grid gap-2">
+                              {studyPack.studyPlan.map((item) => (
+                                <div key={item} className="rounded-2xl bg-slate-50/85 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                                  {item}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                      <Card>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-sky-600 dark:text-sky-300">
+                            <CheckCircle2 size={14} />
+                            Concept checks
+                          </div>
+                          <div className="grid gap-2">
+                            {studyPack.conceptChecks.map((item) => (
+                              <div key={item} className="rounded-2xl bg-slate-50/85 px-4 py-3 text-sm text-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                                {item}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
                   </div>
                 ) : null}
 
@@ -194,15 +269,31 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                 ) : null}
 
                 {activeTab === 'quiz' ? (
-                  <div className="grid gap-4 xl:grid-cols-2">
-                    {studyPack.quiz.map((question) => (
-                      <QuizCard
-                        key={question.id}
-                        question={question}
-                        selectedAnswer={answerMap[question.id]}
-                        onAnswer={(answer) => handleAnswer(question, answer)}
-                      />
-                    ))}
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <Card>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Answered</div>
+                        <div className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{quizStats.answered}/{studyPack.quiz.length}</div>
+                      </Card>
+                      <Card>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Correct</div>
+                        <div className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{quizStats.correct}</div>
+                      </Card>
+                      <Card>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Needs review</div>
+                        <div className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{quizStats.incorrect}</div>
+                      </Card>
+                    </div>
+                    <div className="grid gap-4 xl:grid-cols-2">
+                      {studyPack.quiz.map((question) => (
+                        <QuizCard
+                          key={question.id}
+                          question={question}
+                          selectedAnswer={answerMap[question.id]}
+                          onAnswer={(answer) => handleAnswer(question, answer)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -213,13 +304,23 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
         <div className="space-y-6">
           <Card>
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">
+              <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">
                 <TrendingUp size={15} />
                 Weakness detection
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Incorrect quiz answers feed this list so the app can surface where revision is slipping.
+                Quiz answers now build a live revision radar, so weak concepts surface faster and recovery becomes visible over time.
               </p>
+
+              {weakestTopic ? (
+                <div className="rounded-[22px] border border-amber-200/70 bg-amber-50/80 px-4 py-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-200">Priority topic</div>
+                  <div className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">{weakestTopic.topic}</div>
+                  <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    {weakestTopic.misses} misses, {weakestTopic.corrects} correct answers, status: {getConfidenceLabel(weakestTopic.misses, weakestTopic.corrects)}
+                  </div>
+                </div>
+              ) : null}
 
               {weakAreas.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
@@ -232,7 +333,11 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <div className="font-medium text-slate-900 dark:text-white">{area.topic}</div>
-                          <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">{area.misses} miss{area.misses > 1 ? 'es' : ''} logged</div>
+                          <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            {area.misses} miss{area.misses > 1 ? 'es' : ''} | {area.corrects} correct | status: {getConfidenceLabel(area.misses, area.corrects)}
+                          </div>
+                          {area.lastQuestion ? <div className="mt-3 text-sm text-slate-700 dark:text-slate-300">Last miss: {area.lastQuestion}</div> : null}
+                          {area.lastExplanation ? <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">{area.lastExplanation}</div> : null}
                         </div>
                         <Button size="sm" variant="ghost" onClick={() => clearWeakArea(area.topic)}>
                           Clear
@@ -259,6 +364,15 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
       />
     </div>
   );
+};
+
+const getConfidenceLabel = (misses: number, corrects: number) => {
+  const total = misses + corrects;
+  if (total === 0) return 'unread';
+  const accuracy = corrects / total;
+  if (accuracy >= 0.75) return 'recovering';
+  if (accuracy >= 0.45) return 'needs review';
+  return 'at risk';
 };
 
 export default AIStudyTool;

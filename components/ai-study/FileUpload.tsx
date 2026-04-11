@@ -18,11 +18,11 @@ interface Props {
 }
 
 const FileUpload: React.FC<Props> = ({ files, selectedFileId, onSelectFile, onUploadClick, busy }) => (
-  <Card className="border-cyan-100/80 bg-gradient-to-br from-white via-cyan-50/55 to-sky-50/40 dark:border-cyan-900/60 dark:bg-[linear-gradient(160deg,rgba(8,15,35,0.98),rgba(15,23,42,0.96),rgba(17,24,39,0.94))]">
+  <Card className="border-sky-100/80 bg-gradient-to-br from-white via-slate-50 to-sky-50/55 dark:border-sky-900/50 dark:bg-[linear-gradient(160deg,rgba(8,15,35,0.98),rgba(15,23,42,0.96),rgba(17,24,39,0.94))]">
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
-          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300">
+          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
             <BrainCircuit size={20} />
           </div>
           <div>
@@ -45,7 +45,7 @@ const FileUpload: React.FC<Props> = ({ files, selectedFileId, onSelectFile, onUp
           <select
             value={selectedFileId}
             onChange={(event) => onSelectFile(event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-cyan-500 dark:focus:ring-cyan-950"
+            className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950"
           >
             <option value="">Select a study file</option>
             {files.map((file) => (
