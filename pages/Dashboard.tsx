@@ -11,6 +11,7 @@ import { formatDisplayDate, getLast7Days, getLocalDateKey } from '../utils/date'
 const Dashboard: React.FC = () => {
   const { data, importBackup } = useData();
   const navigate = useNavigate();
+  const stripHtml = (html: string) => new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
 
   const stats = useMemo(() => {
     const totalTasks = countTasks(data.tasks);
@@ -166,7 +167,7 @@ const Dashboard: React.FC = () => {
               recentNotes.map((note) => (
                 <div key={note.id} className="rounded-3xl border border-slate-100 bg-white/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/55">
                   <div className="font-medium text-slate-900 dark:text-white">{note.title}</div>
-                  <p className="mt-2 max-h-12 overflow-hidden text-sm text-slate-600 dark:text-slate-400">{note.content || 'Empty note'}</p>
+                  <p className="mt-2 max-h-12 overflow-hidden text-sm text-slate-600 dark:text-slate-400">{stripHtml(note.content) || 'Empty note'}</p>
                 </div>
               ))
             )}

@@ -163,7 +163,7 @@ const Planner: React.FC = () => {
         description="The planner now supports editing, reminder toggles, and recurring sessions without losing the current visual direction."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-[1.2fr_0.8fr]">
         <Card title="Monthly overview" action={<Badge color="cyan">{month.toLocaleString('default', { month: 'long', year: 'numeric' })}</Badge>}>
           <div className="space-y-5">
             <div className="flex items-center justify-between">
@@ -245,8 +245,8 @@ const Planner: React.FC = () => {
               })}
             </div>
 
-            <div className="hidden sm:block">
-              <div className="grid grid-cols-7 gap-3">
+            <div className="hidden md:block">
+              <div className="grid md:grid-cols-7 gap-3">
                 {monthDays.map((day) => {
                   const key = dateKey(day);
                   const dayEvents = data.planner.filter((event) => isEventOnDate(event, day));

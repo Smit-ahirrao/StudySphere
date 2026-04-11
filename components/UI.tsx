@@ -73,10 +73,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ label, error, className = '', ...props }, ref) => (
   <div className="w-full">
-    {label ? <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label> : null}
+    {label ? <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</label> : null}
     <input
       ref={ref}
-      className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/82 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${error ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950' : ''} ${className}`}
+      className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-500 dark:focus:ring-sky-950 ${error ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950' : ''} ${className}`}
       {...props}
     />
     {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
@@ -88,7 +88,7 @@ Input.displayName = 'Input';
 export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className = '', ...props }, ref) => (
   <textarea
     ref={ref}
-    className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/82 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${className}`}
+    className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-500 dark:focus:ring-sky-950 ${className}`}
     {...props}
   />
 ));
@@ -97,7 +97,7 @@ Textarea.displayName = 'Textarea';
 
 export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ className = '', children, ...props }) => (
   <select
-    className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900/82 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${className}`}
+    className={`w-full rounded-2xl border border-slate-200/90 bg-white/92 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-950 ${className}`}
     {...props}
   >
     {children}
