@@ -128,7 +128,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
         busy={loading}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className={studyPack ? 'space-y-6' : 'grid gap-6 xl:grid-cols-[1.05fr_0.95fr]'}>
         <Card>
           <div className="space-y-5">
             <ModeSelector value={mode} onChange={setMode} />
@@ -340,7 +340,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
           </div>
         </Card>
 
-        <div className="space-y-6 xl:sticky xl:top-24">
+        <div className={studyPack ? 'space-y-6' : 'space-y-6 xl:sticky xl:top-24'}>
           <Card>
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">
