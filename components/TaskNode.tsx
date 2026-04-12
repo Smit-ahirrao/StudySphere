@@ -17,20 +17,21 @@ interface Props {
 export default function TaskNode({ task, onAddSubtask, onFocusTask, onToggle, onDelete, onUpdate, level = 0 }: Props) {
   if (!task) return null;
   const safeChildren = Array.isArray(task.children) ? task.children : [];
-  const [expanded, setExpanded] = useState(task.isExpanded ?? true);
+  const [expanded, setExpanded] = useState(task.isExpanded ?? false);
   const [showInput, setShowInput] = useState(false);
-  const [showNotes, setShowNotes] = useState(Boolean(task.notes));
-  const [showMeta, setShowMeta] = useState(Boolean(task.dueDate) || (task.recurring && task.recurring !== 'none'));
+  const [showNotes, setShowNotes] = useState(false);
+  const [showMeta, setShowMeta] = useState(false);
   const [titleText, setTitleText] = useState(task.title);
   const [subtaskDraft, setSubtaskDraft] = useState('');
   const [noteDraft, setNoteDraft] = useState(task.notes || '');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setTitleText(task.title);
   }, [task.title]);
 
   useEffect(() => {
-    setExpanded(task.isExpanded ?? true);
+    setExpanded(task.isExpanded ?? false);
   }, [task.isExpanded]);
 
   useEffect(() => {
@@ -194,8 +195,15 @@ export default function TaskNode({ task, onAddSubtask, onFocusTask, onToggle, on
                   className="border-none bg-transparent px-0 py-0 shadow-none focus:ring-0"
                 />
                 <div className="mt-3 flex gap-2">
-                  <Button size="sm" onClick={() => onUpdate({ ...task, notes: noteDraft.trim() || undefined })}>
-                    Save note
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onUpdate({ ...task, notes: noteDraft.trim() || undefined });
+                      setSaved(true);
+                      setTimeout(() => setSaved(false), 2000);
+                    }}
+                  >
+                    {saved ? 'Saved ✨' : 'Save note'}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setNoteDraft(task.notes || '')}>
                     Reset

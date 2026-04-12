@@ -233,7 +233,7 @@ const normalizeTaskNode = (task: any): Task => ({
   createdAt: Number.isFinite(Number(task?.createdAt)) ? Number(task.createdAt) : Date.now(),
   children: normalizeTasks(task?.children),
   notes: typeof task?.notes === 'string' ? task.notes : '',
-  isExpanded: task?.isExpanded ?? true,
+  isExpanded: task?.isExpanded ?? false,
 });
 
 // Ensure migration for old or malformed data

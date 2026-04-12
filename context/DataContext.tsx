@@ -267,7 +267,7 @@ const buildDemoData = (base: AppData): AppData => {
       recurring: 'none',
       createdAt: now - 1000 * 60 * 60 * 30,
       notes: 'Focus on heaps, graphs, and recursion patterns.',
-      isExpanded: true,
+      isExpanded: false,
       isDemo: true,
       children: [
         {
@@ -301,7 +301,7 @@ const buildDemoData = (base: AppData): AppData => {
       recurring: 'none',
       createdAt: now - 1000 * 60 * 60 * 22,
       notes: 'Include error analysis and final chart annotation.',
-      isExpanded: true,
+      isExpanded: false,
       isDemo: true,
       children: [
         {
@@ -335,7 +335,7 @@ const buildDemoData = (base: AppData): AppData => {
       recurring: 'weekly',
       createdAt: now - 1000 * 60 * 60 * 12,
       notes: 'Prioritize weak chapters first, then timed recall.',
-      isExpanded: true,
+      isExpanded: false,
       isDemo: true,
       children: [
         {

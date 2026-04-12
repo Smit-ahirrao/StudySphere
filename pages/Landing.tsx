@@ -30,8 +30,8 @@ const Landing: React.FC = () => {
   const { data, injectDemoData, removeDemoData } = useData();
   
   const hasDemoData = React.useMemo(() => {
-    const checkDemo = (items: any[]) => items.some(item => item.isDemo);
-    const checkTasks = (tasks: any[]): boolean => tasks.some(t => t.isDemo || checkTasks(t.children || []));
+    const checkDemo = (items: any[] | undefined) => (items || []).some(item => item.isDemo);
+    const checkTasks = (tasks: any[] | undefined): boolean => (tasks || []).some(t => t.isDemo || (Array.isArray(t.children) && checkTasks(t.children)));
     return checkTasks(data.tasks) || checkDemo(data.notes) || checkDemo(data.planner) || checkDemo(data.files);
   }, [data]);
 

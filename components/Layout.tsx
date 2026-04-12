@@ -27,7 +27,7 @@ interface DeferredPromptEvent extends Event {
 }
 
 const Layout: React.FC = () => {
-  const { data, updateSettings } = useData();
+  const { data, updateSettings, removeDemoData } = useData();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [spotifyEmbed, setSpotifyEmbed] = useState('');
   const [spotifyCollapsed, setSpotifyCollapsed] = useState(false);
@@ -39,8 +39,8 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
 
   const hasDemoData = useMemo(() => {
-    const checkDemo = (items: any[]) => items.some(item => item.isDemo);
-    const checkTasks = (tasks: any[]): boolean => tasks.some(t => t.isDemo || (t.children && checkTasks(t.children)));
+    const checkDemo = (items: any[] | undefined) => (items || []).some(item => item.isDemo);
+    const checkTasks = (tasks: any[] | undefined): boolean => (tasks || []).some(t => t.isDemo || (Array.isArray(t.children) && checkTasks(t.children)));
     return checkTasks(data.tasks) || checkDemo(data.notes) || checkDemo(data.planner) || checkDemo(data.files);
   }, [data]);
 
@@ -262,10 +262,10 @@ const Layout: React.FC = () => {
                 <Sparkles size={18} />
               </div>
               <p className="text-sm font-medium text-sky-800 dark:text-sky-200">
-                You are exploring with demo data. Click below to return home if you'd like to remove it.
+                You are exploring with demo data. You can remove only these samples at any time.
               </p>
             </div>
-            <Button size="sm" variant="secondary" onClick={() => navigate('/')} className="bg-white/80 dark:bg-slate-900/50">
+            <Button size="sm" variant="secondary" onClick={removeDemoData} className="bg-white/80 dark:bg-slate-900/50">
               Clear Demo Data
             </Button>
           </div>
