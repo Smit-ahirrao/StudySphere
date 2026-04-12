@@ -1,23 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="StudySphere logo">
   <defs>
+    <linearGradient id="ss-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1220" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
     <linearGradient id="ss-accent" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22d3ee" />
-      <stop offset="55%" stop-color="#0ea5e9" />
+      <stop offset="50%" stop-color="#0ea5e9" />
       <stop offset="100%" stop-color="#14b8a6" />
     </linearGradient>
-    <filter id="ss-shadow" x="-30%" y="-30%" width="170%" height="170%">
-      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0284c7" flood-opacity="0.3" />
+    <filter id="ss-shadow" x="-30%" y="-30%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#0284c7" flood-opacity="0.33" />
     </filter>
   </defs>
 
   <g filter="url(#ss-shadow)">
-    <circle cx="256" cy="256" r="150" fill="#0b1120" />
+    <rect x="34" y="34" width="444" height="444" rx="126" fill="url(#ss-bg)" />
   </g>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#1e293b" stroke-width="6" />
+  <rect x="34" y="34" width="444" height="444" rx="126" fill="none" stroke="#1e293b" stroke-width="6" />
 
-  <circle cx="256" cy="256" r="116" fill="none" stroke="url(#ss-accent)" stroke-width="18" />
-  <ellipse cx="256" cy="256" rx="128" ry="68" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.9" stroke-width="12" transform="rotate(-20 256 256)" />
-  <ellipse cx="256" cy="256" rx="128" ry="68" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.72" stroke-width="10" transform="rotate(22 256 256)" />
+  <circle cx="256" cy="256" r="112" fill="none" stroke="url(#ss-accent)" stroke-width="16" />
+  <ellipse cx="256" cy="256" rx="122" ry="64" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.9" stroke-width="10" transform="rotate(-20 256 256)" />
+  <ellipse cx="256" cy="256" rx="122" ry="64" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.72" stroke-width="9" transform="rotate(20 256 256)" />
 
-  <path d="M202 188c0-34 28-62 62-62h50v36h-50c-14 0-26 12-26 26s12 26 26 26h32c34 0 62 28 62 62s-28 62-62 62h-51v-36h51c14 0 26-12 26-26s-12-26-26-26h-32c-34 0-62-28-62-62Z" fill="#f8fafc" />
+  <path d="M199 187c0-35 29-64 64-64h50v35h-50c-16 0-29 13-29 29s13 29 29 29h30c35 0 64 29 64 64s-29 64-64 64h-50v-35h50c16 0 29-13 29-29s-13-29-29-29h-30c-35 0-64-29-64-64Z" fill="#f8fafc" />
 </svg>
