@@ -1,28 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="StudySphere logo">
   <defs>
-    <linearGradient id="ss-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="100%" stop-color="#f0f9ff" />
-    </linearGradient>
     <linearGradient id="ss-accent" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22d3ee" />
       <stop offset="55%" stop-color="#0ea5e9" />
       <stop offset="100%" stop-color="#14b8a6" />
     </linearGradient>
-    <filter id="ss-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0284c7" flood-opacity="0.25" />
+    <filter id="ss-shadow" x="-30%" y="-30%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0284c7" flood-opacity="0.3" />
     </filter>
   </defs>
 
-  <rect width="512" height="512" rx="132" fill="url(#ss-bg)" />
-  <rect x="8" y="8" width="496" height="496" rx="124" fill="none" stroke="#dbeafe" stroke-width="10" />
-
   <g filter="url(#ss-shadow)">
-    <circle cx="256" cy="256" r="122" fill="none" stroke="url(#ss-accent)" stroke-width="22" />
-    <ellipse cx="256" cy="256" rx="130" ry="72" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.9" stroke-width="15" transform="rotate(-20 256 256)" />
-    <ellipse cx="256" cy="256" rx="130" ry="72" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.75" stroke-width="13" transform="rotate(22 256 256)" />
+    <circle cx="256" cy="256" r="150" fill="#0b1120" />
   </g>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#1e293b" stroke-width="6" />
 
-  <path d="M200 184c0-31 25-56 56-56h52v37h-52c-10 0-19 9-19 19s9 19 19 19h40c31 0 56 25 56 56s-25 56-56 56h-53v-37h53c10 0 19-9 19-19s-9-19-19-19h-40c-31 0-56-25-56-56Z" fill="#0f172a" />
-  <circle cx="366" cy="176" r="12" fill="url(#ss-accent)" />
+  <circle cx="256" cy="256" r="116" fill="none" stroke="url(#ss-accent)" stroke-width="18" />
+  <ellipse cx="256" cy="256" rx="128" ry="68" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.9" stroke-width="12" transform="rotate(-20 256 256)" />
+  <ellipse cx="256" cy="256" rx="128" ry="68" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.72" stroke-width="10" transform="rotate(22 256 256)" />
+
+  <path d="M202 188c0-34 28-62 62-62h50v36h-50c-14 0-26 12-26 26s12 26 26 26h32c34 0 62 28 62 62s-28 62-62 62h-51v-36h51c14 0 26-12 26-26s-12-26-26-26h-32c-34 0-62-28-62-62Z" fill="#f8fafc" />
 </svg>

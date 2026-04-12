@@ -17,7 +17,7 @@ const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
 
   const characters = 'StudySphere'.split('');
   const isDark = data.settings.theme === 'dark';
-  const subtitle = 'Focus better. Learn deeper.';
+  const subtitle = 'Plan smart. Focus deep. Achieve more.';
 
   return (
     <div

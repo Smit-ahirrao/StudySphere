@@ -134,7 +134,7 @@ const Layout: React.FC = () => {
               </div>
               <div>
                 <div className="text-lg font-semibold tracking-tight">StudySphere</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Focus better. Learn deeper.</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Plan smart. Focus deep. Achieve more.</div>
               </div>
             </NavLink>
 
