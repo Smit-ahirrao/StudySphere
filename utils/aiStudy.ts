@@ -214,6 +214,50 @@ export const generateStudyPack = async ({
   throw new Error(`AI generation failed. ${lastError?.message || 'Please check your API key and connection.'}`);
 };
 
+export const summarizeNoteContent = async (content: string, title?: string): Promise<string> => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('Missing AI configuration. Add VITE_GEMINI_API_KEY to enable note summarization.');
+  }
+
+  const cleanContent = content.trim();
+  if (!cleanContent) {
+    throw new Error('This note is empty. Add some content before using AI Summarize.');
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const prompt = `You are helping a student revise quickly.
+
+Title: ${title || 'Untitled note'}
+
+Generate a concise revision summary in plain text:
+- First line: one-sentence overview.
+- Then exactly 4 bullet points, each starting with "- ".
+- Keep total output under 120 words.
+- Focus on exam-relevant understanding and memory cues.
+- No markdown headings, no JSON, no code blocks.
+
+Note content:
+${cleanContent.slice(0, 12000)}`;
+
+  let lastError: Error | null = null;
+  for (const modelName of MODEL_CANDIDATES) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text().trim();
+      if (text) return text;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      continue;
+    }
+  }
+
+  throw new Error(`AI summary failed. ${lastError?.message || 'Please try again.'}`);
+};
+
 const buildPrompt = ({
   fileName,
   mode,

@@ -9,6 +9,7 @@ import {
   Download,
   Highlighter,
   Italic,
+  Loader2,
   List,
   ListOrdered,
   Palette,
@@ -21,10 +22,12 @@ import {
   Type,
   Underline,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { Note } from '../types';
 import { Badge, Button, Card, Input, SectionHeading } from '../components/UI';
+import { summarizeNoteContent } from '../utils/aiStudy';
 
 const NOTE_COLORS = ['#fffdf8', '#f8fafc', '#eff6ff', '#ecfeff', '#f0fdf4', '#fef3c7'];
 const EXTRA_NOTE_COLORS = ['#fde68a', '#fecdd3', '#ddd6fe', '#bfdbfe', '#bbf7d0', '#fde2e4'];
@@ -53,6 +56,10 @@ const Notes: React.FC = () => {
   const [showExtraPalette, setShowExtraPalette] = useState(false);
   const [showTextPalette, setShowTextPalette] = useState(false);
   const [showHighlightPalette, setShowHighlightPalette] = useState(false);
+  const [aiSummaryByNote, setAiSummaryByNote] = useState<Record<string, string>>({});
+  const [summaryDismissed, setSummaryDismissed] = useState<Record<string, boolean>>({});
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
   const editorRef = useRef<HTMLDivElement | null>(null);
 
   const filteredNotes = useMemo(
@@ -98,6 +105,21 @@ const Notes: React.FC = () => {
     setSaving(true);
     updateNote({ ...activeNote, ...changes, updatedAt: Date.now() });
     window.setTimeout(() => setSaving(false), 250);
+  };
+
+  const handleAiSummarize = async () => {
+    if (!activeNote) return;
+    setSummaryLoading(true);
+    setSummaryError('');
+    try {
+      const summary = await summarizeNoteContent(stripHtml(activeNote.content), activeNote.title);
+      setAiSummaryByNote((prev) => ({ ...prev, [activeNote.id]: summary }));
+      setSummaryDismissed((prev) => ({ ...prev, [activeNote.id]: false }));
+    } catch (error) {
+      setSummaryError(error instanceof Error ? error.message : 'Failed to generate summary.');
+    } finally {
+      setSummaryLoading(false);
+    }
   };
 
   const exportNote = () => {
@@ -220,6 +242,10 @@ const Notes: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={handleAiSummarize} isLoading={summaryLoading}>
+                    {summaryLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                    AI Summarize
+                  </Button>
                   <Button size="sm" variant="secondary" onClick={() => patchActiveNote({ pinned: !activeNote.pinned })}>
                     <Pin size={14} />
                     {activeNote.pinned ? 'Unpin' : 'Pin'}
@@ -234,6 +260,31 @@ const Notes: React.FC = () => {
                   </Button>
                 </div>
               </div>
+
+              {aiSummaryByNote[activeNote.id] && !summaryDismissed[activeNote.id] ? (
+                <div className="mt-4 rounded-[20px] border border-cyan-200 bg-cyan-50/50 px-4 py-3 text-sm text-cyan-900 dark:border-cyan-700/60 dark:bg-cyan-950/35 dark:text-cyan-100">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300">
+                      <Sparkles size={13} />
+                      AI Summary
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-full border border-cyan-200 bg-white/85 px-2 py-1 text-[11px] text-cyan-700 dark:border-cyan-800 dark:bg-slate-900/70 dark:text-cyan-300"
+                      onClick={() => setSummaryDismissed((prev) => ({ ...prev, [activeNote.id]: true }))}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                  <p className="whitespace-pre-line leading-6">{aiSummaryByNote[activeNote.id]}</p>
+                </div>
+              ) : null}
+
+              {summaryError ? (
+                <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+                  {summaryError}
+                </div>
+              ) : null}
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 {NOTE_COLORS.map((color) => (

@@ -6,6 +6,7 @@ import { useData } from '../context/DataContext';
 import { Badge, Button, Card, Input, SectionHeading, Select } from '../components/UI';
 import { Task } from '../types';
 import { getLocalDateKey } from '../utils/date';
+import { triggerConfetti } from '../utils/confetti';
 
 const AMBIENT = {
   none: 'Off',
@@ -212,6 +213,7 @@ const Focus: React.FC = () => {
         mode: 'focus',
         taskId: selectedTask || undefined,
       });
+      triggerConfetti('focus');
       if (selectedTask && completeLinkedTask) {
         setTaskComplete(selectedTask, true);
       }

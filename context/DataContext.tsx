@@ -12,6 +12,7 @@ import {
 
 interface DataContextType {
   data: AppData;
+  injectDemoData: () => void;
   addTask: (task: Task, parentId?: string) => void;
   updateTask: (task: Task) => void;
   toggleTask: (id: string) => void;
@@ -40,7 +41,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setData(loadData());
+    const loaded = loadData();
+    const hasStoredData = Boolean(localStorage.getItem('studysphere_data_v2') || localStorage.getItem('studysphere_data_v1'));
+    if (!hasStoredData && isDataEmpty(loaded)) {
+      setData(buildDemoData(loaded));
+    } else {
+      setData(loaded);
+    }
     setIsLoaded(true);
   }, []);
 
@@ -145,6 +152,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSettings = (settings: AppData['settings']) => setData((prev) => ({ ...prev, settings }));
 
+  const injectDemoData = () =>
+    setData((prev) => {
+      if (!isDataEmpty(prev)) return prev;
+      return buildDemoData(prev);
+    });
+
   const importBackup = (jsonData: string): boolean => {
     try {
       const parsed = JSON.parse(jsonData);
@@ -164,6 +177,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     <DataContext.Provider
       value={{
         data,
+        injectDemoData,
         addTask,
         updateTask,
         toggleTask,
@@ -197,6 +211,167 @@ const loadDataFromImport = (parsed: Partial<AppData>): AppData => {
     ...parsed,
     tasks: normalizeTasks(parsed.tasks),
     settings: { ...loaded.settings, ...(parsed.settings || {}) },
+  };
+};
+
+const isDataEmpty = (value: AppData) =>
+  value.tasks.length === 0 &&
+  value.notes.length === 0 &&
+  value.focusHistory.length === 0 &&
+  value.planner.length === 0 &&
+  value.files.length === 0;
+
+const buildDemoData = (base: AppData): AppData => {
+  const now = Date.now();
+  const toDate = (offset: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return date.toISOString().slice(0, 10);
+  };
+
+  const demoTasks: Task[] = [
+    {
+      id: 'demo-task-1',
+      title: 'Prepare Data Structures revision sprint',
+      completed: false,
+      priority: 'high',
+      dueDate: toDate(2),
+      recurring: 'none',
+      createdAt: now - 1000 * 60 * 60 * 30,
+      notes: 'Focus on heaps, graphs, and recursion patterns.',
+      isExpanded: true,
+      children: [
+        {
+          id: 'demo-task-1-1',
+          title: 'Solve 3 medium graph problems',
+          completed: true,
+          priority: 'medium',
+          createdAt: now - 1000 * 60 * 60 * 28,
+          recurring: 'none',
+          children: [],
+        },
+        {
+          id: 'demo-task-1-2',
+          title: 'Review Dijkstra and Union-Find notes',
+          completed: false,
+          priority: 'high',
+          createdAt: now - 1000 * 60 * 60 * 26,
+          recurring: 'none',
+          children: [],
+        },
+      ],
+    },
+    {
+      id: 'demo-task-2',
+      title: 'Finalize Physics lab report',
+      completed: false,
+      priority: 'medium',
+      dueDate: toDate(1),
+      recurring: 'none',
+      createdAt: now - 1000 * 60 * 60 * 22,
+      notes: 'Include error analysis and final chart annotation.',
+      isExpanded: true,
+      children: [
+        {
+          id: 'demo-task-2-1',
+          title: 'Write methodology section',
+          completed: true,
+          priority: 'medium',
+          createdAt: now - 1000 * 60 * 60 * 20,
+          recurring: 'none',
+          children: [],
+        },
+        {
+          id: 'demo-task-2-2',
+          title: 'Attach observations and charts',
+          completed: false,
+          priority: 'low',
+          createdAt: now - 1000 * 60 * 60 * 18,
+          recurring: 'none',
+          children: [],
+        },
+      ],
+    },
+    {
+      id: 'demo-task-3',
+      title: 'Plan next week exam strategy',
+      completed: false,
+      priority: 'low',
+      dueDate: toDate(5),
+      recurring: 'weekly',
+      createdAt: now - 1000 * 60 * 60 * 12,
+      notes: 'Prioritize weak chapters first, then timed recall.',
+      isExpanded: true,
+      children: [
+        {
+          id: 'demo-task-3-1',
+          title: 'Map chapters by difficulty',
+          completed: true,
+          priority: 'low',
+          createdAt: now - 1000 * 60 * 60 * 10,
+          recurring: 'none',
+          children: [],
+        },
+      ],
+    },
+  ];
+
+  const demoNotes: Note[] = [
+    {
+      id: 'demo-note-1',
+      title: 'Neural Networks quick map',
+      content:
+        '<h2>Neural Networks</h2><p><strong>Core idea:</strong> learn a function by adjusting weights through gradient descent.</p><ul><li>Forward pass computes predictions</li><li>Backpropagation updates parameters</li><li>Regularization reduces overfitting</li></ul><blockquote>Best exam cue: explain the role of activation functions.</blockquote>',
+      tags: ['AI', 'Revision'],
+      createdAt: now - 1000 * 60 * 60 * 36,
+      updatedAt: now - 1000 * 60 * 60 * 8,
+      pinned: true,
+      color: '#eff6ff',
+      trashed: false,
+    },
+    {
+      id: 'demo-note-2',
+      title: 'Operating Systems crash recap',
+      content:
+        '<h2>Processes vs Threads</h2><p>Processes have isolated memory, threads share process memory and are lighter.</p><ol><li>Context switch cost is lower for threads</li><li>Race conditions happen in shared data access</li><li>Use mutexes/semaphores for synchronization</li></ol><p><em>Remember:</em> deadlock requires 4 conditions.</p>',
+      tags: ['OS', 'Systems'],
+      createdAt: now - 1000 * 60 * 60 * 30,
+      updatedAt: now - 1000 * 60 * 60 * 6,
+      pinned: false,
+      color: '#f8fafc',
+      trashed: false,
+    },
+  ];
+
+  const demoFocusSessions: FocusSession[] = [
+    {
+      id: 'demo-focus-1',
+      duration: 25,
+      completedAt: now - 1000 * 60 * 60 * 3,
+      mode: 'focus',
+      taskId: 'demo-task-1',
+    },
+    {
+      id: 'demo-focus-2',
+      duration: 45,
+      completedAt: now - 1000 * 60 * 60 * 26,
+      mode: 'focus',
+      taskId: 'demo-task-2',
+    },
+    {
+      id: 'demo-focus-3',
+      duration: 30,
+      completedAt: now - 1000 * 60 * 60 * 50,
+      mode: 'focus',
+      taskId: 'demo-task-3',
+    },
+  ];
+
+  return {
+    ...base,
+    tasks: demoTasks,
+    notes: demoNotes,
+    focusHistory: demoFocusSessions,
   };
 };
 

@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   CheckSquare,
+  Command,
   Clock3,
   Download,
   FolderOpen,
   Home,
   Menu,
   Moon,
+  Search,
   Sparkles,
   StickyNote,
   SunMedium,
@@ -31,7 +33,10 @@ const Layout: React.FC = () => {
   const [spotifyCollapsed, setSpotifyCollapsed] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<DeferredPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (data.settings.theme === 'dark') {
@@ -40,6 +45,26 @@ const Layout: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [data.settings.theme]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen(true);
+      } else if (event.key === 'Escape') {
+        setPaletteOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!paletteOpen) {
+      setPaletteQuery('');
+    }
+  }, [paletteOpen]);
 
   useEffect(() => {
     const syncSpotify = () => {
@@ -91,6 +116,14 @@ const Layout: React.FC = () => {
       { path: '/files', label: 'Files', icon: FolderOpen },
     ],
     []
+  );
+
+  const paletteLinks = useMemo(
+    () =>
+      navItems
+        .filter((item) => ['/dashboard', '/tasks', '/planner', '/notes', '/focus', '/files'].includes(item.path))
+        .filter((item) => item.label.toLowerCase().includes(paletteQuery.toLowerCase())),
+    [navItems, paletteQuery]
   );
 
   const completedTasks = countCompleted(data.tasks);
@@ -258,6 +291,55 @@ const Layout: React.FC = () => {
           ) : (
             <div className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">Music keeps playing while the player stays docked.</div>
           )}
+        </div>
+      ) : null}
+
+      {paletteOpen ? (
+        <div className="fixed inset-0 z-[70] flex items-start justify-center bg-slate-950/30 px-4 pt-24 backdrop-blur-sm" onClick={() => setPaletteOpen(false)}>
+          <div
+            className="w-full max-w-2xl rounded-[28px] border border-white/70 bg-white/88 p-4 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950/88"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/92 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/85">
+              <Search size={16} className="text-slate-400" />
+              <input
+                autoFocus
+                value={paletteQuery}
+                onChange={(event) => setPaletteQuery(event.target.value)}
+                placeholder="Go to Dashboard, Tasks, Planner, Notes, Focus, or Files"
+                className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
+              />
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-1 text-[11px] text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                <Command size={12} />
+                K
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2">
+              {paletteLinks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  No matching section found.
+                </div>
+              ) : (
+                paletteLinks.map((item) => (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => {
+                      setPaletteOpen(false);
+                      navigate(item.path);
+                    }}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white/92 px-4 py-3 text-left transition hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-sky-700 dark:hover:bg-slate-900"
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon size={16} className="text-slate-500 dark:text-slate-300" />
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">{item.label}</span>
+                    </div>
+                    <span className="text-xs text-slate-400">Enter</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronDown, ChevronRight, Flag, Focus, Plus, Repeat, StickyNote, Trash2 } from 'lucide-react';
 import { Task } from '../types';
 import { Badge, Button, Input, Textarea } from './UI';
+import { triggerConfetti } from '../utils/confetti';
 
 interface Props {
   task: Task;
@@ -102,7 +103,12 @@ export default function TaskNode({ task, onAddSubtask, onFocusTask, onToggle, on
           <input
             type="checkbox"
             checked={task.completed}
-            onChange={() => onToggle(task.id)}
+            onChange={() => {
+              if (isTopLevel && !task.completed) {
+                triggerConfetti('task');
+              }
+              onToggle(task.id);
+            }}
             className="mt-1 h-4.5 w-4.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-900"
           />
 
