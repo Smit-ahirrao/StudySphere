@@ -27,8 +27,8 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<DeferredPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const { data, injectDemoData } = useData();
-  const canLoadDemoData = data.tasks.length === 0 && data.notes.length === 0 && data.focusHistory.length === 0;
+  const { data, injectDemoData, clearAllData } = useData();
+  const canLoadDemoData = data.tasks.length === 0 && data.notes.length === 0 && data.focusHistory.length === 0 && data.planner.length === 0;
 
   useEffect(() => {
     const standalone =
@@ -176,12 +176,6 @@ const Landing: React.FC = () => {
               <Sparkles className="text-cyan-500 dark:text-cyan-300" />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl border border-white/80 bg-white/80 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/70">
-                <div className="text-sm text-slate-500 dark:text-slate-300">Productivity stack</div>
-                <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">6-in-1</div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, study lab, and revision AI</div>
-              </div>
               <div className="rounded-3xl border border-cyan-100 bg-gradient-to-br from-cyan-100 via-cyan-50 to-emerald-50 p-5 dark:border-cyan-300/10 dark:bg-gradient-to-br dark:from-cyan-500/18 dark:via-sky-500/10 dark:to-emerald-400/12">
                 <div className="text-sm text-cyan-700 dark:text-cyan-200">Experience quality</div>
                 <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">Pro</div>
@@ -191,25 +185,17 @@ const Landing: React.FC = () => {
 
             <div className="space-y-4 rounded-3xl border border-white/80 bg-white/75 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/65">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Why choose StudySphere</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">Snapshot highlights</span>
                 <TrendingUp size={16} className="text-emerald-500 dark:text-emerald-300" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
                   <div className="text-base font-semibold text-slate-900 dark:text-white">All-in-one workflow</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Plan work, collect notes, schedule sessions, and revise without context switching.</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Plan, notes, routines, and focus in one place.</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
-                  <div className="text-base font-semibold text-slate-900 dark:text-white">AI-ready revision</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Convert real study material into ready-to-use revision assets in a few clicks.</p>
-                </div>
-                <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
-                  <div className="text-base font-semibold text-slate-900 dark:text-white">Focus that feels modern</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Focus sessions, music support, and progress tracking make staying locked in easier.</p>
-                </div>
-                <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
-                  <div className="text-base font-semibold text-slate-900 dark:text-white">Polished and practical</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">The product feels presentation-ready while still being useful for everyday student work.</p>
+                  <div className="text-base font-semibold text-slate-900 dark:text-white">AI-ready lab</div>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Turn documents into flashcards and quizzes instantly.</p>
                 </div>
               </div>
             </div>
@@ -217,26 +203,57 @@ const Landing: React.FC = () => {
         </Card>
       </section>
 
-      {canLoadDemoData ? (
-        <section className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50/50 p-6 shadow-sm dark:border-sky-500/20 dark:bg-gradient-to-r dark:from-sky-950/40 dark:to-blue-900/20 sm:p-8">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <div>
-              <div className="flex items-center gap-2">
-                <Sparkles size={22} className="text-sky-600 dark:text-sky-400" />
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Want to test the app?</h3>
-              </div>
-              <p className="mt-2 max-w-lg leading-relaxed text-sm text-slate-600 dark:text-slate-300">
-                Load our curated demo data to instantly explore a fully populated workspace. This adds sample tasks, rich notes, and focus history so you can see StudySphere in action without any manual setup.
-              </p>
+      <section id="demo-hub" className="relative overflow-hidden rounded-[40px] border border-cyan-100 bg-white shadow-2xl shadow-cyan-500/15 dark:border-cyan-500/20 dark:bg-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_50%)]" />
+        <div className="relative flex flex-col items-center justify-between gap-10 p-8 lg:flex-row lg:p-14">
+          <div className="max-w-xl space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
+              <Sparkles size={16} />
+              <span>Submission Sandbox</span>
             </div>
-            <div className="shrink-0">
-              <Button size="lg" onClick={() => { injectDemoData(); navigate('/dashboard'); }} className="w-full shadow-lg shadow-sky-500/20 sm:w-auto">
-                Load demo data
-              </Button>
-            </div>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-950 dark:text-white lg:text-5xl">
+              Want to test the App?
+            </h2>
+            <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+              {canLoadDemoData 
+                ? "Experience StudySphere instantly. Click below to populate every section—Notes, Tasks, Planner, and Files—with curated study data for evaluation."
+                : "You've successfully loaded the demo workspace. You can now explore all sections as a live user would. Reset anytime to start clean."
+              }
+            </p>
           </div>
-        </section>
-      ) : null}
+          
+          <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
+            {canLoadDemoData ? (
+              <Button 
+                size="lg" 
+                onClick={() => { injectDemoData(); navigate('/dashboard'); }} 
+                className="h-16 rounded-2xl bg-cyan-600 px-10 text-lg font-bold text-white shadow-xl shadow-cyan-600/30 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
+              >
+                <Sparkles className="mr-2 h-6 w-6" />
+                Load Demo Data
+              </Button>
+            ) : (
+              <Button 
+                size="lg" 
+                variant="secondary"
+                onClick={clearAllData} 
+                className="h-16 rounded-2xl border-rose-200 bg-rose-50 px-10 text-lg font-bold text-rose-700 shadow-lg hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-900/40"
+              >
+                <TrendingUp className="mr-2 h-6 w-6 rotate-180" />
+                Remove All Data
+              </Button>
+            )}
+            <Button 
+              size="lg" 
+              variant="secondary" 
+              onClick={() => navigate('/dashboard')} 
+              className="h-16 rounded-2xl border-slate-200 bg-white px-10 text-lg font-bold text-slate-700 shadow-md hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Skip to App
+            </Button>
+          </div>
+        </div>
+      </section>
 
       <section className="space-y-6">
         <SectionHeading

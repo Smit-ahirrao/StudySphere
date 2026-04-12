@@ -13,6 +13,7 @@ import {
 interface DataContextType {
   data: AppData;
   injectDemoData: () => void;
+  clearAllData: () => void;
   addTask: (task: Task, parentId?: string) => void;
   updateTask: (task: Task) => void;
   toggleTask: (id: string) => void;
@@ -152,11 +153,20 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSettings = (settings: AppData['settings']) => setData((prev) => ({ ...prev, settings }));
 
+  const clearAllData = () => {
+    setData((prev) => ({
+      ...prev,
+      tasks: [],
+      notes: [],
+      planner: [],
+      focusHistory: [],
+      files: [],
+      weakAreas: [],
+    }));
+  };
+
   const injectDemoData = () =>
-    setData((prev) => {
-      if (!isDataEmpty(prev)) return prev;
-      return buildDemoData(prev);
-    });
+    setData((prev) => buildDemoData(prev));
 
   const importBackup = (jsonData: string): boolean => {
     try {
@@ -178,6 +188,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       value={{
         data,
         injectDemoData,
+        clearAllData,
         addTask,
         updateTask,
         toggleTask,
@@ -367,11 +378,48 @@ const buildDemoData = (base: AppData): AppData => {
     },
   ];
 
+  const demoPlanner: PlannerEvent[] = [
+    {
+      id: 'demo-event-1',
+      title: 'Study Data Structures',
+      date: toDate(0),
+      startTime: '09:00',
+      endTime: '11:00',
+      type: 'study',
+      completed: true,
+      color: 'blue'
+    },
+    {
+      id: 'demo-event-2',
+      title: 'Physics Lab Review',
+      date: toDate(0),
+      startTime: '14:00',
+      endTime: '16:00',
+      type: 'class',
+      completed: false,
+      color: 'emerald'
+    }
+  ];
+
+  const demoFiles: FileMeta[] = [
+    {
+      id: 'demo-file-1',
+      name: 'OS_Syllabus.pdf',
+      size: 1048576,
+      type: 'application/pdf',
+      createdAt: now - 1000 * 60 * 60 * 24,
+      lastModified: now - 1000 * 60 * 60 * 24,
+      hasSummary: true,
+    }
+  ];
+
   return {
     ...base,
     tasks: demoTasks,
     notes: demoNotes,
     focusHistory: demoFocusSessions,
+    planner: demoPlanner,
+    files: demoFiles,
   };
 };
 

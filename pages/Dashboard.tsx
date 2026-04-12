@@ -115,12 +115,6 @@ const Dashboard: React.FC = () => {
         description="This dashboard surfaces progress, focus consistency, and what needs attention next so you can decide quickly and start moving."
         action={
           <div className="flex flex-wrap gap-2">
-            {canLoadDemoData ? (
-              <Button variant="secondary" onClick={injectDemoData}>
-                <Sparkles size={16} />
-                Load Demo Data
-              </Button>
-            ) : null}
             <label className="inline-flex cursor-pointer items-center">
               <input type="file" className="hidden" accept=".json" onChange={handleImport} />
               <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:border-cyan-700 dark:hover:bg-slate-800">
