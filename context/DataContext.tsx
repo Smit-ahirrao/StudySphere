@@ -13,6 +13,7 @@ import {
 interface DataContextType {
   data: AppData;
   injectDemoData: () => void;
+  removeDemoData: () => void;
   clearAllData: () => void;
   addTask: (task: Task, parentId?: string) => void;
   updateTask: (task: Task) => void;
@@ -43,12 +44,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const loaded = loadData();
-    const hasStoredData = Boolean(localStorage.getItem('studysphere_data_v2') || localStorage.getItem('studysphere_data_v1'));
-    if (!hasStoredData && isDataEmpty(loaded)) {
-      setData(buildDemoData(loaded));
-    } else {
-      setData(loaded);
-    }
+    setData(loaded);
     setIsLoaded(true);
   }, []);
 
@@ -165,6 +161,26 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const removeDemoData = () => {
+    setData((prev) => {
+      const filterDemo = (items: any[]) => items.filter((item) => !item.isDemo);
+      const filterTasks = (tasks: Task[]): Task[] => {
+        return tasks
+          .filter((t) => !t.isDemo)
+          .map((t) => ({ ...t, children: filterTasks(t.children) }));
+      };
+
+      return {
+        ...prev,
+        tasks: filterTasks(prev.tasks),
+        notes: filterDemo(prev.notes),
+        planner: filterDemo(prev.planner),
+        focusHistory: filterDemo(prev.focusHistory),
+        files: filterDemo(prev.files),
+      };
+    });
+  };
+
   const injectDemoData = () =>
     setData((prev) => buildDemoData(prev));
 
@@ -188,6 +204,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       value={{
         data,
         injectDemoData,
+        removeDemoData,
         clearAllData,
         addTask,
         updateTask,
@@ -251,6 +268,7 @@ const buildDemoData = (base: AppData): AppData => {
       createdAt: now - 1000 * 60 * 60 * 30,
       notes: 'Focus on heaps, graphs, and recursion patterns.',
       isExpanded: true,
+      isDemo: true,
       children: [
         {
           id: 'demo-task-1-1',
@@ -259,6 +277,7 @@ const buildDemoData = (base: AppData): AppData => {
           priority: 'medium',
           createdAt: now - 1000 * 60 * 60 * 28,
           recurring: 'none',
+          isDemo: true,
           children: [],
         },
         {
@@ -268,6 +287,7 @@ const buildDemoData = (base: AppData): AppData => {
           priority: 'high',
           createdAt: now - 1000 * 60 * 60 * 26,
           recurring: 'none',
+          isDemo: true,
           children: [],
         },
       ],
@@ -282,6 +302,7 @@ const buildDemoData = (base: AppData): AppData => {
       createdAt: now - 1000 * 60 * 60 * 22,
       notes: 'Include error analysis and final chart annotation.',
       isExpanded: true,
+      isDemo: true,
       children: [
         {
           id: 'demo-task-2-1',
@@ -290,6 +311,7 @@ const buildDemoData = (base: AppData): AppData => {
           priority: 'medium',
           createdAt: now - 1000 * 60 * 60 * 20,
           recurring: 'none',
+          isDemo: true,
           children: [],
         },
         {
@@ -299,6 +321,7 @@ const buildDemoData = (base: AppData): AppData => {
           priority: 'low',
           createdAt: now - 1000 * 60 * 60 * 18,
           recurring: 'none',
+          isDemo: true,
           children: [],
         },
       ],
@@ -313,6 +336,7 @@ const buildDemoData = (base: AppData): AppData => {
       createdAt: now - 1000 * 60 * 60 * 12,
       notes: 'Prioritize weak chapters first, then timed recall.',
       isExpanded: true,
+      isDemo: true,
       children: [
         {
           id: 'demo-task-3-1',
@@ -321,6 +345,7 @@ const buildDemoData = (base: AppData): AppData => {
           priority: 'low',
           createdAt: now - 1000 * 60 * 60 * 10,
           recurring: 'none',
+          isDemo: true,
           children: [],
         },
       ],
@@ -339,6 +364,7 @@ const buildDemoData = (base: AppData): AppData => {
       pinned: true,
       color: '#eff6ff',
       trashed: false,
+      isDemo: true,
     },
     {
       id: 'demo-note-2',
@@ -351,6 +377,7 @@ const buildDemoData = (base: AppData): AppData => {
       pinned: false,
       color: '#f8fafc',
       trashed: false,
+      isDemo: true,
     },
   ];
 
@@ -361,6 +388,7 @@ const buildDemoData = (base: AppData): AppData => {
       completedAt: now - 1000 * 60 * 60 * 3,
       mode: 'focus',
       taskId: 'demo-task-1',
+      isDemo: true,
     },
     {
       id: 'demo-focus-2',
@@ -368,6 +396,7 @@ const buildDemoData = (base: AppData): AppData => {
       completedAt: now - 1000 * 60 * 60 * 26,
       mode: 'focus',
       taskId: 'demo-task-2',
+      isDemo: true,
     },
     {
       id: 'demo-focus-3',
@@ -375,6 +404,7 @@ const buildDemoData = (base: AppData): AppData => {
       completedAt: now - 1000 * 60 * 60 * 50,
       mode: 'focus',
       taskId: 'demo-task-3',
+      isDemo: true,
     },
   ];
 
@@ -382,34 +412,36 @@ const buildDemoData = (base: AppData): AppData => {
     {
       id: 'demo-event-1',
       title: 'Study Data Structures',
-      date: toDate(0),
-      startTime: '09:00',
-      endTime: '11:00',
+      day: toDate(0),
+      startTime: 9 * 60,
+      duration: 120,
       type: 'study',
-      completed: true,
-      color: 'blue'
+      label: 'study',
+      color: 'blue',
+      isDemo: true,
     },
     {
       id: 'demo-event-2',
       title: 'Physics Lab Review',
-      date: toDate(0),
-      startTime: '14:00',
-      endTime: '16:00',
-      type: 'class',
-      completed: false,
-      color: 'emerald'
+      day: toDate(0),
+      startTime: 14 * 60,
+      duration: 120,
+      type: 'study',
+      label: 'study',
+      color: 'emerald',
+      isDemo: true,
     }
   ];
 
   const demoFiles: FileMeta[] = [
     {
       id: 'demo-file-1',
-      name: 'OS_Syllabus.pdf',
-      size: 1048576,
-      type: 'application/pdf',
-      createdAt: now - 1000 * 60 * 60 * 24,
-      lastModified: now - 1000 * 60 * 60 * 24,
-      hasSummary: true,
+      name: 'Advanced_OS_Syllabus.txt',
+      size: 1048,
+      type: 'text/plain',
+      uploadedAt: now - 1000 * 60 * 60 * 24,
+      isDemo: true,
+      notes: 'Contains key topics for Operating Systems exam: Deadlocks, Memory Management, and Scheduling.',
     }
   ];
 

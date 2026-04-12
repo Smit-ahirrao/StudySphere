@@ -14,6 +14,7 @@ export interface Task {
   children: Task[];
   notes?: string;
   isExpanded?: boolean;
+  isDemo?: boolean;
 }
 
 export interface Note {
@@ -26,6 +27,7 @@ export interface Note {
   pinned?: boolean;
   color?: string;
   trashed?: boolean;
+  isDemo?: boolean;
 }
 
 export interface PlannerEvent {
@@ -40,6 +42,7 @@ export interface PlannerEvent {
   repeat?: PlannerRepeat;
   reminder?: boolean;
   color?: string;
+  isDemo?: boolean;
 }
 
 export interface FocusSession {
@@ -48,6 +51,7 @@ export interface FocusSession {
   completedAt: number;
   mode: 'focus' | 'short-break' | 'long-break';
   taskId?: string;
+  isDemo?: boolean;
 }
 
 export interface FileMeta {
@@ -60,6 +64,7 @@ export interface FileMeta {
   folder?: string;
   pinned?: boolean;
   notes?: string;
+  isDemo?: boolean;
 }
 
 export interface StudySummary {

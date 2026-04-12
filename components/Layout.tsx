@@ -38,6 +38,12 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const hasDemoData = useMemo(() => {
+    const checkDemo = (items: any[]) => items.some(item => item.isDemo);
+    const checkTasks = (tasks: any[]): boolean => tasks.some(t => t.isDemo || (t.children && checkTasks(t.children)));
+    return checkTasks(data.tasks) || checkDemo(data.notes) || checkDemo(data.planner) || checkDemo(data.files);
+  }, [data]);
+
   useEffect(() => {
     if (data.settings.theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -249,6 +255,21 @@ const Layout: React.FC = () => {
       </header>
 
       <main className={`relative z-10 mx-auto w-full px-4 pb-12 pt-8 sm:px-6 lg:px-8 ${isLanding ? 'max-w-7xl' : 'max-w-7xl'}`}>
+        {!isLanding && hasDemoData && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-3xl border border-sky-200 bg-sky-50 px-6 py-4 dark:border-sky-500/20 dark:bg-sky-500/10">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-600 dark:text-sky-300">
+                <Sparkles size={18} />
+              </div>
+              <p className="text-sm font-medium text-sky-800 dark:text-sky-200">
+                You are exploring with demo data. Click below to return home if you'd like to remove it.
+              </p>
+            </div>
+            <Button size="sm" variant="secondary" onClick={() => navigate('/')} className="bg-white/80 dark:bg-slate-900/50">
+              Clear Demo Data
+            </Button>
+          </div>
+        )}
         <Outlet />
       </main>
 

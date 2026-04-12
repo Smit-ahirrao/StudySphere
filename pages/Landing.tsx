@@ -27,8 +27,15 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<DeferredPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const { data, injectDemoData, clearAllData } = useData();
-  const canLoadDemoData = data.tasks.length === 0 && data.notes.length === 0 && data.focusHistory.length === 0 && data.planner.length === 0;
+  const { data, injectDemoData, removeDemoData } = useData();
+  
+  const hasDemoData = React.useMemo(() => {
+    const checkDemo = (items: any[]) => items.some(item => item.isDemo);
+    const checkTasks = (tasks: any[]): boolean => tasks.some(t => t.isDemo || checkTasks(t.children || []));
+    return checkTasks(data.tasks) || checkDemo(data.notes) || checkDemo(data.planner) || checkDemo(data.files);
+  }, [data]);
+
+  const isEmpty = data.tasks.length === 0 && data.notes.length === 0 && data.planner.length === 0 && data.files.length === 0;
 
   useEffect(() => {
     const standalone =
@@ -213,23 +220,19 @@ const Landing: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_50%)]" />
         <div className="relative flex flex-col items-center justify-between gap-10 p-8 lg:flex-row lg:p-14">
           <div className="max-w-xl space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">
-              <Sparkles size={16} />
-              <span>Submission Sandbox</span>
-            </div>
             <h2 className="text-4xl font-bold tracking-tight text-slate-950 dark:text-white lg:text-5xl">
-              Want to test the App?
+              {hasDemoData ? "Sample Data Loaded" : "Want to test the App?"}
             </h2>
             <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-              {canLoadDemoData 
-                ? "Experience StudySphere instantly. Click below to populate every section—Notes, Tasks, Planner, and Files—with curated study data for evaluation."
-                : "You've successfully loaded the demo workspace. You can now explore all sections as a live user would. Reset anytime to start clean."
+              {hasDemoData 
+                ? "You've successfully loaded the demo workspace. Explore all sections like Notes, Tasks, and the AI Study Lab. You can remove only these samples anytime."
+                : "Experience StudySphere instantly. Click below to populate every section—Notes, Tasks, Planner, and Files—with curated study material for evaluation."
               }
             </p>
           </div>
           
           <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-            {canLoadDemoData ? (
+            {!hasDemoData ? (
               <Button 
                 size="lg" 
                 onClick={() => { injectDemoData(); navigate('/dashboard'); }} 
@@ -242,11 +245,11 @@ const Landing: React.FC = () => {
               <Button 
                 size="lg" 
                 variant="secondary"
-                onClick={clearAllData} 
+                onClick={removeDemoData} 
                 className="h-16 rounded-2xl border-rose-200 bg-rose-50 px-10 text-lg font-bold text-rose-700 shadow-lg hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-900/40"
               >
                 <TrendingUp className="mr-2 h-6 w-6 rotate-180" />
-                Remove All Data
+                Remove Demo Data
               </Button>
             )}
             <Button 
