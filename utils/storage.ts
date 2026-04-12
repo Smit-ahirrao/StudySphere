@@ -30,6 +30,7 @@ const normalizeNotes = (notes: unknown): Note[] => {
     pinned: Boolean(note.pinned),
     color: note.color || '#ffffff',
     trashed: Boolean(note.trashed),
+    isDemo: Boolean(note.isDemo),
   }));
 };
 
@@ -47,6 +48,7 @@ const normalizePlanner = (planner: unknown): PlannerEvent[] => {
     repeat: event.repeat || 'none',
     reminder: Boolean(event.reminder),
     color: event.color || 'blue',
+    isDemo: Boolean(event.isDemo),
   }));
 };
 
@@ -62,6 +64,7 @@ const normalizeFiles = (files: unknown): FileMeta[] => {
     folder: file.folder || 'all',
     pinned: Boolean(file.pinned),
     notes: file.notes || '',
+    isDemo: Boolean(file.isDemo),
   }));
 };
 

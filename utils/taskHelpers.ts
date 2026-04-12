@@ -234,6 +234,7 @@ const normalizeTaskNode = (task: any): Task => ({
   children: normalizeTasks(task?.children),
   notes: typeof task?.notes === 'string' ? task.notes : '',
   isExpanded: task?.isExpanded ?? false,
+  isDemo: Boolean(task?.isDemo),
 });
 
 // Ensure migration for old or malformed data
