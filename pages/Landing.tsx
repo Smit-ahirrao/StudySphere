@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Badge, Button, Card, SectionHeading } from '../components/UI';
 import { useEffect, useState } from 'react';
+import { useData } from '../context/DataContext';
 
 interface DeferredPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -26,6 +27,8 @@ const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<DeferredPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const { data, injectDemoData } = useData();
+  const canLoadDemoData = data.tasks.length === 0 && data.notes.length === 0 && data.focusHistory.length === 0;
 
   useEffect(() => {
     const standalone =
@@ -213,6 +216,27 @@ const Landing: React.FC = () => {
           </div>
         </Card>
       </section>
+
+      {canLoadDemoData ? (
+        <section className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50/50 p-6 shadow-sm dark:border-sky-500/20 dark:bg-gradient-to-r dark:from-sky-950/40 dark:to-blue-900/20 sm:p-8">
+          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles size={22} className="text-sky-600 dark:text-sky-400" />
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Want to test the app?</h3>
+              </div>
+              <p className="mt-2 max-w-lg leading-relaxed text-sm text-slate-600 dark:text-slate-300">
+                Load our curated demo data to instantly explore a fully populated workspace. This adds sample tasks, rich notes, and focus history so you can see StudySphere in action without any manual setup.
+              </p>
+            </div>
+            <div className="shrink-0">
+              <Button size="lg" onClick={() => { injectDemoData(); navigate('/dashboard'); }} className="w-full shadow-lg shadow-sky-500/20 sm:w-auto">
+                Load demo data
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-6">
         <SectionHeading

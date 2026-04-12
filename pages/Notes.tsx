@@ -231,7 +231,8 @@ const Notes: React.FC = () => {
                 <div className="flex-1">
                   <Input
                     value={activeNote.title}
-                    onChange={(event) => patchActiveNote({ title: event.target.value || 'Untitled note' })}
+                    onChange={(event) => patchActiveNote({ title: event.target.value })}
+                    placeholder="Untitled note"
                     className="border-none bg-transparent px-0 py-0 text-3xl font-semibold tracking-tight shadow-none focus:ring-0"
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
