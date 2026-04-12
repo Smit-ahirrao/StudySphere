@@ -1,23 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="StudySphere logo">
   <defs>
-    <linearGradient id="ss-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0b1220" />
-      <stop offset="100%" stop-color="#111827" />
-    </linearGradient>
     <linearGradient id="ss-accent" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22d3ee" />
       <stop offset="50%" stop-color="#0ea5e9" />
       <stop offset="100%" stop-color="#14b8a6" />
     </linearGradient>
     <filter id="ss-shadow" x="-30%" y="-30%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#0284c7" flood-opacity="0.33" />
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.32" />
     </filter>
   </defs>
 
   <g filter="url(#ss-shadow)">
-    <rect x="34" y="34" width="444" height="444" rx="126" fill="url(#ss-bg)" />
+    <circle cx="256" cy="256" r="150" fill="#0b1220" />
   </g>
-  <rect x="34" y="34" width="444" height="444" rx="126" fill="none" stroke="#1e293b" stroke-width="6" />
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#1e293b" stroke-width="6" />
 
   <circle cx="256" cy="256" r="112" fill="none" stroke="url(#ss-accent)" stroke-width="16" />
   <ellipse cx="256" cy="256" rx="122" ry="64" fill="none" stroke="url(#ss-accent)" stroke-opacity="0.9" stroke-width="10" transform="rotate(-20 256 256)" />

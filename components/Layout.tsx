@@ -129,8 +129,8 @@ const Layout: React.FC = () => {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <NavLink to="/" className="flex items-center gap-3" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-sky-500/20 ring-1 ring-white/20 dark:ring-slate-700/60">
-                <img src="/brand-mark.svg" alt="StudySphere logo" className="h-full w-full object-cover" />
+              <div className="flex h-11 w-11 items-center justify-center">
+                <img src="/brand-mark.svg" alt="StudySphere logo" className="h-11 w-11 object-contain drop-shadow-[0_8px_16px_rgba(14,165,233,0.35)]" />
               </div>
               <div>
                 <div className="text-lg font-semibold tracking-tight">StudySphere</div>
