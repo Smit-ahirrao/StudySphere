@@ -176,6 +176,12 @@ const Landing: React.FC = () => {
               <Sparkles className="text-cyan-500 dark:text-cyan-300" />
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl border border-white/80 bg-white/80 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/70">
+                <div className="text-sm text-slate-500 dark:text-slate-300">Productivity stack</div>
+                <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">6-in-1</div>
+                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, study lab, and revision AI</div>
+              </div>
               <div className="rounded-3xl border border-cyan-100 bg-gradient-to-br from-cyan-100 via-cyan-50 to-emerald-50 p-5 dark:border-cyan-300/10 dark:bg-gradient-to-br dark:from-cyan-500/18 dark:via-sky-500/10 dark:to-emerald-400/12">
                 <div className="text-sm text-cyan-700 dark:text-cyan-200">Experience quality</div>
                 <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">Pro</div>
