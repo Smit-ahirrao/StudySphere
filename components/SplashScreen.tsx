@@ -1,104 +1,165 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
+import { NodeSphere } from './NodeSphere';
+
+// Helper to generate random box shadows for the parallax stars
+const generateBoxShadows = (n: number, color: string) => {
+  const shadows: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = Math.floor(Math.random() * 2000);
+    const y = Math.floor(Math.random() * 2000);
+    shadows.push(`${x}px ${y}px ${color}`);
+  }
+  return shadows.join(', ');
+};
+
+// Generate static shadows outside render to keep them stable
+const shadowsSmallLight = generateBoxShadows(700, '#0284c7'); // sky-600 for better visibility on light background
+const shadowsMediumLight = generateBoxShadows(200, '#0284c7');
+const shadowsBigLight = generateBoxShadows(100, '#0284c7');
+
+const shadowsSmallDark = generateBoxShadows(700, '#FFFFFF');
+const shadowsMediumDark = generateBoxShadows(200, '#FFFFFF');
+const shadowsBigDark = generateBoxShadows(100, '#FFFFFF');
 
 const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const { data } = useData();
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
+    // Extended the timer so the 3D sphere and stars can be fully appreciated
     const timer = setTimeout(() => {
       setIsExiting(true);
-      setTimeout(onComplete, 520);
-    }, 1450);
+      setTimeout(onComplete, 600);
+    }, 2800);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
-  const characters = 'StudySphere'.split('');
   const isDark = data.settings.theme === 'dark';
-  const subtitle = 'Plan smart. Focus deep. Achieve more.';
+  const subtitle = 'Learn · Focus · Achieve';
+
+  // Select shadows based on theme
+  const shadowsSmall = isDark ? shadowsSmallDark : shadowsSmallLight;
+  const shadowsMedium = isDark ? shadowsMediumDark : shadowsMediumLight;
+  const shadowsBig = isDark ? shadowsBigDark : shadowsBigLight;
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden ${
-        isDark ? 'bg-[#020617] text-white' : 'bg-[#f8fafc] text-slate-900'
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden select-none ${
+        isDark ? 'bg-[#090A0F]' : 'bg-[#f8fafc]'
       }`}
     >
+      {/* ── Custom Font & Star Animations ── */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap');
+        
+        @keyframes animStar {
+          from { transform: translateY(0px); }
+          to { transform: translateY(-2000px); }
+        }
+      `}</style>
+
+      {/* ── Background Atmosphere & Parallax Stars ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.45 }}
-        className={`absolute inset-0 ${
-          isDark
-            ? 'bg-[radial-gradient(circle_at_18%_12%,_rgba(14,165,233,0.22),_transparent_34%),radial-gradient(circle_at_82%_18%,_rgba(20,184,166,0.18),_transparent_28%),linear-gradient(180deg,_#020617_0%,_#0b1120_52%,_#111827_100%)]'
-            : 'bg-[radial-gradient(circle_at_18%_12%,_rgba(14,165,233,0.16),_transparent_34%),radial-gradient(circle_at_82%_18%,_rgba(20,184,166,0.12),_transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#ecfeff_52%,_#e2e8f0_100%)]'
-        }`}
-      />
+        transition={{ duration: 0.8 }}
+        className="absolute inset-0"
+      >
+        {isDark ? (
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%)' }}
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse at center, #ecfeff 0%, #f8fafc 100%)' }}
+          />
+        )}
 
+        {/* Stars Layer 1 (Small) */}
+        <div 
+          className="absolute left-0 top-0 w-[1px] h-[1px] bg-transparent opacity-60 animate-[animStar_50s_linear_infinite]"
+          style={{ boxShadow: shadowsSmall }}
+        >
+          <div className="absolute top-[2000px] w-[1px] h-[1px] bg-transparent" style={{ boxShadow: shadowsSmall }} />
+        </div>
+
+        {/* Stars Layer 2 (Medium) */}
+        <div 
+          className="absolute left-0 top-0 w-[2px] h-[2px] bg-transparent opacity-60 animate-[animStar_100s_linear_infinite]"
+          style={{ boxShadow: shadowsMedium }}
+        >
+          <div className="absolute top-[2000px] w-[2px] h-[2px] bg-transparent" style={{ boxShadow: shadowsMedium }} />
+        </div>
+
+        {/* Stars Layer 3 (Big) */}
+        <div 
+          className="absolute left-0 top-0 w-[3px] h-[3px] bg-transparent opacity-60 animate-[animStar_150s_linear_infinite]"
+          style={{ boxShadow: shadowsBig }}
+        >
+          <div className="absolute top-[2000px] w-[3px] h-[3px] bg-transparent" style={{ boxShadow: shadowsBig }} />
+        </div>
+      </motion.div>
+
+      {/* ── 3D Node Sphere Container ── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: [0.25, 0.65, 0.25], scale: 1.03 }}
-        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,_rgba(14,165,233,0.24),_transparent_64%)] blur-2xl"
-      />
+        className="absolute inset-0 flex items-center justify-center overflow-hidden"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+      >
+        {/* Glow behind the sphere */}
+        <div className={`absolute w-[40vw] h-[40vw] max-w-[600px] max-h-[600px] rounded-full blur-[100px] ${isDark ? 'bg-sky-500/20' : 'bg-sky-400/10'}`} />
 
-      <div className="relative flex flex-col items-center">
+        <div className="relative w-[300px] h-[300px] sm:w-[450px] sm:h-[450px]">
+          <NodeSphere 
+            radius={window.innerWidth < 640 ? 120 : 180} 
+            nodeCount={160} 
+            connectionDistance={window.innerWidth < 640 ? 45 : 70} 
+            baseHue={195} 
+            backgroundOpacity={0} 
+          />
+        </div>
+      </motion.div>
+
+      {/* ── Typography Overlay ── */}
+      <div className="relative z-10 flex flex-col items-center pointer-events-none">
         <motion.div
-          initial={{ scale: 0.84, opacity: 0, y: 6 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{
-            duration: 0.42,
+            delay: 0.5,
+            duration: 0.8,
             ease: [0.2, 0.8, 0.2, 1],
           }}
-          className="relative"
         >
-          <motion.div
-            animate={{
-              rotate: [0, 10, 0, -10, 0],
-              boxShadow: [
-                '0 0 0 6px rgba(14,165,233,0.1)',
-                '0 0 0 11px rgba(14,165,233,0.2)',
-                '0 0 0 6px rgba(14,165,233,0.1)',
-              ],
+          <h1 
+            className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight"
+            style={{
+              fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+              color: isDark ? 'transparent' : '#0f172a',
+              background: isDark 
+                ? 'linear-gradient(180deg, #ffffff 0%, #bae6fd 100%)' 
+                : 'none',
+              WebkitBackgroundClip: isDark ? 'text' : 'unset',
+              WebkitTextFillColor: isDark ? 'transparent' : '#0f172a',
+              filter: isDark ? 'drop-shadow(0 4px 12px rgba(14,165,233,0.3))' : 'drop-shadow(0 2px 4px rgba(255,255,255,0.5))',
             }}
-            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute -inset-4 rounded-[30px]"
-          />
-
-          <motion.img
-            src="/pwa-512.png"
-            alt="StudySphere Logo"
-            className="relative h-32 w-32 rounded-[26px] object-cover shadow-[0_24px_60px_-30px_rgba(14,165,233,0.85)] sm:h-36 sm:w-36"
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          >
+            StudySphere
+          </h1>
         </motion.div>
-
-        <div className="mt-8 flex gap-1">
-          {characters.map((char, index) => (
-            <motion.span
-              key={index}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: 0.34 + index * 0.04,
-                duration: 0.3,
-                ease: 'easeOut',
-              }}
-              className={`text-3xl font-bold tracking-tight sm:text-4xl ${isDark ? 'text-white' : 'text-slate-900'}`}
-            >
-              {char}
-            </motion.span>
-          ))}
-        </div>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.45 }}
-          className={`mt-3 text-[11px] font-semibold uppercase tracking-[0.32em] ${
-            isDark ? 'text-sky-300/85' : 'text-sky-700/85'
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className={`mt-4 text-xs sm:text-sm font-bold uppercase tracking-[0.4em] ${
+            isDark ? 'text-sky-300/80' : 'text-sky-700/80'
           }`}
         >
           {subtitle}
@@ -108,10 +169,10 @@ const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
       <AnimatePresence>
         {isExiting && (
           <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 0.48, ease: [0.4, 0, 0.2, 1] }}
-            className={`absolute inset-0 ${isDark ? 'bg-[#020617]' : 'bg-[#f8fafc]'}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            className={`absolute inset-0 z-50 ${isDark ? 'bg-[#020617]' : 'bg-[#f8fafc]'}`}
           />
         )}
       </AnimatePresence>
