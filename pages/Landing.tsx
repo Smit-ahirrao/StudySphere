@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { ComponentType, RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionTemplate, useScroll, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionTemplate, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import {
   ArrowRight,
   BookOpen,
@@ -105,8 +105,27 @@ export default function Landing() {
   });
   const smoothExperience = useSpring(experienceProgress, { stiffness: 90, damping: 20, mass: 0.2 });
 
+  // --- MOUSE TRACKING FOR 3D HERO PARALLAX ---
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const smoothMouseX = useSpring(mouseX, { stiffness: 50, damping: 20 });
+  const smoothMouseY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+  const appRotateX = useTransform(smoothMouseY, [-1, 1], [10, -10]);
+  const appRotateY = useTransform(smoothMouseX, [-1, 1], [-10, 10]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const x = (e.clientX / window.innerWidth) * 2 - 1;
+    const y = (e.clientY / window.innerHeight) * 2 - 1;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   const heroSceneY = useTransform(smoothPage, [0, 0.18], [0, -70]);
-  const heroSceneRotate = useTransform(smoothPage, [0, 0.18], [-10, 4]);
   const heroGlowScale = useTransform(smoothPage, [0, 0.22], [0.9, 1.2]);
   const progressWidth = useTransform(smoothPage, [0, 1], ['0%', '100%']);
 
@@ -208,7 +227,12 @@ export default function Landing() {
       </header>
 
       <main className="relative z-10 pt-28">
-        <section ref={heroRef} className="mx-auto grid max-w-7xl gap-10 px-4 pb-28 pt-10 sm:px-6 sm:pb-32 lg:grid-cols-[0.96fr_1.04fr] lg:px-8 lg:pb-24 lg:pt-14">
+        <section 
+          ref={heroRef} 
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className="mx-auto grid max-w-7xl gap-10 px-4 pb-28 pt-10 sm:px-6 sm:pb-32 lg:grid-cols-[0.96fr_1.04fr] lg:px-8 lg:pb-24 lg:pt-14 [perspective:2000px]"
+        >
           <div className="max-w-3xl pt-6 lg:pt-18">
             <motion.div
               initial={{ opacity: 0, y: 22 }}
@@ -277,83 +301,92 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px]">
+          <div className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center justify-center">
             <motion.div
               style={{ y: heroSceneY, scale: heroGlowScale }}
-              className="absolute left-1/2 top-8 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.56),rgba(255,255,255,0)_68%)] blur-3xl"
+              className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.56),rgba(255,255,255,0)_68%)] blur-3xl"
             />
 
             <motion.div
-              style={{ y: heroSceneY, rotate: heroSceneRotate }}
-              className="absolute inset-x-0 top-6 mx-auto h-[520px] w-full max-w-[680px] [perspective:1800px] sm:h-[580px]"
+              style={{ 
+                y: heroSceneY, 
+                rotateX: appRotateX, 
+                rotateY: appRotateY,
+              }}
+              initial={{ opacity: 0, scale: 0.8, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-[580px] [transform-style:preserve-3d] pt-10 lg:pt-0"
             >
-              <div className="relative h-full w-full [transform-style:preserve-3d]">
-                <motion.div
-                  animate={{ y: [0, -10, 0], rotateZ: [-1.5, 1.5, -1.5] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute left-4 top-8 h-[420px] w-[320px] rounded-[38px] border border-white/90 bg-[linear-gradient(165deg,rgba(255,255,255,0.96),rgba(240,249,255,0.92),rgba(224,242,254,0.72))] p-6 shadow-[0_42px_120px_-52px_rgba(14,165,233,0.52)] backdrop-blur-2xl [transform:rotateX(12deg)_rotateY(-18deg)_translateZ(60px)] sm:left-10"
-                >
-                  <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Your workload, clarified" tone="bg-sky-100 text-sky-700" />
-                  <div className="mt-8 grid grid-cols-2 gap-4">
-                    <HeroMetric label="Focus" value="124h" tone="bg-sky-50" />
-                    <HeroMetric label="Tasks" value="18" tone="bg-cyan-50" />
-                    <HeroMetric label="Notes" value="42" tone="bg-white" />
-                    <HeroMetric label="Files" value="86" tone="bg-slate-50" />
-                  </div>
-                  <div className="mt-8 rounded-[28px] border border-sky-100 bg-white/92 p-4 shadow-inner">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-slate-600">Consistency</span>
-                      <span className="font-semibold text-sky-700">94%</span>
+              {/* Main App Window Glass */}
+              <div className="relative rounded-[32px] border border-white/80 bg-white/40 p-2 shadow-[0_42px_100px_-40px_rgba(14,165,233,0.3)] backdrop-blur-2xl">
+                {/* Inner Window Chrome */}
+                <div className="relative overflow-hidden rounded-[26px] border border-white/60 bg-[linear-gradient(165deg,rgba(255,255,255,0.9),rgba(240,249,255,0.8))] shadow-inner">
+                  {/* Fake Header */}
+                  <div className="flex items-center border-b border-white/50 bg-white/40 px-6 py-4 backdrop-blur-md">
+                    <div className="flex gap-2">
+                      <div className="h-3 w-3 rounded-full bg-slate-300" />
+                      <div className="h-3 w-3 rounded-full bg-slate-300" />
+                      <div className="h-3 w-3 rounded-full bg-slate-300" />
                     </div>
-                    <div className="mt-4 flex h-28 items-end gap-2 rounded-[22px] bg-[linear-gradient(180deg,#f7fbff_0%,#edf6ff_100%)] p-4">
-                      {[30, 48, 56, 74, 66, 90, 82].map((height, index) => (
-                        <div key={height} className="flex-1">
-                          <div
-                            className={`rounded-t-[14px] bg-gradient-to-t ${index > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
-                            style={{ height: `${height}%` }}
-                          />
-                        </div>
-                      ))}
+                  </div>
+
+                  {/* Body Grid */}
+                  <div className="p-6 sm:p-8">
+                    <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Your workload, clarified" tone="bg-sky-100 text-sky-700" />
+                    
+                    <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5">
+                      <HeroMetric label="Focus" value="124h" tone="bg-sky-50" />
+                      <HeroMetric label="Tasks" value="18" tone="bg-cyan-50" />
+                      <HeroMetric label="Notes" value="42" tone="bg-white" />
+                      <HeroMetric label="Files" value="86" tone="bg-slate-50" />
+                    </div>
+                    
+                    <div className="mt-6 rounded-[22px] border border-sky-100 bg-white/92 p-4 sm:p-5 shadow-inner">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-slate-600">Consistency</span>
+                        <span className="font-semibold text-sky-700">94%</span>
+                      </div>
+                      <div className="mt-4 flex h-24 sm:h-28 items-end gap-2 rounded-[14px] bg-[linear-gradient(180deg,#f7fbff_0%,#edf6ff_100%)] px-3 pb-3 sm:px-4 sm:pb-4">
+                        {[30, 48, 56, 74, 66, 90, 82].map((height, index) => (
+                          <div key={index} className="flex-1">
+                            <div
+                              className={`rounded-t-[8px] bg-gradient-to-t ${index > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
+                              style={{ height: `${height}%` }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Parallax Floating Element 1 (Focus Mode) */}
+                <motion.div
+                  style={{ translateZ: 80 }}
+                  className="absolute -right-4 sm:-right-12 top-10 sm:top-20 w-[240px] sm:w-[280px] rounded-[30px] border border-white/90 bg-white/95 p-5 sm:p-6 shadow-[0_34px_90px_-30px_rgba(16,185,129,0.35)] backdrop-blur-xl"
+                >
+                  <PanelHeader icon={Clock3} label="Focus mode" subtitle="Active block" tone="bg-emerald-100 text-emerald-700" />
+                  <div className="mt-5 sm:mt-6 rounded-[24px] bg-slate-950 p-4 sm:p-5 text-white">
+                    <div className="text-4xl sm:text-5xl font-semibold tracking-[-0.05em]">25:00</div>
+                    <div className="mt-3 sm:mt-4 h-2 w-full rounded-full bg-white/20">
+                      <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" />
                     </div>
                   </div>
                 </motion.div>
 
+                {/* Parallax Floating Element 2 (Notes) */}
                 <motion.div
-                  animate={{ y: [0, 12, 0], rotateZ: [2, -1, 2] }}
-                  transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
-                  className="absolute right-2 top-28 h-[292px] w-[255px] rounded-[32px] border border-white/90 bg-[linear-gradient(160deg,rgba(255,255,255,0.96),rgba(236,253,245,0.9),rgba(220,252,231,0.72))] p-5 shadow-[0_34px_90px_-44px_rgba(16,185,129,0.58)] backdrop-blur-xl [transform:rotateX(12deg)_rotateY(20deg)_translateZ(130px)] sm:right-8"
+                  style={{ translateZ: 140 }}
+                  className="absolute -left-4 sm:-left-16 bottom-10 sm:bottom-16 w-[260px] sm:w-[300px] rounded-[30px] border border-white/90 bg-white/95 p-5 sm:p-6 shadow-[0_34px_90px_-30px_rgba(99,102,241,0.25)] backdrop-blur-xl"
                 >
-                  <PanelHeader icon={Clock3} label="Focus mode" subtitle="Built for deep work" tone="bg-emerald-100 text-emerald-700" />
-                  <div className="mt-8 rounded-[26px] bg-slate-950 p-5 text-white">
-                    <div className="text-xs uppercase tracking-[0.24em] text-white/45">Current block</div>
-                    <div className="mt-3 text-5xl font-semibold tracking-[-0.06em]">25:00</div>
-                    <div className="mt-5 h-2 rounded-full bg-white/10">
-                      <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300" />
-                    </div>
-                  </div>
-                  <div className="mt-5 flex items-center gap-3 rounded-[22px] bg-white/88 px-4 py-3 text-sm text-slate-600">
-                    <Target size={16} className="text-emerald-600" />
-                    Attention stays protected
+                  <PanelHeader icon={StickyNote} label="Notes + AI" subtitle="Ideas connected" tone="bg-indigo-50 text-indigo-700" />
+                  <div className="mt-4 sm:mt-5 rounded-[20px] border border-slate-100 bg-slate-50 p-4">
+                    <div className="text-sm font-semibold text-slate-900">Revision guide generated</div>
+                    <div className="mt-2 text-sm leading-6 text-slate-500">Based on your recent 3 study sessions.</div>
                   </div>
                 </motion.div>
 
-                <motion.div
-                  animate={{ y: [0, -8, 0], rotateZ: [-1, 1, -1] }}
-                  transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
-                  className="absolute inset-x-14 bottom-6 rounded-[30px] border border-white/90 bg-white/92 p-5 shadow-[0_28px_80px_-44px_rgba(15,23,42,0.45)] backdrop-blur-xl [transform:rotateX(-2deg)_rotateY(-8deg)_translateZ(110px)]"
-                >
-                  <PanelHeader icon={StickyNote} label="Notes + AI" subtitle="Ideas stay connected" tone="bg-indigo-50 text-indigo-700" />
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-[22px] border border-slate-100 bg-slate-50 p-4">
-                      <div className="text-sm font-semibold text-slate-900">Revision guide</div>
-                      <div className="mt-2 text-sm leading-6 text-slate-500">Turn chapters into clean summaries with linked context.</div>
-                    </div>
-                    <div className="rounded-[22px] border border-slate-100 bg-white p-4">
-                      <div className="text-sm font-semibold text-slate-900">Study pack</div>
-                      <div className="mt-2 text-sm leading-6 text-slate-500">Generate flashcards, outlines, and quick recall material.</div>
-                    </div>
-                  </div>
-                </motion.div>
               </div>
             </motion.div>
           </div>
