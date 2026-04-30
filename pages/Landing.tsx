@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ComponentType, RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionTemplate, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
+import { motion, useMotionTemplate, useScroll, useSpring, useTransform, useMotionValue, useAnimationFrame } from 'framer-motion';
 import {
   ArrowRight,
   BookOpen,
@@ -105,18 +105,13 @@ export default function Landing() {
   });
   const smoothExperience = useSpring(experienceProgress, { stiffness: 90, damping: 20, mass: 0.2 });
 
-  // --- MOUSE TRACKING FOR 3D HERO PARALLAX ---
+  // --- 3D ORBITING CAROUSEL ---
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const smoothMouseX = useSpring(mouseX, { stiffness: 40, damping: 25, mass: 1.5 });
-  const smoothMouseY = useSpring(mouseY, { stiffness: 40, damping: 25, mass: 1.5 });
-  const appRotateX = useTransform(smoothMouseY, [-1, 1], [12, -12]);
-  const appRotateY = useTransform(smoothMouseX, [-1, 1], [-12, 12]);
-
-  // Spotlight effect tracking mouse
-  const spotlightX = useTransform(smoothMouseX, [-1, 1], [0, 100]);
-  const spotlightY = useTransform(smoothMouseY, [-1, 1], [0, 100]);
-  const spotlight = useMotionTemplate`radial-gradient(circle at ${spotlightX}% ${spotlightY}%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 80%)`;
+  const smoothMouseX = useSpring(mouseX, { stiffness: 35, damping: 30, mass: 1.2 });
+  const smoothMouseY = useSpring(mouseY, { stiffness: 35, damping: 30, mass: 1.2 });
+  const sceneRotateX = useTransform(smoothMouseY, [-1, 1], [8, -8]);
+  const sceneRotateY = useTransform(smoothMouseX, [-1, 1], [-8, 8]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -130,6 +125,16 @@ export default function Landing() {
     mouseX.set(0);
     mouseY.set(0);
   };
+
+  // Orbit angle state
+  const orbitAngle = useMotionValue(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useAnimationFrame((_, delta) => {
+    if (!isPaused) {
+      orbitAngle.set(orbitAngle.get() + delta * 0.018);
+    }
+  });
 
   const heroSceneY = useTransform(smoothPage, [0, 0.18], [0, -70]);
   const heroGlowScale = useTransform(smoothPage, [0, 0.22], [0.9, 1.2]);
@@ -307,146 +312,145 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center justify-center">
+          <div
+            className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center justify-center"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => { setIsPaused(false); handleMouseLeave(); }}
+          >
+            {/* Background glow */}
             <motion.div
               style={{ y: heroSceneY, scale: heroGlowScale }}
-              className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.48),rgba(255,255,255,0)_70%)] blur-3xl"
+              className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.35),rgba(255,255,255,0)_70%)] blur-3xl"
             />
 
-            {/* Atmospheric Particles */}
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{
-                  y: [0, -40, 0],
-                  x: [0, i % 2 === 0 ? 20 : -20, 0],
-                  opacity: [0.3, 0.6, 0.3],
-                }}
-                transition={{
-                  duration: 8 + i * 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 1.5,
-                }}
-                className="absolute h-2 w-2 rounded-full bg-sky-300/40 blur-[2px]"
-                style={{
-                  left: `${20 + i * 12}%`,
-                  top: `${30 + (i % 3) * 20}%`,
-                  x: useTransform(smoothMouseX, [-1, 1], [i * 10, -i * 10]),
-                  y: useTransform(smoothMouseY, [-1, 1], [i * 10, -i * 10]),
-                }}
-              />
-            ))}
-
+            {/* 3D Scene container */}
             <motion.div
-              style={{ 
-                y: heroSceneY, 
-                rotateX: appRotateX, 
-                rotateY: appRotateY,
-              }}
-              initial={{ opacity: 0, scale: 0.8, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-[580px] [transform-style:preserve-3d] pt-10 lg:pt-0"
+              style={{ rotateX: sceneRotateX, rotateY: sceneRotateY }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative h-[520px] w-full max-w-[620px] [perspective:1200px] [transform-style:preserve-3d]"
+              onMouseMove={handleMouseMove}
             >
-              {/* Main App Window Glass */}
-              <div className="relative rounded-[32px] border border-white/80 bg-white/40 p-2 shadow-[0_42px_100px_-40px_rgba(14,165,233,0.3)] backdrop-blur-2xl overflow-hidden">
-                {/* Spotlight Overlay */}
-                <motion.div 
-                  className="pointer-events-none absolute inset-0 z-10"
-                  style={{ background: spotlight }}
+              {/* Central glowing core */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[5]">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                  className="h-32 w-32 rounded-full border border-sky-200/40"
                 />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+                  className="absolute inset-2 rounded-full border border-dashed border-cyan-300/30"
+                />
+                <div className="absolute inset-4 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.5),rgba(14,165,233,0.15)_60%,transparent_80%)] blur-sm" />
+                <div className="absolute inset-[18px] rounded-full bg-white/90 shadow-[0_0_40px_rgba(56,189,248,0.4)] flex items-center justify-center">
+                  <BookOpen size={28} className="text-sky-600" />
+                </div>
+              </div>
 
-                {/* Inner Window Chrome */}
-                <div className="relative overflow-hidden rounded-[26px] border border-white/60 bg-[linear-gradient(165deg,rgba(255,255,255,0.9),rgba(240,249,255,0.8))] shadow-inner">
-                  {/* Fake Header */}
-                  <div className="flex items-center border-b border-white/50 bg-white/40 px-6 py-4 backdrop-blur-md">
-                    <div className="flex gap-2">
-                      <div className="h-3 w-3 rounded-full bg-slate-300" />
-                      <div className="h-3 w-3 rounded-full bg-slate-300" />
-                      <div className="h-3 w-3 rounded-full bg-slate-300" />
-                    </div>
+              {/* Orbit track ring */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[540px] rounded-[50%] border border-sky-100/50 [transform:rotateX(65deg)]" />
+
+              {/* Orbiting cards */}
+              <OrbitCard
+                angle={orbitAngle}
+                offsetDeg={0}
+                icon={LayoutDashboard}
+                label="Dashboard"
+                tone="bg-sky-100 text-sky-700"
+                accentShadow="rgba(14,165,233,0.4)"
+              >
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <div className="rounded-xl bg-sky-50 p-2.5">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Focus</div>
+                    <div className="text-lg font-bold text-slate-900">124h</div>
                   </div>
-
-                  {/* Body Grid */}
-                  <div className="p-6 sm:p-8">
-                    <motion.div style={{ translateZ: 20 }}>
-                      <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Your workload, clarified" tone="bg-sky-100 text-sky-700" />
-                    </motion.div>
-                    
-                    <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5">
-                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Focus" value="124h" tone="bg-sky-50" /></motion.div>
-                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Tasks" value="18" tone="bg-cyan-50" /></motion.div>
-                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Notes" value="42" tone="bg-white" /></motion.div>
-                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Files" value="86" tone="bg-slate-50" /></motion.div>
-                    </div>
-                    
-                    <motion.div 
-                      style={{ translateZ: 40 }}
-                      className="mt-6 rounded-[22px] border border-sky-100 bg-white/92 p-4 sm:p-5 shadow-inner"
-                    >
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-600">Consistency</span>
-                        <span className="font-semibold text-sky-700">94%</span>
-                      </div>
-                      <div className="mt-4 flex h-24 sm:h-28 items-end gap-2 rounded-[14px] bg-[linear-gradient(180deg,#f7fbff_0%,#edf6ff_100%)] px-3 pb-3 sm:px-4 sm:pb-4">
-                        {[30, 48, 56, 74, 66, 90, 82].map((height, index) => (
-                          <div key={index} className="flex-1">
-                            <motion.div
-                              initial={{ height: 0 }}
-                              animate={{ height: `${height}%` }}
-                              transition={{ duration: 1, delay: 0.5 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                              className={`rounded-t-[8px] bg-gradient-to-t ${index > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
+                  <div className="rounded-xl bg-cyan-50 p-2.5">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Tasks</div>
+                    <div className="text-lg font-bold text-slate-900">18</div>
                   </div>
                 </div>
-
-                {/* Parallax Floating Element 1 (Focus Mode) */}
-                <motion.div
-                  style={{ translateZ: 110 }}
-                  className="absolute -right-4 sm:-right-12 top-10 sm:top-20 w-[240px] sm:w-[280px] rounded-[30px] border border-white/90 bg-white/95 p-5 sm:p-6 shadow-[0_34px_90px_-30px_rgba(16,185,129,0.35)] backdrop-blur-xl"
-                >
-                  <PanelHeader icon={Clock3} label="Focus mode" subtitle="Active block" tone="bg-emerald-100 text-emerald-700" />
-                  <div className="mt-5 sm:mt-6 rounded-[24px] bg-slate-950 p-4 sm:p-5 text-white">
-                    <motion.div 
-                      animate={{ opacity: [1, 0.7, 1] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="text-4xl sm:text-5xl font-semibold tracking-[-0.05em]"
-                    >
-                      25:00
-                    </motion.div>
-                    <div className="mt-3 sm:mt-4 h-2 w-full rounded-full bg-white/20">
-                      <motion.div 
-                        animate={{ width: ["0%", "66%"] }}
-                        transition={{ duration: 2, ease: "easeInOut" }}
-                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" 
+                <div className="mt-3 flex h-14 items-end gap-1 rounded-xl bg-slate-50/80 px-2 pb-2">
+                  {[30, 48, 56, 74, 66, 90, 82].map((h, i) => (
+                    <div key={i} className="flex-1">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${h}%` }}
+                        transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                        className={`rounded-t bg-gradient-to-t ${i > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
                       />
                     </div>
-                  </div>
-                </motion.div>
+                  ))}
+                </div>
+              </OrbitCard>
 
-                {/* Parallax Floating Element 2 (Notes) */}
-                <motion.div
-                  style={{ translateZ: 160 }}
-                  className="absolute -left-4 sm:-left-16 bottom-10 sm:bottom-16 w-[260px] sm:w-[300px] rounded-[30px] border border-white/90 bg-white/95 p-5 sm:p-6 shadow-[0_34px_90px_-30px_rgba(99,102,241,0.25)] backdrop-blur-xl"
-                >
-                  <PanelHeader icon={StickyNote} label="Notes + AI" subtitle="Ideas connected" tone="bg-indigo-50 text-indigo-700" />
-                  <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.8 }}
-                    className="mt-4 sm:mt-5 rounded-[20px] border border-slate-100 bg-slate-50 p-4"
+              <OrbitCard
+                angle={orbitAngle}
+                offsetDeg={90}
+                icon={Clock3}
+                label="Focus Mode"
+                tone="bg-emerald-100 text-emerald-700"
+                accentShadow="rgba(16,185,129,0.4)"
+              >
+                <div className="mt-3 rounded-2xl bg-slate-950 p-4 text-white">
+                  <motion.div
+                    animate={{ opacity: [1, 0.6, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="text-3xl font-bold tracking-tighter"
                   >
-                    <div className="text-sm font-semibold text-slate-900">Revision guide generated</div>
-                    <div className="mt-2 text-sm leading-6 text-slate-500">Based on your recent 3 study sessions.</div>
+                    25:00
                   </motion.div>
-                </motion.div>
+                  <div className="mt-3 h-1.5 w-full rounded-full bg-white/15">
+                    <motion.div
+                      animate={{ width: ['0%', '66%'] }}
+                      transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }}
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300"
+                    />
+                  </div>
+                </div>
+              </OrbitCard>
 
-              </div>
+              <OrbitCard
+                angle={orbitAngle}
+                offsetDeg={180}
+                icon={StickyNote}
+                label="Notes + AI"
+                tone="bg-indigo-50 text-indigo-700"
+                accentShadow="rgba(99,102,241,0.35)"
+              >
+                <div className="mt-3 space-y-2">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/90 p-2.5">
+                    <div className="text-xs font-semibold text-slate-800">Revision guide</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Auto-generated from notes</div>
+                  </div>
+                  <div className="rounded-xl border border-slate-100 bg-white p-2.5">
+                    <div className="text-xs font-semibold text-slate-800">Study pack</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Flashcards + outlines</div>
+                  </div>
+                </div>
+              </OrbitCard>
+
+              <OrbitCard
+                angle={orbitAngle}
+                offsetDeg={270}
+                icon={CheckSquare}
+                label="Tasks"
+                tone="bg-teal-50 text-teal-700"
+                accentShadow="rgba(20,184,166,0.35)"
+              >
+                <div className="mt-3 space-y-1.5">
+                  {['Linear Algebra Ch.5', 'CS Project Draft', 'Lab Report'].map((task, i) => (
+                    <div key={i} className="flex items-center gap-2 rounded-xl bg-slate-50/80 px-3 py-2">
+                      <div className={`h-3 w-3 rounded border-2 ${i === 0 ? 'border-teal-500 bg-teal-500' : 'border-slate-300'}`}>
+                        {i === 0 && <CheckSquare size={8} className="text-white" />}
+                      </div>
+                      <span className={`text-xs font-medium ${i === 0 ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{task}</span>
+                    </div>
+                  ))}
+                </div>
+              </OrbitCard>
             </motion.div>
           </div>
         </section>
@@ -817,4 +821,66 @@ function toneClass(tint: string) {
     default:
       return 'bg-slate-100 text-slate-700';
   }
+}
+
+function OrbitCard({
+  angle,
+  offsetDeg,
+  icon: Icon,
+  label,
+  tone,
+  accentShadow,
+  children,
+}: {
+  angle: import('framer-motion').MotionValue<number>;
+  offsetDeg: number;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  tone: string;
+  accentShadow: string;
+  children: React.ReactNode;
+}) {
+  const offsetRad = (offsetDeg * Math.PI) / 180;
+  const radiusX = 260;
+  const radiusZ = 160;
+  const verticalSpread = 120;
+
+  const x = useTransform(angle, (a) => Math.cos(a + offsetRad) * radiusX);
+  const z = useTransform(angle, (a) => Math.sin(a + offsetRad) * radiusZ);
+  const yOffset = useTransform(angle, (a) => -Math.sin(a + offsetRad) * verticalSpread);
+
+  // Depth-based scale and opacity
+  const depthScale = useTransform(z, [-radiusZ, radiusZ], [0.7, 1.1]);
+  const depthOpacity = useTransform(z, [-radiusZ, radiusZ], [0.4, 1]);
+  const depthBlur = useTransform(z, [-radiusZ, 0, radiusZ], [3, 0.5, 0]);
+  const zIndex = useTransform(z, [-radiusZ, radiusZ], [1, 20]);
+
+  const blur = useMotionTemplate`blur(${depthBlur}px)`;
+
+  return (
+    <motion.div
+      style={{
+        x,
+        y: yOffset,
+        scale: depthScale,
+        opacity: depthOpacity,
+        filter: blur,
+        zIndex,
+      }}
+      className="absolute left-1/2 top-1/2 -ml-[110px] -mt-[100px] w-[220px]"
+    >
+      <div
+        className="rounded-[26px] border border-white/85 bg-white/92 p-4 backdrop-blur-2xl"
+        style={{ boxShadow: `0 30px 80px -30px ${accentShadow}` }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-bold tracking-tight text-slate-900">{label}</div>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${tone}`}>
+            <Icon size={15} />
+          </div>
+        </div>
+        {children}
+      </div>
+    </motion.div>
+  );
 }
