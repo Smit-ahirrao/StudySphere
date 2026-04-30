@@ -112,29 +112,29 @@ export default function Landing() {
 
   const stageY = useTransform(smoothExperience, [0, 1], [20, -20]);
 
-  // Dashboard (0 - 0.25 active)
-  const dashboardY = useTransform(smoothExperience, [0, 0.25, 0.5, 1], [0, -40, -80, -160]);
-  const dashboardScale = useTransform(smoothExperience, [0, 0.25, 0.5, 1], [1, 0.92, 0.84, 0.75]);
-  const dashboardOpacity = useTransform(smoothExperience, [0, 0.25, 0.5, 1], [1, 0.7, 0.3, 0]);
-  const dashboardBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.25, 0.5, 1], [0, 4, 8, 12])}px)`;
+  // Dashboard (Active: 0 -> 0.15, Transitions out: 0.15 -> 0.25)
+  const dashboardY = useTransform(smoothExperience, [0, 0.15, 0.25, 0.5, 1], [0, 0, -40, -80, -160]);
+  const dashboardScale = useTransform(smoothExperience, [0, 0.15, 0.25, 0.5, 1], [1, 1, 0.92, 0.84, 0.75]);
+  const dashboardOpacity = useTransform(smoothExperience, [0, 0.15, 0.25, 0.5, 1], [1, 1, 0.7, 0.3, 0]);
+  const dashboardBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.15, 0.25, 0.5, 1], [0, 0, 4, 8, 12])}px)`;
 
-  // Tasks (0.25 - 0.5 active)
-  const tasksY = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [400, 0, -40, -80, -160]);
-  const tasksScale = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [1.1, 1, 0.92, 0.84, 0.75]);
-  const tasksOpacity = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [0, 1, 0.7, 0.3, 0]);
-  const tasksBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [8, 0, 4, 8, 12])}px)`;
+  // Tasks (Transitions in: 0.15 -> 0.25, Active: 0.25 -> 0.4, Transitions out: 0.4 -> 0.5)
+  const tasksY = useTransform(smoothExperience, [0, 0.15, 0.25, 0.4, 0.5, 1], [400, 400, 0, 0, -40, -160]);
+  const tasksScale = useTransform(smoothExperience, [0, 0.15, 0.25, 0.4, 0.5, 1], [1.1, 1.1, 1, 1, 0.92, 0.75]);
+  const tasksOpacity = useTransform(smoothExperience, [0, 0.15, 0.25, 0.4, 0.5, 1], [0, 0, 1, 1, 0.7, 0]);
+  const tasksBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.15, 0.25, 0.4, 0.5, 1], [8, 8, 0, 0, 4, 12])}px)`;
 
-  // Notes (0.5 - 0.75 active)
-  const notesY = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [400, 400, 0, -40, -80]);
-  const notesScale = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [1.1, 1.1, 1, 0.92, 0.84]);
-  const notesOpacity = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [0, 0, 1, 0.7, 0.3]);
-  const notesBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [8, 8, 0, 4, 8])}px)`;
+  // Notes (Transitions in: 0.4 -> 0.5, Active: 0.5 -> 0.65, Transitions out: 0.65 -> 0.75)
+  const notesY = useTransform(smoothExperience, [0, 0.4, 0.5, 0.65, 0.75, 1], [400, 400, 0, 0, -40, -80]);
+  const notesScale = useTransform(smoothExperience, [0, 0.4, 0.5, 0.65, 0.75, 1], [1.1, 1.1, 1, 1, 0.92, 0.84]);
+  const notesOpacity = useTransform(smoothExperience, [0, 0.4, 0.5, 0.65, 0.75, 1], [0, 0, 1, 1, 0.7, 0.3]);
+  const notesBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.4, 0.5, 0.65, 0.75, 1], [8, 8, 0, 0, 4, 8])}px)`;
 
-  // Focus (0.75 - 1.0 active)
-  const focusY = useTransform(smoothExperience, [0, 0.5, 0.75, 1], [400, 400, 0, -40]);
-  const focusScale = useTransform(smoothExperience, [0, 0.5, 0.75, 1], [1.1, 1.1, 1, 0.92]);
-  const focusOpacity = useTransform(smoothExperience, [0, 0.5, 0.75, 1], [0, 0, 1, 0.7]);
-  const focusBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.5, 0.75, 1], [8, 8, 0, 4])}px)`;
+  // Focus (Transitions in: 0.65 -> 0.75, Active: 0.75 -> 1.0)
+  const focusY = useTransform(smoothExperience, [0, 0.65, 0.75, 1], [400, 400, 0, 0]);
+  const focusScale = useTransform(smoothExperience, [0, 0.65, 0.75, 1], [1.1, 1.1, 1, 1]);
+  const focusOpacity = useTransform(smoothExperience, [0, 0.65, 0.75, 1], [0, 0, 1, 1]);
+  const focusBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.65, 0.75, 1], [8, 8, 0, 0])}px)`;
 
   const orbitGlowOpacity = useTransform(smoothExperience, [0, 0.5, 1], [0.45, 0.8, 0.5]);
   const orbitGlowScale = useTransform(smoothExperience, [0, 0.5, 1], [0.85, 1.2, 0.95]);
