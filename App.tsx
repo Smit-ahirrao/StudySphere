@@ -19,15 +19,18 @@ const App: React.FC = () => {
       {loading && <SplashScreen onComplete={() => setLoading(false)} />}
       <HashRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Landing />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="tasks" element={<Tasks />} />
-            <Route path="notes" element={<Notes />} />
-            <Route path="planner" element={<Planner />} />
-            <Route path="focus" element={<Focus />} />
-            <Route path="files" element={<Files />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Landing page is now outside the main app layout */}
+          <Route path="/" element={<Landing />} />
+          
+          {/* App routes wrapped in Layout */}
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/focus" element={<Focus />} />
+            <Route path="/files" element={<Files />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
       </HashRouter>

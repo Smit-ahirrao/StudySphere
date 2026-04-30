@@ -5,6 +5,9 @@ const STORAGE_KEY = 'studysphere_data_v2';
 
 const DEFAULT_DATA: AppData = {
   tasks: [],
+  projects: [],
+  sections: [],
+  labels: [],
   notes: [],
   planner: [],
   focusHistory: [],
@@ -16,6 +19,37 @@ const DEFAULT_DATA: AppData = {
     shortBreakDuration: 5,
     longBreakDuration: 15,
   },
+};
+
+const normalizeProjects = (projects: unknown) => {
+  if (!Array.isArray(projects)) return [];
+  return projects.map((p: any) => ({
+    id: String(p.id),
+    name: p.name || 'Untitled Project',
+    color: p.color || undefined,
+    isDemo: Boolean(p.isDemo),
+  }));
+};
+
+const normalizeSections = (sections: unknown) => {
+  if (!Array.isArray(sections)) return [];
+  return sections.map((s: any) => ({
+    id: String(s.id),
+    projectId: String(s.projectId),
+    name: s.name || 'Untitled Section',
+    order: Number(s.order) || 0,
+    isDemo: Boolean(s.isDemo),
+  }));
+};
+
+const normalizeLabels = (labels: unknown) => {
+  if (!Array.isArray(labels)) return [];
+  return labels.map((l: any) => ({
+    id: String(l.id),
+    name: l.name || 'Untitled Label',
+    color: l.color || undefined,
+    isDemo: Boolean(l.isDemo),
+  }));
 };
 
 const normalizeNotes = (notes: unknown): Note[] => {
@@ -93,6 +127,9 @@ export const loadData = (): AppData => {
       ...DEFAULT_DATA,
       ...parsed,
       tasks: normalizeTasks(parsed.tasks || []),
+      projects: normalizeProjects(parsed.projects),
+      sections: normalizeSections(parsed.sections),
+      labels: normalizeLabels(parsed.labels),
       notes: normalizeNotes(parsed.notes),
       planner: normalizePlanner(parsed.planner),
       files: [], // Files are strictly managed via IndexedDB in Files.tsx

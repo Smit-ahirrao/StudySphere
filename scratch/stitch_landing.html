@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudySphere | Precision for the modern researcher</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#6d797d",
+                        "inverse-surface": "#213145",
+                        "tertiary-container": "#e89337",
+                        "on-primary-fixed": "#001f26",
+                        "tertiary": "#8c5000",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "surface-container-low": "#eff4ff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "outline-variant": "#bcc9cd",
+                        "on-surface": "#0b1c30",
+                        "surface-tint": "#00687a",
+                        "on-secondary-container": "#00714d",
+                        "secondary-container": "#6cf8bb",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-secondary-fixed": "#002113",
+                        "background": "#f8f9ff",
+                        "primary-container": "#06b6d4",
+                        "surface-dim": "#cbdbf5",
+                        "on-background": "#0b1c30",
+                        "secondary": "#006c49",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#f8f9ff",
+                        "on-surface-variant": "#3d494c",
+                        "on-tertiary-container": "#5b3200",
+                        "primary-fixed": "#acedff",
+                        "surface-variant": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#6a3b00",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdcbf",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#4cd7f6",
+                        "tertiary-fixed-dim": "#ffb873",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed-dim": "#4cd7f6",
+                        "surface-container": "#e5eeff",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#d3e4fe",
+                        "primary": "#00687a",
+                        "on-tertiary-fixed": "#2d1600",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-primary-container": "#00424f",
+                        "surface-container-high": "#dce9ff",
+                        "surface": "#f8f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xs": "4px",
+                        "margin": "32px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "2xl": "64px",
+                        "xl": "40px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "title-lg": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"],
+                        "display-md": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "title-lg": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["30px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "display-md": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9ff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .hero-gradient { background: radial-gradient(circle at 50% 50%, #e0f2fe 0%, #f8f9ff 100%); }
+        .ai-glow { box-shadow: 0 0 40px rgba(6, 182, 212, 0.3); }
+        
+        /* Note: Framer Motion interactions are handled via data attributes and custom classes as requested by UI task constraints */
+        .reveal-on-scroll { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-active { opacity: 1; transform: translateY(0); }
+        
+        .perspective-container { perspective: 1000px; }
+        .tilt-card { transform: rotateY(15deg) scale(0.95); transition: transform 0.6s ease-out; }
+        .tilt-card:hover { transform: rotateY(0deg) scale(1); }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-50 flex justify-between items-center px-6 py-4 max-w-[1280px] mx-auto bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_4px_20px_0px_rgba(0,0,0,0.04)] border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">StudySphere</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-sans text-sm font-medium tracking-wide text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-600 pb-1" href="#">Features</a>
+<a class="font-sans text-sm font-medium tracking-wide text-slate-600 dark:text-slate-400 hover:text-cyan-500 transition-colors" href="#">Notes</a>
+<a class="font-sans text-sm font-medium tracking-wide text-slate-600 dark:text-slate-400 hover:text-cyan-500 transition-colors" href="#">AI Lab</a>
+<a class="font-sans text-sm font-medium tracking-wide text-slate-600 dark:text-slate-400 hover:text-cyan-500 transition-colors" href="#">Pricing</a>
+</nav>
+</div>
+<button class="px-5 py-2 bg-primary-container text-white rounded-full font-label-md hover:opacity-90 transition-all scale-95 duration-200 ease-in-out">
+            Enter App
+        </button>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex flex-col items-center justify-center text-center px-6 hero-gradient overflow-hidden">
+<div class="absolute inset-0 z-0 opacity-30">
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-container/20 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary-container/20 rounded-full blur-[100px]"></div>
+</div>
+<div class="relative z-10 max-w-4xl mx-auto">
+<span class="inline-block px-4 py-1.5 mb-6 text-cyan-600 bg-cyan-50 rounded-full font-label-sm tracking-widest uppercase">Intelligent Workflow</span>
+<h1 class="font-display-lg text-on-surface mb-6 leading-tight">
+                    The Future of <span class="text-primary-container">Deep Work</span>
+</h1>
+<p class="font-body-lg text-outline max-w-2xl mx-auto mb-10">
+                    Precision tools for the modern researcher. StudySphere orchestrates your cognitive load, turning fragmented thoughts into coherent breakthroughs.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="px-8 py-4 bg-primary-container text-on-primary rounded-xl font-label-md shadow-lg shadow-cyan-500/20 hover:scale-105 transition-transform">
+                        Enter App
+                    </button>
+<button class="px-8 py-4 bg-white border border-slate-200 text-on-surface rounded-xl font-label-md hover:bg-slate-50 transition-colors">
+                        View Documentation
+                    </button>
+</div>
+</div>
+<div class="mt-20 w-full max-w-5xl px-6 perspective-container">
+<div class="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 tilt-card">
+<img alt="StudySphere Dashboard Preview" class="w-full h-auto object-cover opacity-90" data-alt="A clean, high-fidelity desktop dashboard interface showing analytical charts, a bento-style task layout, and minimalist typography. The workspace is bathed in soft daylight, featuring a soft cyan and white color palette that evokes precision and professional focus in a modern research environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwEXR2PBYb1HbfklCXVa9NwtxdQwjNGgAFKsVc5MhOLPXQ4bDqQ7BNJu2tsrknnqIRJLON6Eu4SPZd5ZDLXFxTqpyxup6K3dTMTKnQ9s_yMreB6PAFxqSkkJh7YHeiFLRAIVAv1lH-6z7WQdos2GdbISAizFbpf6RtI_BroD3dqApu2kwrvoCQS9Xrl3NUce3Dlws7MGHcJq3u-X_G2NsOMkaBrx_S9lWwIOnBdAuZBlEz-f2MV1thsMkQNMlDAUSEQB6Q5GRGs-Q"/>
+</div>
+</div>
+</section>
+<!-- Scrolling Features Section -->
+<section class="py-32 px-6 max-w-[1280px] mx-auto space-y-48">
+<!-- 1. Tasks -->
+<div class="grid md:grid-cols-2 gap-16 items-center">
+<div class="reveal-on-scroll reveal-active">
+<h2 class="font-headline-lg text-on-surface mb-4">Focused Checklists</h2>
+<p class="font-body-md text-outline mb-8">Eliminate decision fatigue with context-aware task management that prioritizes your most impactful research milestones.</p>
+<ul class="space-y-4">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-body-md text-on-surface">Asymmetric task weighting</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-body-md text-on-surface">Time-blocked focus sessions</span>
+</li>
+</ul>
+</div>
+<div class="perspective-container">
+<div class="glass-panel p-8 rounded-2xl shadow-xl tilt-card border-slate-200">
+<div class="space-y-4">
+<div class="p-4 bg-white rounded-lg border border-slate-100 flex justify-between items-center shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-cyan-500"></div>
+<span class="font-label-md">Synthesize archival literature</span>
+</div>
+<span class="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full">High Priority</span>
+</div>
+<div class="p-4 bg-white rounded-lg border border-slate-100 flex justify-between items-center shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-secondary text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<span class="font-label-md text-outline line-through">Establish research parameters</span>
+</div>
+</div>
+<div class="p-4 bg-white/50 rounded-lg border border-slate-100 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded border border-slate-300"></div>
+<span class="font-label-md text-outline opacity-50">Cross-reference citations</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Notes -->
+<div class="grid md:grid-cols-2 gap-16 items-center">
+<div class="order-2 md:order-1 perspective-container">
+<div class="bg-slate-900 text-slate-300 p-8 rounded-2xl shadow-2xl font-mono text-sm tilt-card" style="transform: rotateY(-15deg);">
+<div class="flex gap-2 mb-4 border-b border-slate-700 pb-4">
+<div class="w-3 h-3 rounded-full bg-red-500"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+<div class="w-3 h-3 rounded-full bg-green-500"></div>
+</div>
+<p class="text-cyan-400 mb-2"># Research Methodology</p>
+<p class="mb-4">The core objective is to analyze the **interconnectivity** between digital distraction and deep work efficiency.</p>
+<p class="text-emerald-400">---</p>
+<p class="mb-2">1. Qualitative Synthesis</p>
+<p>2. Quantitative Analysis</p>
+<div class="mt-8 animate-pulse text-cyan-400">|</div>
+</div>
+</div>
+<div class="order-1 md:order-2 reveal-on-scroll reveal-active">
+<h2 class="font-headline-lg text-on-surface mb-4">Bionic Note-taking</h2>
+<p class="font-body-md text-outline mb-8">A distraction-free markdown environment that connects your thoughts using semantic linking and automated back-referencing.</p>
+<div class="flex items-center gap-4 p-4 bg-surface-container rounded-xl">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">link</span>
+<div>
+<p class="font-label-md">Bi-directional Graph</p>
+<p class="text-xs text-outline">Never lose the thread of a complex argument.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. AI Lab -->
+<div class="flex flex-col items-center text-center space-y-12">
+<div class="max-w-2xl reveal-on-scroll reveal-active">
+<h2 class="font-headline-lg text-on-surface mb-4">Neural Paper Analysis</h2>
+<p class="font-body-md text-outline">Upload complex manuscripts and let our proprietary AI Lab distill core findings, identify methodology gaps, and suggest related literature.</p>
+</div>
+<div class="relative w-full max-w-3xl aspect-video glass-panel rounded-3xl ai-glow flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-64 h-64 bg-cyan-400/20 rounded-full animate-ping absolute"></div>
+<div class="w-48 h-48 bg-primary-container/40 rounded-full blur-xl animate-pulse"></div>
+</div>
+<div class="z-10 grid grid-cols-3 gap-6 p-12">
+<div class="bg-white/40 p-4 rounded-xl border border-white/60 text-center scale-90 transition-transform hover:scale-100">
+<span class="material-symbols-outlined text-cyan-600 block mb-2">science</span>
+<span class="font-label-sm text-cyan-900">Synthesize</span>
+</div>
+<div class="bg-white/60 p-4 rounded-xl border border-white/60 text-center shadow-lg">
+<span class="material-symbols-outlined text-cyan-600 block mb-2">psychology</span>
+<span class="font-label-sm text-cyan-900">Analyze</span>
+</div>
+<div class="bg-white/40 p-4 rounded-xl border border-white/60 text-center scale-90 transition-transform hover:scale-100">
+<span class="material-symbols-outlined text-cyan-600 block mb-2">auto_graph</span>
+<span class="font-label-sm text-cyan-900">Forecast</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-32 px-6">
+<div class="max-w-5xl mx-auto bg-slate-900 rounded-[32px] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl">
+<div class="absolute top-0 right-0 p-8 opacity-20">
+<span class="material-symbols-outlined text-[120px] text-cyan-400" style="font-variation-settings: 'wght' 100;">auto_awesome</span>
+</div>
+<div class="relative z-10">
+<h2 class="font-display-md text-white mb-6">Ready to start your journey?</h2>
+<p class="font-body-lg text-slate-400 mb-10 max-w-xl mx-auto">Join 50,000+ researchers who have evolved their workflow with StudySphere.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="px-10 py-5 bg-primary-container text-on-primary rounded-2xl font-label-md text-lg hover:scale-105 transition-all">
+                            Enter App
+                        </button>
+<button class="px-10 py-5 bg-white/10 text-white rounded-2xl font-label-md text-lg hover:bg-white/20 transition-all backdrop-blur-md border border-white/10">
+                            Talk to Sales
+                        </button>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 p-8 opacity-10">
+<span class="material-symbols-outlined text-[80px] text-white">grid_view</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-16">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-[1280px] mx-auto gap-8">
+<div class="flex flex-col gap-4 text-center md:text-left">
+<span class="text-lg font-semibold text-slate-800 dark:text-slate-200">StudySphere</span>
+<p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
+                    © 2024 StudySphere. Precision for the modern researcher. Built for deep work environments.
+                </p>
+</div>
+<div class="flex gap-12">
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-slate-900 uppercase tracking-tighter">Product</span>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">AI Lab</a>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">Pricing</a>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">API Docs</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-slate-900 uppercase tracking-tighter">Company</span>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">Privacy</a>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">Terms</a>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">Research Hub</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-slate-900 uppercase tracking-tighter">Social</span>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">Twitter</a>
+<a class="text-xs text-slate-500 hover:text-cyan-500 transition-colors" href="#">LinkedIn</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        // Simple Intersection Observer to mimic scrollytelling entry animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+
+        // Parallax effect for the hero dashboard
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const tiltCard = document.querySelector('.tilt-card');
+            if(tiltCard) {
+                const val = scrolled * 0.05;
+                tiltCard.style.transform = `rotateY(${Math.max(0, 15 - val)}deg) scale(${Math.min(1, 0.95 + (val/100))})`;
+            }
+        });
+    </script>
+</body></html>

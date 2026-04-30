@@ -1,301 +1,726 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
+import type { ComponentType, RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useMotionTemplate, useScroll, useSpring, useTransform } from 'framer-motion';
 import {
   ArrowRight,
-  BrainCircuit,
-  CalendarDays,
   BookOpen,
-  CheckCheck,
+  Brain,
+  CalendarRange,
+  CheckSquare,
   Clock3,
-  Download,
-  FolderOpen,
-  NotebookPen,
+  Files,
+  LayoutDashboard,
   ShieldCheck,
   Sparkles,
-  TrendingUp,
+  StickyNote,
+  Target,
+  Zap,
 } from 'lucide-react';
-import { Badge, Button, Card, SectionHeading } from '../components/UI';
-import { useEffect, useState } from 'react';
 import { useData } from '../context/DataContext';
 
-interface DeferredPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-}
+const proofItems = [
+  { label: 'Unified command center', value: 'Tasks, notes, files, focus' },
+  { label: 'Built for momentum', value: 'See the next move instantly' },
+  { label: 'Designed to feel premium', value: 'Calm, bright, and deliberate' },
+] as const;
 
-const Landing: React.FC = () => {
+const storySteps = [
+  {
+    label: 'Dashboard',
+    title: 'Start from a clear aerial view of your academic life.',
+    body: 'Deadlines, progress, active notes, and focus history stay visible in one elegant control layer so decisions happen faster.',
+    icon: LayoutDashboard,
+    tint: 'sky',
+    accent: 'from-sky-500/18 via-cyan-300/8 to-white',
+  },
+  {
+    label: 'Tasks',
+    title: 'Turn scattered coursework into a plan that keeps moving.',
+    body: 'Capture quickly, organize by priority, and let the interface highlight what deserves attention right now.',
+    icon: CheckSquare,
+    tint: 'emerald',
+    accent: 'from-emerald-500/18 via-cyan-300/8 to-white',
+  },
+  {
+    label: 'Notes',
+    title: 'Keep knowledge structured instead of trapped in messy documents.',
+    body: 'Your notes become part of a wider study system, connected to sessions, files, and revision flow.',
+    icon: StickyNote,
+    tint: 'indigo',
+    accent: 'from-indigo-500/18 via-sky-300/8 to-white',
+  },
+  {
+    label: 'Focus',
+    title: 'Drop into deep work with a ritual that feels intentional.',
+    body: 'Sessions, streaks, and timing surfaces are presented with enough energy to motivate, without ever becoming noisy.',
+    icon: Clock3,
+    tint: 'teal',
+    accent: 'from-teal-500/18 via-emerald-300/8 to-white',
+  },
+] as const;
+
+const pillars = [
+  {
+    icon: Brain,
+    title: 'Clarity first',
+    text: 'The entire product is arranged to reduce cognitive clutter and surface the next useful decision.',
+  },
+  {
+    icon: Files,
+    title: 'Everything connected',
+    text: 'Files, notes, planning, and focus sessions feel like one ecosystem instead of separate tools.',
+  },
+  {
+    icon: Zap,
+    title: 'Motion with purpose',
+    text: 'Depth and motion guide the eye, strengthen hierarchy, and keep the experience feeling alive.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Calm visual trust',
+    text: 'Bright surfaces, restrained color, and layered glass panels create a polished premium atmosphere.',
+  },
+] as const;
+
+export default function Landing() {
   const navigate = useNavigate();
-  const [deferredPrompt, setDeferredPrompt] = useState<DeferredPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const { data, injectDemoData, removeDemoData } = useData();
-  
-  const hasDemoData = React.useMemo(() => {
-    const checkDemo = (items: any[] | undefined) => (items || []).some(item => item.isDemo);
-    const checkTasks = (tasks: any[] | undefined): boolean => (tasks || []).some(t => t.isDemo || (Array.isArray(t.children) && checkTasks(t.children)));
-    return checkTasks(data.tasks) || checkDemo(data.notes) || checkDemo(data.planner) || checkDemo(data.files);
-  }, [data]);
+  const { injectDemoData } = useData();
 
-  const isEmpty = data.tasks.length === 0 && data.notes.length === 0 && data.planner.length === 0 && data.files.length === 0;
+  const heroRef = useRef<HTMLElement | null>(null);
+  const experienceRef = useRef<HTMLElement | null>(null);
+  const systemRef = useRef<HTMLElement | null>(null);
+  const launchRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const standalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
-      (window.navigator as any).standalone === true;
-    setIsInstalled(standalone);
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as DeferredPromptEvent);
-    };
-
-    const onInstalled = () => {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('appinstalled', onInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) {
-      window.alert('Use your browser menu and choose "Install app" to add StudySphere to your device.');
-      return;
-    }
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setIsInstalled(true);
+  const { scrollYProgress } = useScroll();
+  const smoothPage = useSpring(scrollYProgress, { stiffness: 110, damping: 22, mass: 0.24 });
+
+  const { scrollYProgress: experienceProgress } = useScroll({
+    target: experienceRef,
+    offset: ['start center', 'end center'],
+  });
+  const smoothExperience = useSpring(experienceProgress, { stiffness: 90, damping: 20, mass: 0.2 });
+
+  const heroSceneY = useTransform(smoothPage, [0, 0.18], [0, -70]);
+  const heroSceneRotate = useTransform(smoothPage, [0, 0.18], [-10, 4]);
+  const heroGlowScale = useTransform(smoothPage, [0, 0.22], [0.9, 1.2]);
+  const progressWidth = useTransform(smoothPage, [0, 1], ['0%', '100%']);
+
+  const stageY = useTransform(smoothExperience, [0, 1], [20, -20]);
+
+  // Dashboard (0 - 0.25 active)
+  const dashboardY = useTransform(smoothExperience, [0, 0.25, 0.5, 1], [0, -40, -80, -160]);
+  const dashboardScale = useTransform(smoothExperience, [0, 0.25, 0.5, 1], [1, 0.92, 0.84, 0.75]);
+  const dashboardOpacity = useTransform(smoothExperience, [0, 0.25, 0.5, 1], [1, 0.7, 0.3, 0]);
+  const dashboardBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.25, 0.5, 1], [0, 4, 8, 12])}px)`;
+
+  // Tasks (0.25 - 0.5 active)
+  const tasksY = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [400, 0, -40, -80, -160]);
+  const tasksScale = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [1.1, 1, 0.92, 0.84, 0.75]);
+  const tasksOpacity = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [0, 1, 0.7, 0.3, 0]);
+  const tasksBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [8, 0, 4, 8, 12])}px)`;
+
+  // Notes (0.5 - 0.75 active)
+  const notesY = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [400, 400, 0, -40, -80]);
+  const notesScale = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [1.1, 1.1, 1, 0.92, 0.84]);
+  const notesOpacity = useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [0, 0, 1, 0.7, 0.3]);
+  const notesBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.25, 0.5, 0.75, 1], [8, 8, 0, 4, 8])}px)`;
+
+  // Focus (0.75 - 1.0 active)
+  const focusY = useTransform(smoothExperience, [0, 0.5, 0.75, 1], [400, 400, 0, -40]);
+  const focusScale = useTransform(smoothExperience, [0, 0.5, 0.75, 1], [1.1, 1.1, 1, 0.92]);
+  const focusOpacity = useTransform(smoothExperience, [0, 0.5, 0.75, 1], [0, 0, 1, 0.7]);
+  const focusBlur = useMotionTemplate`blur(${useTransform(smoothExperience, [0, 0.5, 0.75, 1], [8, 8, 0, 4])}px)`;
+
+  const orbitGlowOpacity = useTransform(smoothExperience, [0, 0.5, 1], [0.45, 0.8, 0.5]);
+  const orbitGlowScale = useTransform(smoothExperience, [0, 0.5, 1], [0.85, 1.2, 0.95]);
+  const orbitBackground = useMotionTemplate`radial-gradient(circle at 50% 50%, rgba(56, 189, 248, ${orbitGlowOpacity}), rgba(186, 230, 253, 0.20) 30%, rgba(255,255,255,0) 72%)`;
+
+  const handleEnter = async () => {
+    try {
+      await injectDemoData();
+    } catch (error) {
+      console.error('Failed to initialize workspace:', error);
+    } finally {
+      navigate('/dashboard');
     }
   };
 
-  const features = [
-    {
-      icon: CheckCheck,
-      title: 'Task system that feels actionable',
-      description: 'Break work down fast and keep progress visible.',
-      path: '/tasks',
-    },
-    {
-      icon: BookOpen,
-      title: 'Notes that stay organized',
-      description: 'Capture ideas, revision notes, and study material in one place.',
-      path: '/notes',
-    },
-    {
-      icon: CalendarDays,
-      title: 'Planner for real routines',
-      description: 'Turn intentions into scheduled study blocks.',
-      path: '/planner',
-    },
-    {
-      icon: Clock3,
-      title: 'Focus mode with momentum',
-      description: 'Stay locked in with timers, alerts, and consistency tracking.',
-      path: '/focus',
-    },
-    {
-      icon: BrainCircuit,
-      title: 'AI study generation',
-      description: 'Turn files into summaries, flashcards, and quizzes.',
-      path: '/files',
-    },
-    {
-      icon: FolderOpen,
-      title: 'Study resources in one vault',
-      description: 'Keep documents, slides, and references easy to reach.',
-      path: '/files',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Private and fast',
-      description: 'Your workspace stays personal and responsive.',
-    },
-  ];
-
-  const highlights = [
-    'Plan, study, revise, and track progress from one workspace',
-    'Every tool is built to push you toward action, not setup',
-    'Clean enough to impress, practical enough to use every day',
-  ];
+  const scrollTo = (ref: RefObject<HTMLElement>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
-    <div className="space-y-10 pb-10">
-      <section className="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-8">
-          <Badge color="cyan">Competition-ready student productivity platform</Badge>
-          <div className="space-y-5">
-            <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-6xl">
-              The student workspace that helps you plan, focus, and revise from the same place.
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-              StudySphere gives students one place to plan work, manage notes, stay focused, and generate revision material without bouncing between apps.
-            </p>
-          </div>
+    <div
+      className="relative overflow-clip bg-[linear-gradient(180deg,#f7fbff_0%,#edf5fb_38%,#f8fbfd_100%)] text-slate-900"
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+    >
+      <motion.div className="fixed inset-x-0 top-0 z-[90] h-1 origin-left bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400" style={{ width: progressWidth }} />
 
-          <div className="flex flex-wrap gap-3">
-            <Button size="lg" onClick={() => navigate('/dashboard')}>
-              Open dashboard
-              <ArrowRight size={18} />
-            </Button>
-            <Button size="lg" variant="secondary" onClick={() => navigate('/tasks')}>
-              Explore product
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="border-sky-300/60 bg-sky-500/10 text-sky-700 hover:bg-sky-500/15 dark:border-sky-500/40 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/20"
-              onClick={handleInstall}
-              disabled={isInstalled}
-            >
-              <Download size={18} />
-              {isInstalled ? 'Installed' : 'Download app'}
-            </Button>
-          </div>
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_18%,rgba(125,211,252,0.22),transparent_24%),radial-gradient(circle_at_85%_12%,rgba(16,185,129,0.12),transparent_20%),radial-gradient(circle_at_52%_72%,rgba(148,163,184,0.12),transparent_30%)]" />
+        <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:96px_96px]" />
+      </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-cyan-100 bg-cyan-50/40 px-4 py-3 text-sm text-cyan-800 shadow-sm dark:border-cyan-500/20 dark:bg-cyan-500/10 dark:text-cyan-300">
-            <Badge color="cyan">New</Badge>
-            <span>Install StudySphere on mobile or desktop for a full-screen app experience with faster launch.</span>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            {highlights.map((item) => (
-              <div key={item} className="rounded-3xl border border-white/60 bg-white/75 px-4 py-4 text-sm text-slate-700 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-300">
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <Card className="overflow-hidden border border-cyan-100 bg-gradient-to-br from-white via-cyan-50/70 to-sky-100/60 text-slate-900 shadow-[0_30px_90px_-40px_rgba(14,165,233,0.35)] dark:border-cyan-500/10 dark:bg-[linear-gradient(145deg,rgba(8,15,35,0.96),rgba(15,23,42,0.92)_42%,rgba(17,24,39,0.9))] dark:text-white dark:shadow-[0_30px_90px_-40px_rgba(14,165,233,0.65)]">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-cyan-600 dark:text-cyan-300">Live Snapshot</p>
-                <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">A smarter command center for ambitious students</h2>
-              </div>
-              <Sparkles className="text-cyan-500 dark:text-cyan-300" />
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/60 bg-white/72 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-4 py-4 sm:px-6 lg:px-8">
+          <button type="button" onClick={() => scrollTo(heroRef)} className="flex items-center gap-3 text-left">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(145deg,#ffffff,#dff2fe)] shadow-[0_18px_50px_-25px_rgba(14,165,233,0.6)] ring-1 ring-sky-100">
+              <BookOpen size={20} className="text-sky-600" />
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl border border-white/80 bg-white/80 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/70">
-                <div className="text-sm text-slate-500 dark:text-slate-300">Productivity stack</div>
-                <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">6-in-1</div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">Tasks, notes, planner, focus, study lab, and revision AI</div>
-              </div>
-              <div className="rounded-3xl border border-cyan-100 bg-gradient-to-br from-cyan-100 via-cyan-50 to-emerald-50 p-5 dark:border-cyan-300/10 dark:bg-gradient-to-br dark:from-cyan-500/18 dark:via-sky-500/10 dark:to-emerald-400/12">
-                <div className="text-sm text-cyan-700 dark:text-cyan-200">Experience quality</div>
-                <div className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">Pro</div>
-                <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">Clear structure, stronger workflow, and smarter revision support</div>
-              </div>
+            <div>
+              <div className="text-lg font-semibold tracking-tight text-slate-950">StudySphere</div>
+              <div className="text-xs text-slate-500">Plan smart. Focus deep.</div>
             </div>
+          </button>
 
-            <div className="space-y-4 rounded-3xl border border-white/80 bg-white/75 p-5 shadow-sm dark:border-cyan-400/10 dark:bg-slate-900/65">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Snapshot highlights</span>
-                <TrendingUp size={16} className="text-emerald-500 dark:text-emerald-300" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
-                  <div className="text-base font-semibold text-slate-900 dark:text-white">All-in-one workflow</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Plan, notes, routines, and focus in one place.</p>
-                </div>
-                <div className="rounded-2xl bg-slate-50/80 px-4 py-4 dark:bg-slate-800/70">
-                  <div className="text-base font-semibold text-slate-900 dark:text-white">AI-ready lab</div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Turn documents into flashcards and quizzes instantly.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </section>
+          <nav className="hidden items-center gap-2 rounded-full border border-white/80 bg-white/80 p-1 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.35)] lg:flex">
+            <NavPill label="Home" onClick={() => scrollTo(heroRef)} />
+            <NavPill label="Experience" onClick={() => scrollTo(experienceRef)} />
+            <NavPill label="System" onClick={() => scrollTo(systemRef)} />
+            <NavPill label="Launch" onClick={() => scrollTo(launchRef)} />
+          </nav>
 
-      <section id="demo-hub" className="relative overflow-hidden rounded-[40px] border border-cyan-100 bg-white shadow-2xl shadow-cyan-500/15 dark:border-cyan-500/20 dark:bg-slate-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_50%)]" />
-        <div className="relative flex flex-col items-center justify-between gap-10 p-8 lg:flex-row lg:p-14">
-          <div className="max-w-xl space-y-6 text-center lg:text-left">
-            <h2 className="text-4xl font-bold tracking-tight text-slate-950 dark:text-white lg:text-5xl">
-              {hasDemoData ? "Sample Data Loaded" : "Want to test the App?"}
-            </h2>
-            <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-              {hasDemoData 
-                ? "You've successfully loaded the demo workspace. Explore all sections like Notes, Tasks, and the AI Study Lab. You can remove only these samples anytime."
-                : "Experience StudySphere instantly. Click below to populate every section—Notes, Tasks, Planner, and Files—with curated study material for evaluation."
-              }
-            </p>
-          </div>
-          
-          <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-            {!hasDemoData ? (
-              <Button 
-                size="lg" 
-                onClick={() => { injectDemoData(); navigate('/dashboard'); }} 
-                className="h-16 rounded-2xl bg-cyan-600 px-10 text-lg font-bold text-white shadow-xl shadow-cyan-600/30 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
-              >
-                <Sparkles className="mr-2 h-6 w-6" />
-                Load Demo Data
-              </Button>
-            ) : (
-              <Button 
-                size="lg" 
-                variant="secondary"
-                onClick={removeDemoData} 
-                className="h-16 rounded-2xl border-rose-200 bg-rose-50 px-10 text-lg font-bold text-rose-700 shadow-lg hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-900/40"
-              >
-                <TrendingUp className="mr-2 h-6 w-6 rotate-180" />
-                Remove Demo Data
-              </Button>
-            )}
-            <Button 
-              size="lg" 
-              variant="secondary" 
-              onClick={() => navigate('/dashboard')} 
-              className="h-16 rounded-2xl border-slate-200 bg-white px-10 text-lg font-bold text-slate-700 shadow-md hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Skip to App
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <SectionHeading
-          eyebrow="Core Suite"
-          title="Everything you need to move from overwhelm to execution"
-          description="Each workspace is designed to support the next one, so planning, doing, and reflecting feel connected."
-        />
-
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {features.map((feature) => (
+          <div className="flex items-center gap-3">
             <button
-              key={feature.title}
               type="button"
-              onClick={() => feature.path && navigate(feature.path)}
-              className="group text-left"
+              onClick={() => scrollTo(experienceRef)}
+              className="hidden rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:text-sky-700 sm:inline-flex"
             >
-              <Card className="h-full transition duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_30px_70px_-45px_rgba(14,165,233,0.55)]">
-                <div className="space-y-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-500/10 text-cyan-700 dark:text-cyan-300">
-                    <feature.icon size={24} />
+              Explore
+            </button>
+            <button
+              type="button"
+              onClick={handleEnter}
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_28px_60px_-28px_rgba(15,23,42,0.82)] transition hover:-translate-y-0.5 hover:bg-sky-600"
+            >
+              Open workspace
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 pt-28">
+        <section ref={heroRef} className="mx-auto grid max-w-7xl gap-10 px-4 pb-28 pt-10 sm:px-6 sm:pb-32 lg:grid-cols-[0.96fr_1.04fr] lg:px-8 lg:pb-24 lg:pt-14">
+          <div className="max-w-3xl pt-6 lg:pt-18">
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
+              className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-sm"
+            >
+              <Sparkles size={14} />
+              Academic operating system
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.86, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-8 text-5xl font-semibold tracking-[-0.07em] text-slate-950 sm:text-6xl lg:text-[5.7rem] lg:leading-[0.94]"
+            >
+              The premium workspace for focused students.
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.16 }}
+              className="mt-7 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl"
+            >
+              StudySphere brings your tasks, notes, files, planner, and focus rituals into one polished environment built to help you think clearly and move faster.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.24 }}
+              className="mt-10 flex flex-col gap-4 sm:flex-row"
+            >
+              <button
+                type="button"
+                onClick={handleEnter}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-7 py-4 text-base font-semibold text-white shadow-[0_34px_80px_-28px_rgba(2,132,199,0.65)] transition hover:-translate-y-0.5 hover:bg-sky-500"
+              >
+                Launch StudySphere
+                <ArrowRight size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo(experienceRef)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/92 px-7 py-4 text-base font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 hover:text-sky-700"
+              >
+                See the experience
+              </button>
+            </motion.div>
+
+            <div className="mt-14 grid gap-4 sm:grid-cols-3">
+              {proofItems.map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.72, delay: 0.22 + index * 0.08 }}
+                  className="rounded-[28px] border border-white/80 bg-white/82 p-5 shadow-[0_24px_70px_-42px_rgba(15,23,42,0.35)] backdrop-blur-xl"
+                >
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">{item.label}</div>
+                  <div className="mt-3 text-sm leading-6 text-slate-600">{item.value}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px]">
+            <motion.div
+              style={{ y: heroSceneY, scale: heroGlowScale }}
+              className="absolute left-1/2 top-8 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.56),rgba(255,255,255,0)_68%)] blur-3xl"
+            />
+
+            <motion.div
+              style={{ y: heroSceneY, rotate: heroSceneRotate }}
+              className="absolute inset-x-0 top-6 mx-auto h-[520px] w-full max-w-[680px] [perspective:1800px] sm:h-[580px]"
+            >
+              <div className="relative h-full w-full [transform-style:preserve-3d]">
+                <motion.div
+                  animate={{ y: [0, -10, 0], rotateZ: [-1.5, 1.5, -1.5] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute left-4 top-8 h-[420px] w-[320px] rounded-[38px] border border-white/90 bg-[linear-gradient(165deg,rgba(255,255,255,0.96),rgba(240,249,255,0.92),rgba(224,242,254,0.72))] p-6 shadow-[0_42px_120px_-52px_rgba(14,165,233,0.52)] backdrop-blur-2xl [transform:rotateX(12deg)_rotateY(-18deg)_translateZ(60px)] sm:left-10"
+                >
+                  <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Your workload, clarified" tone="bg-sky-100 text-sky-700" />
+                  <div className="mt-8 grid grid-cols-2 gap-4">
+                    <HeroMetric label="Focus" value="124h" tone="bg-sky-50" />
+                    <HeroMetric label="Tasks" value="18" tone="bg-cyan-50" />
+                    <HeroMetric label="Notes" value="42" tone="bg-white" />
+                    <HeroMetric label="Files" value="86" tone="bg-slate-50" />
+                  </div>
+                  <div className="mt-8 rounded-[28px] border border-sky-100 bg-white/92 p-4 shadow-inner">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-slate-600">Consistency</span>
+                      <span className="font-semibold text-sky-700">94%</span>
+                    </div>
+                    <div className="mt-4 flex h-28 items-end gap-2 rounded-[22px] bg-[linear-gradient(180deg,#f7fbff_0%,#edf6ff_100%)] p-4">
+                      {[30, 48, 56, 74, 66, 90, 82].map((height, index) => (
+                        <div key={height} className="flex-1">
+                          <div
+                            className={`rounded-t-[14px] bg-gradient-to-t ${index > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
+                            style={{ height: `${height}%` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  animate={{ y: [0, 12, 0], rotateZ: [2, -1, 2] }}
+                  transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+                  className="absolute right-2 top-28 h-[292px] w-[255px] rounded-[32px] border border-white/90 bg-[linear-gradient(160deg,rgba(255,255,255,0.96),rgba(236,253,245,0.9),rgba(220,252,231,0.72))] p-5 shadow-[0_34px_90px_-44px_rgba(16,185,129,0.58)] backdrop-blur-xl [transform:rotateX(12deg)_rotateY(20deg)_translateZ(130px)] sm:right-8"
+                >
+                  <PanelHeader icon={Clock3} label="Focus mode" subtitle="Built for deep work" tone="bg-emerald-100 text-emerald-700" />
+                  <div className="mt-8 rounded-[26px] bg-slate-950 p-5 text-white">
+                    <div className="text-xs uppercase tracking-[0.24em] text-white/45">Current block</div>
+                    <div className="mt-3 text-5xl font-semibold tracking-[-0.06em]">25:00</div>
+                    <div className="mt-5 h-2 rounded-full bg-white/10">
+                      <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300" />
+                    </div>
+                  </div>
+                  <div className="mt-5 flex items-center gap-3 rounded-[22px] bg-white/88 px-4 py-3 text-sm text-slate-600">
+                    <Target size={16} className="text-emerald-600" />
+                    Attention stays protected
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  animate={{ y: [0, -8, 0], rotateZ: [-1, 1, -1] }}
+                  transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+                  className="absolute inset-x-14 bottom-6 rounded-[30px] border border-white/90 bg-white/92 p-5 shadow-[0_28px_80px_-44px_rgba(15,23,42,0.45)] backdrop-blur-xl [transform:rotateX(-2deg)_rotateY(-8deg)_translateZ(110px)]"
+                >
+                  <PanelHeader icon={StickyNote} label="Notes + AI" subtitle="Ideas stay connected" tone="bg-indigo-50 text-indigo-700" />
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-[22px] border border-slate-100 bg-slate-50 p-4">
+                      <div className="text-sm font-semibold text-slate-900">Revision guide</div>
+                      <div className="mt-2 text-sm leading-6 text-slate-500">Turn chapters into clean summaries with linked context.</div>
+                    </div>
+                    <div className="rounded-[22px] border border-slate-100 bg-white p-4">
+                      <div className="text-sm font-semibold text-slate-900">Study pack</div>
+                      <div className="mt-2 text-sm leading-6 text-slate-500">Generate flashcards, outlines, and quick recall material.</div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section ref={experienceRef} className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mt-4 grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="space-y-10">
+              {storySteps.map((step, index) => (
+                <motion.article
+                  key={step.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-12% 0px -10% 0px' }}
+                  transition={{ duration: 0.7, delay: index * 0.04 }}
+                  className={`min-h-[35vh] rounded-[36px] border border-white/90 bg-gradient-to-br ${step.accent} p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.42)] backdrop-blur-xl sm:p-10`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${toneClass(step.tint)} shadow-sm`}>
+                      <step.icon size={22} />
+                    </div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-700">{step.label}</div>
+                  </div>
+                  <h3 className="mt-8 max-w-xl text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-[2.4rem] sm:leading-[1.05]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">{step.body}</p>
+                </motion.article>
+              ))}
+            </div>
+
+            <div className="relative">
+              <div className="lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)]">
+                <div className="relative flex h-[560px] items-center justify-center overflow-hidden rounded-[42px] border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(241,245,249,0.88))] shadow-[0_42px_120px_-56px_rgba(15,23,42,0.45)] lg:h-full">
+                  <motion.div className="absolute inset-0" style={{ background: orbitBackground }} />
+                  <motion.div
+                    style={{ scale: orbitGlowScale }}
+                    className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.98),rgba(186,230,253,0.45),rgba(255,255,255,0)_72%)] blur-xl"
+                  />
+
+                  <motion.div
+                    style={{ y: stageY }}
+                    className="relative h-[520px] w-[min(92%,620px)] scale-[1.35] sm:scale-[1.5] origin-center"
+                  >
+                    <div className="relative h-full w-full">
+                      {/* Dashboard */}
+                      <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+                        <motion.div
+                          style={{ y: dashboardY, scale: dashboardScale, opacity: dashboardOpacity, filter: dashboardBlur }}
+                          className="w-[360px] rounded-[30px] border border-white/90 bg-white/96 p-6 shadow-[0_28px_90px_-48px_rgba(14,165,233,0.65)]"
+                        >
+                          <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Deadlines, output, progress" tone="bg-sky-100 text-sky-700" />
+                          <div className="mt-6 grid grid-cols-2 gap-4">
+                            <StageMetric label="Today" value="07" />
+                            <StageMetric label="Focus" value="3.4h" />
+                          </div>
+                          <div className="mt-5 rounded-[22px] bg-slate-50 p-5">
+                            <div className="flex h-24 items-end gap-2">
+                              {[36, 44, 56, 72, 66, 84].map((height) => (
+                                <div key={height} className="flex-1 rounded-t-xl bg-gradient-to-t from-sky-500 to-cyan-300" style={{ height: `${height}%` }} />
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Tasks */}
+                      <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+                        <motion.div
+                          style={{ y: tasksY, scale: tasksScale, opacity: tasksOpacity, filter: tasksBlur }}
+                          className="w-[340px] rounded-[30px] border border-white/90 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(240,253,250,0.92))] p-6 shadow-[0_28px_90px_-50px_rgba(16,185,129,0.54)]"
+                        >
+                          <PanelHeader icon={CheckSquare} label="Tasks" subtitle="Priority made visible" tone="bg-emerald-100 text-emerald-700" />
+                          <div className="mt-6 space-y-4">
+                            <StageListItem label="Review lecture notes" meta="High priority" />
+                            <StageListItem label="Finish problem set" meta="Due today" />
+                            <StageListItem label="Plan revision block" meta="Ready next" />
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Notes */}
+                      <div className="absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2">
+                        <motion.div
+                          style={{ y: notesY, scale: notesScale, opacity: notesOpacity, filter: notesBlur }}
+                          className="w-[320px] rounded-[28px] border border-white/90 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(238,242,255,0.92))] p-6 shadow-[0_28px_80px_-50px_rgba(99,102,241,0.5)]"
+                        >
+                          <PanelHeader icon={StickyNote} label="Notes" subtitle="Knowledge that compounds" tone="bg-indigo-100 text-indigo-700" />
+                          <div className="mt-6 rounded-[22px] bg-white/90 p-5 shadow-inner">
+                            <div className="text-sm font-semibold text-slate-900">Neural plasticity</div>
+                            <div className="mt-2 text-sm leading-6 text-slate-500">Connected summaries, flashcards, and revision context.</div>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Focus */}
+                      <div className="absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2">
+                        <motion.div
+                          style={{ y: focusY, scale: focusScale, opacity: focusOpacity, filter: focusBlur }}
+                          className="w-[300px] rounded-[28px] border border-white/90 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(236,253,245,0.92))] p-6 shadow-[0_24px_70px_-48px_rgba(5,150,105,0.56)]"
+                        >
+                          <PanelHeader icon={Clock3} label="Focus" subtitle="Energy stays protected" tone="bg-teal-100 text-teal-700" />
+                          <div className="mt-8 rounded-[22px] bg-slate-950 p-5 text-white">
+                            <div className="text-xs uppercase tracking-[0.24em] text-white/45">Next session</div>
+                            <div className="mt-3 text-5xl font-semibold tracking-[-0.05em]">25:00</div>
+                            <div className="mt-5 h-2 rounded-full bg-white/10">
+                              <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300" />
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section ref={systemRef} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div className="max-w-xl">
+              <motion.div
+                initial={{ opacity: 0, y: 22 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-sm"
+              >
+                <ShieldCheck size={14} />
+                Visual system
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-5xl"
+              >
+                Bright, calm, and engineered to feel composed under pressure.
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.05 }}
+                className="mt-5 text-lg leading-8 text-slate-600"
+              >
+                The interface keeps depth, contrast, and motion working together so the product feels premium without becoming flashy or exhausting.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="mt-8 rounded-[34px] border border-white/90 bg-white/86 p-6 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.35)]"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+                    <CalendarRange size={22} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-950 dark:text-white">{feature.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-400">{feature.description}</p>
+                    <div className="text-lg font-semibold text-slate-950">Built for long sessions</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      Large type, bright surfaces, and carefully controlled motion make the product feel clear even when the workload gets dense.
+                    </p>
                   </div>
                 </div>
-              </Card>
-            </button>
-          ))}
-        </div>
-      </section>
+              </motion.div>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {pillars.map((pillar, index) => (
+                <motion.article
+                  key={pillar.title}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+                  transition={{ duration: 0.65, delay: index * 0.05 }}
+                  whileHover={{ y: -8, rotateX: 2, rotateY: index % 2 === 0 ? -2 : 2 }}
+                  className="rounded-[32px] border border-white/86 bg-white/82 p-6 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.4)] backdrop-blur-xl"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_16px_40px_-22px_rgba(15,23,42,0.6)]">
+                    <pillar.icon size={20} />
+                  </div>
+                  <h3 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{pillar.title}</h3>
+                  <p className="mt-3 text-base leading-7 text-slate-600">{pillar.text}</p>
+                </motion.article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="relative overflow-hidden rounded-[38px] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.94),rgba(240,249,255,0.88),rgba(224,242,254,0.74))] p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)]"
+            >
+              <div className="absolute -right-8 top-0 h-36 w-36 rounded-full bg-sky-200/60 blur-3xl" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-sky-700">
+                  <Brain size={18} />
+                  Designed for cognition
+                </div>
+                <p className="mt-6 max-w-2xl text-2xl leading-10 text-slate-700">
+                  The page constantly feels active, but never frantic. Motion highlights hierarchy, reinforces progress, and keeps the eye moving through the workspace naturally.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.08 }}
+              className="rounded-[38px] border border-white/90 bg-white/86 p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)]"
+            >
+              <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                <Files size={18} />
+                Inside the workspace
+              </div>
+              <div className="mt-6 grid gap-4">
+                <FeatureRow icon={LayoutDashboard} label="A dashboard that clarifies the whole week" />
+                <FeatureRow icon={CheckSquare} label="Task structure that actually keeps moving" />
+                <FeatureRow icon={StickyNote} label="Notes that connect instead of pile up" />
+                <FeatureRow icon={Clock3} label="Focus rituals that feel motivating" />
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section ref={launchRef} className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="relative overflow-hidden rounded-[44px] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(240,249,255,0.92),rgba(236,253,245,0.82))] px-6 py-12 shadow-[0_36px_120px_-60px_rgba(15,23,42,0.5)] sm:px-10 lg:px-14 lg:py-14"
+          >
+            <div className="absolute -right-16 -top-10 h-56 w-56 rounded-full bg-sky-200/50 blur-3xl" />
+            <div className="absolute -bottom-12 left-10 h-44 w-44 rounded-full bg-emerald-200/50 blur-3xl" />
+            <div className="relative z-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-700">Launch the workspace</div>
+                <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-5xl">
+                  Enter the app and pick up your work in a space that already feels under control.
+                </h2>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
+                  Open StudySphere with demo data loaded so the full system is immediately ready to explore.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4 sm:flex-row lg:justify-end">
+                <button
+                  type="button"
+                  onClick={handleEnter}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 text-base font-semibold text-white shadow-[0_28px_70px_-32px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:bg-sky-600"
+                >
+                  Open StudySphere
+                  <ArrowRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollTo(heroRef)}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/90 px-7 py-4 text-base font-semibold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                >
+                  Back to top
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+      </main>
     </div>
   );
-};
+}
 
-export default Landing;
+function NavPill({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
+    >
+      {label}
+    </button>
+  );
+}
+
+function PanelHeader({
+  icon: Icon,
+  label,
+  subtitle,
+  tone,
+}: {
+  icon: ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  subtitle: string;
+  tone: string;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="text-lg font-semibold tracking-tight text-slate-950">{label}</div>
+        <div className="mt-1 text-sm text-slate-500">{subtitle}</div>
+      </div>
+      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${tone}`}>
+        <Icon size={18} />
+      </div>
+    </div>
+  );
+}
+
+function HeroMetric({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <div className={`rounded-[22px] border border-white/80 ${tone} p-4 shadow-sm`}>
+      <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{label}</div>
+      <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{value}</div>
+    </div>
+  );
+}
+
+function StageMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-slate-100 bg-slate-50 p-3">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{label}</div>
+      <div className="mt-2 text-xl font-semibold text-slate-950">{value}</div>
+    </div>
+  );
+}
+
+function StageListItem({ label, meta }: { label: string; meta: string }) {
+  return (
+    <div className="rounded-[18px] border border-emerald-100 bg-white/82 p-3">
+      <div className="text-sm font-semibold text-slate-900">{label}</div>
+      <div className="mt-1 text-xs font-medium uppercase tracking-[0.2em] text-emerald-700">{meta}</div>
+    </div>
+  );
+}
+
+function FeatureRow({
+  icon: Icon,
+  label,
+}: {
+  icon: ComponentType<{ size?: number; className?: string }>;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-[22px] border border-slate-100 bg-slate-50/80 px-4 py-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+        <Icon size={18} />
+      </div>
+      <div className="font-medium text-slate-700">{label}</div>
+    </div>
+  );
+}
+
+function toneClass(tint: string) {
+  switch (tint) {
+    case 'sky':
+      return 'bg-sky-100 text-sky-700';
+    case 'emerald':
+      return 'bg-emerald-100 text-emerald-700';
+    case 'indigo':
+      return 'bg-indigo-100 text-indigo-700';
+    case 'teal':
+      return 'bg-teal-100 text-teal-700';
+    default:
+      return 'bg-slate-100 text-slate-700';
+  }
+}

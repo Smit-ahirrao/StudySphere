@@ -47,14 +47,16 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export const Card: React.FC<{
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
   title?: string;
   action?: React.ReactNode;
-}> = ({ children, className = '', title, action }) => (
+}
+
+export const Card: React.FC<CardProps> = ({ children, className = '', title, action, ...props }) => (
   <div
     className={`rounded-[28px] border border-white/70 bg-white/88 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.42)] backdrop-blur-xl dark:border-slate-800/90 dark:bg-slate-950/78 overflow-hidden ${className}`}
+    {...props}
   >
     {(title || action) && (
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100/80 px-5 py-4 dark:border-slate-800">

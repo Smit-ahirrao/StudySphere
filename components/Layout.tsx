@@ -16,6 +16,7 @@ import {
   SunMedium,
   X,
 } from 'lucide-react';
+import DeckPlayer from './music/DeckPlayer';
 import { useData } from '../context/DataContext';
 import { Button, Badge } from './UI';
 
@@ -27,7 +28,7 @@ interface DeferredPromptEvent extends Event {
 }
 
 const Layout: React.FC = () => {
-  const { data, updateSettings, removeDemoData } = useData();
+  const { data, updateSettings, removeDemoData, injectDemoData } = useData();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [spotifyEmbed, setSpotifyEmbed] = useState('');
   const [spotifyCollapsed, setSpotifyCollapsed] = useState(false);
@@ -113,7 +114,6 @@ const Layout: React.FC = () => {
 
   const navItems = useMemo(
     () => [
-      { path: '/', label: 'Home', icon: Home },
       { path: '/dashboard', label: 'Dashboard', icon: Sparkles },
       { path: '/tasks', label: 'Tasks', icon: CheckSquare },
       { path: '/notes', label: 'Notes', icon: StickyNote },
@@ -137,8 +137,6 @@ const Layout: React.FC = () => {
   const focusMinutesToday = data.focusHistory
     .filter((session) => new Date(session.completedAt).toDateString() === new Date().toDateString() && session.mode === 'focus')
     .reduce((sum, session) => sum + session.duration, 0);
-
-  const isLanding = location.pathname === '/';
 
   const toggleTheme = () => {
     updateSettings({
@@ -254,9 +252,9 @@ const Layout: React.FC = () => {
         ) : null}
       </header>
 
-      <main className={`relative z-10 mx-auto w-full px-4 pb-12 pt-8 sm:px-6 lg:px-8 ${isLanding ? 'max-w-7xl' : 'max-w-7xl'}`}>
-        {!isLanding && hasDemoData && (
-          <div className="mb-6 flex items-center justify-between gap-4 rounded-3xl border border-sky-200 bg-sky-50 px-6 py-4 dark:border-sky-500/20 dark:bg-sky-500/10">
+      <main className={`relative z-10 mx-auto w-full px-4 pb-12 pt-8 sm:px-6 lg:px-8 max-w-7xl`}>
+        {hasDemoData ? (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-sky-200 bg-sky-50 px-6 py-4 dark:border-sky-500/20 dark:bg-sky-500/10">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-600 dark:text-sky-300">
                 <Sparkles size={18} />
@@ -265,8 +263,22 @@ const Layout: React.FC = () => {
                 You are exploring with demo data. You can remove only these samples at any time.
               </p>
             </div>
-            <Button size="sm" variant="secondary" onClick={removeDemoData} className="bg-white/80 dark:bg-slate-900/50">
+            <Button size="sm" variant="secondary" onClick={removeDemoData} className="bg-white/80 dark:bg-slate-900/50 shrink-0">
               Clear Demo Data
+            </Button>
+          </div>
+        ) : (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-white/60 px-6 py-4 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <Sparkles size={18} />
+              </div>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Want to test the app? Add demo data to see how everything works.
+              </p>
+            </div>
+            <Button size="sm" variant="secondary" onClick={injectDemoData} className="bg-white/80 dark:bg-slate-900/50 shrink-0">
+              Add Demo Data
             </Button>
           </div>
         )}
@@ -274,17 +286,17 @@ const Layout: React.FC = () => {
       </main>
 
       {spotifyEmbed ? (
-        <div className={`fixed bottom-5 right-5 z-40 overflow-hidden rounded-[28px] border border-white/70 bg-white/92 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl transition dark:border-slate-800/90 dark:bg-slate-950/88 ${spotifyCollapsed ? 'w-[220px]' : 'w-[340px]'}`}>
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <div className={`fixed bottom-5 right-5 z-40 overflow-hidden rounded-[40px] border border-white/70 bg-white/40 shadow-[0_32px_100px_-20px_rgba(15,23,42,0.4)] backdrop-blur-3xl transition-all duration-500 ease-out dark:border-slate-800/90 dark:bg-slate-950/40 ${spotifyCollapsed ? 'h-[80px] w-[240px]' : 'h-[500px] w-[440px]'}`}>
+          <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <div className="text-sm font-semibold text-slate-950 dark:text-white">Spotify player</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Stays available while you use the app</div>
+              <div className="text-sm font-bold tracking-tight text-slate-950 dark:text-white">Premium Player</div>
+              <div className="text-[10px] uppercase tracking-widest text-slate-500 opacity-60 dark:text-slate-400">Gen Z Edition</div>
             </div>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setSpotifyCollapsed((value) => !value)}
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                className="rounded-full bg-slate-950/5 px-4 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-950/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
               >
                 {spotifyCollapsed ? 'Expand' : 'Minimize'}
               </button>
@@ -294,23 +306,21 @@ const Layout: React.FC = () => {
                   localStorage.removeItem(SPOTIFY_STORAGE_KEY);
                   window.dispatchEvent(new Event('studysphere-spotify-updated'));
                 }}
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                className="rounded-full bg-red-500/10 px-4 py-1.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-500/20 dark:text-red-400"
               >
                 Close
               </button>
             </div>
           </div>
           {!spotifyCollapsed ? (
-            <iframe
-              src={spotifyEmbed}
-              width="100%"
-              height="352"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="block"
-            />
+            <div className="px-4 pb-4">
+              <DeckPlayer />
+            </div>
           ) : (
-            <div className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">Music keeps playing while the player stays docked.</div>
+            <div className="flex items-center gap-3 px-6 pb-4">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Music streaming active</div>
+            </div>
           )}
         </div>
       ) : null}

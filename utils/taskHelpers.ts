@@ -1,12 +1,14 @@
 import { Task } from '../types';
 
-const generateId = () => {
+export const generateId = () => {
   try {
     return crypto.randomUUID();
   } catch (e) {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   }
 };
+
+export const uuidv4 = generateId;
 
 const createTaskNode = (title: string): Task => ({
   id: generateId(),
@@ -221,7 +223,7 @@ const normalizePriority = (value: unknown): Task['priority'] =>
   value === 'low' || value === 'medium' || value === 'high' ? value : 'medium';
 
 const normalizeRecurring = (value: unknown): Task['recurring'] =>
-  value === 'daily' || value === 'weekly' || value === 'none' ? value : 'none';
+  typeof value === 'string' ? value : 'none';
 
 const normalizeTaskNode = (task: any): Task => ({
   id: typeof task?.id === 'string' && task.id.trim() ? task.id : generateId(),
@@ -229,7 +231,19 @@ const normalizeTaskNode = (task: any): Task => ({
   completed: Boolean(task?.completed),
   priority: normalizePriority(task?.priority),
   dueDate: typeof task?.dueDate === 'string' && task.dueDate.trim() ? task.dueDate : undefined,
+  time: typeof task?.time === 'string' && task.time.trim() ? task.time : undefined,
+  deadline: typeof task?.deadline === 'string' && task.deadline.trim() ? task.deadline : undefined,
   recurring: normalizeRecurring(task?.recurring),
+  recurringRule: typeof task?.recurringRule === 'string' ? task.recurringRule : undefined,
+  reminders: Array.isArray(task?.reminders) ? task.reminders : undefined,
+  projectId: typeof task?.projectId === 'string' ? task.projectId : undefined,
+  sectionId: typeof task?.sectionId === 'string' ? task.sectionId : undefined,
+  labels: Array.isArray(task?.labels) ? task.labels : undefined,
+  studyState: task?.studyState || undefined,
+  subject: typeof task?.subject === 'string' ? task.subject : undefined,
+  taskType: typeof task?.taskType === 'string' ? task.taskType : undefined,
+  estimatedTime: typeof task?.estimatedTime === 'number' ? task.estimatedTime : undefined,
+  effortLevel: typeof task?.effortLevel === 'number' ? task.effortLevel : undefined,
   createdAt: Number.isFinite(Number(task?.createdAt)) ? Number(task.createdAt) : Date.now(),
   children: normalizeTasks(task?.children),
   notes: typeof task?.notes === 'string' ? task.notes : '',
@@ -243,4 +257,50 @@ export const normalizeTasks = (tasks: unknown): Task[] => {
   return tasks
     .filter((task) => task && typeof task === 'object')
     .map((task) => normalizeTaskNode(task));
+};
+
+export const parseNaturalLanguageTask = (input: string): Partial<Task> => {
+  let title = input;
+  const result: Partial<Task> = {};
+
+  // Priority: p1 (high), p2 (medium), p3 (low)
+  const pMatch = title.match(/\bp([1-3])\b/i);
+  if (pMatch) {
+    result.priority = pMatch[1] === '1' ? 'high' : pMatch[1] === '2' ? 'medium' : 'low';
+    title = title.replace(pMatch[0], '');
+  }
+
+  // Recurring: every day, every week, etc.
+  const rMatch = title.match(/\bevery\s+(day|week|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
+  if (rMatch) {
+    result.recurring = rMatch[1].toLowerCase() === 'day' ? 'daily' : rMatch[1].toLowerCase() === 'week' ? 'weekly' : `every ${rMatch[1].toLowerCase()}`;
+    title = title.replace(rMatch[0], '');
+  }
+
+  // Time: 7pm, 14:00, 7:30am
+  const tMatch = title.match(/\b([0-2]?[0-9])(:[0-5][0-9])?\s*(am|pm)\b|\b([0-2][0-9]):([0-5][0-9])\b/i);
+  if (tMatch) {
+    result.time = tMatch[0].toLowerCase();
+    title = title.replace(tMatch[0], '');
+  }
+
+  // Due Date (simple heuristic): tomorrow, today, next friday, etc.
+  const dMatch = title.match(/\b(tomorrow|today|next\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))\b/i);
+  if (dMatch) {
+    const today = new Date();
+    if (dMatch[0].toLowerCase() === 'tomorrow') {
+      today.setDate(today.getDate() + 1);
+      result.dueDate = today.toISOString().split('T')[0];
+    } else if (dMatch[0].toLowerCase() === 'today') {
+      result.dueDate = today.toISOString().split('T')[0];
+    } else if (dMatch[0].toLowerCase().startsWith('next ')) {
+      // rough logic for "next X" - just set to 7 days from now for simplicity in a heuristic parser
+      today.setDate(today.getDate() + 7);
+      result.dueDate = today.toISOString().split('T')[0];
+    }
+    title = title.replace(dMatch[0], '');
+  }
+
+  result.title = title.replace(/\s+/g, ' ').trim();
+  return result;
 };

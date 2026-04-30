@@ -1,481 +1,393 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  Bold,
   ChevronDown,
   Download,
-  Highlighter,
-  Italic,
   Loader2,
-  List,
-  ListOrdered,
-  Palette,
   Pin,
   Plus,
   Search,
-  Strikethrough,
-  Tag,
   Trash2,
-  Type,
-  Underline,
-  X,
   Sparkles,
+  LayoutGrid,
+  List as ListIcon,
+  Table as TableIcon,
+  Columns,
+  Archive,
+  ArrowLeft,
+  Copy,
+  History,
+  MoreHorizontal,
+  Share2,
+  Settings,
+  Filter,
+  ArrowUpDown,
+  BookMarked,
+  X
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { Note } from '../types';
+import { Note, NoteTemplate, Block } from '../types';
 import { Badge, Button, Card, Input, SectionHeading } from '../components/UI';
 import { summarizeNoteContent } from '../utils/aiStudy';
-
-const NOTE_COLORS = ['#fffdf8', '#f8fafc', '#eff6ff', '#ecfeff', '#f0fdf4', '#fef3c7'];
-const EXTRA_NOTE_COLORS = ['#fde68a', '#fecdd3', '#ddd6fe', '#bfdbfe', '#bbf7d0', '#fde2e4'];
-const TEXT_COLORS = ['#0f172a', '#2563eb', '#0f766e', '#7c3aed', '#c2410c', '#be123c'];
-const HIGHLIGHT_COLORS = ['#fef08a', '#bfdbfe', '#a7f3d0', '#fecaca', '#ddd6fe', '#fdba74'];
-const FONT_FAMILIES = [
-  { label: 'Sans', value: 'Inter, ui-sans-serif, system-ui' },
-  { label: 'Serif', value: 'Georgia, Cambria, serif' },
-  { label: 'Mono', value: '"JetBrains Mono", Consolas, monospace' },
-  { label: 'Display', value: '"Trebuchet MS", "Segoe UI", sans-serif' },
-];
-const FONT_SIZES = [
-  { label: 'Small', value: '3' },
-  { label: 'Normal', value: '4' },
-  { label: 'Large', value: '5' },
-  { label: 'XL', value: '6' },
-];
+import BlockEditor from '../components/notes/BlockEditor';
+import NoteProperties from '../components/notes/NoteProperties';
+import { ListView, GalleryView, TableView, BoardView } from '../components/notes/NoteViews';
+import NoteTemplateSelector from '../components/notes/NoteTemplateSelector';
 
 const Notes: React.FC = () => {
-  const { data, addNote, updateNote } = useData();
+  const { data, addNote, updateNote, deleteNote } = useData();
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTrash, setShowTrash] = useState(false);
+  const [view, setView] = useState<'list' | 'table' | 'gallery' | 'board'>('gallery');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [tagInput, setTagInput] = useState('');
-  const [showExtraPalette, setShowExtraPalette] = useState(false);
-  const [showTextPalette, setShowTextPalette] = useState(false);
-  const [showHighlightPalette, setShowHighlightPalette] = useState(false);
-  const [aiSummaryByNote, setAiSummaryByNote] = useState<Record<string, string>>({});
-  const [summaryDismissed, setSummaryDismissed] = useState<Record<string, boolean>>({});
+  
+  // Filtering & Sorting
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'updatedAt' | 'createdAt' | 'title'>('updatedAt');
+
+  const filteredNotes = useMemo(() => {
+    return data.notes
+      .filter((note) => (showTrash ? note.trashed : !note.trashed))
+      .filter((note) => {
+        const query = searchTerm.toLowerCase();
+        const matchesSearch = 
+          note.title.toLowerCase().includes(query) || 
+          note.subject?.toLowerCase().includes(query) ||
+          note.tags.some(tag => tag.toLowerCase().includes(query));
+        const matchesStatus = filterStatus === 'all' || note.status === filterStatus;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+        if (sortBy === 'title') return a.title.localeCompare(b.title);
+        return b[sortBy] - a[sortBy];
+      });
+  }, [data.notes, searchTerm, showTrash, filterStatus, sortBy]);
+
+  const activeNote = data.notes.find((note) => note.id === activeNoteId) || null;
+
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState('');
-  const editorRef = useRef<HTMLDivElement | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
 
-  const filteredNotes = useMemo(
-    () =>
-      [...data.notes]
-        .filter((note) => (showTrash ? note.trashed : !note.trashed))
-        .filter((note) => {
-          const plain = stripHtml(note.content).toLowerCase();
-          const query = searchTerm.toLowerCase();
-          return note.title.toLowerCase().includes(query) || plain.includes(query) || note.tags.some((tag) => tag.toLowerCase().includes(query));
-        })
-        .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt - a.updatedAt),
-    [data.notes, searchTerm, showTrash]
-  );
-
-  const activeNote = filteredNotes.find((note) => note.id === activeNoteId) || filteredNotes[0] || null;
-  const activeNoteWords = useMemo(() => countWords(stripHtml(activeNote?.content || '')), [activeNote?.content]);
-
-  useEffect(() => {
-    if (activeNote && editorRef.current && editorRef.current.innerHTML !== activeNote.content) {
-      editorRef.current.innerHTML = activeNote.content || '';
-    }
-  }, [activeNote]);
-
-  const createNote = () => {
-    const note: Note = {
-      id: uuidv4(),
-      title: 'Untitled note',
-      content: '<p></p>',
-      tags: [],
-      pinned: false,
-      color: NOTE_COLORS[0],
-      trashed: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    addNote(note);
-    setActiveNoteId(note.id);
-  };
-
-  const patchActiveNote = (changes: Partial<Note>) => {
-    if (!activeNote) return;
-    setSaving(true);
-    updateNote({ ...activeNote, ...changes, updatedAt: Date.now() });
-    window.setTimeout(() => setSaving(false), 250);
+  const blocksToText = (blocks: Block[]): string => {
+    return blocks.map(b => b.content).join('\n');
   };
 
   const handleAiSummarize = async () => {
     if (!activeNote) return;
     setSummaryLoading(true);
-    setSummaryError('');
     try {
-      const summary = await summarizeNoteContent(stripHtml(activeNote.content), activeNote.title);
-      setAiSummaryByNote((prev) => ({ ...prev, [activeNote.id]: summary }));
-      setSummaryDismissed((prev) => ({ ...prev, [activeNote.id]: false }));
+      const summary = await summarizeNoteContent(blocksToText(activeNote.blocks), activeNote.title);
+      setAiSummary(summary);
     } catch (error) {
-      setSummaryError(error instanceof Error ? error.message : 'Failed to generate summary.');
+      console.error(error);
     } finally {
-      setSummaryLoading(false);
+      setSummaryLoading(true);
+      setTimeout(() => setSummaryLoading(false), 800); // Simulate some thought
     }
   };
 
-  const exportNote = () => {
+  const handleCreateNote = (template?: NoteTemplate) => {
+    const newNote: Note = {
+      id: uuidv4(),
+      title: template?.name || 'Untitled note',
+      content: '',
+      blocks: template?.blocks || [{ id: uuidv4(), type: 'paragraph', content: '' }],
+      tags: [],
+      pinned: false,
+      trashed: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      status: (template?.defaultProperties?.status as any) || 'draft',
+      type: (template?.defaultProperties?.type as any) || 'other',
+      examRelevance: (template?.defaultProperties?.examRelevance as any) || 'medium',
+      difficulty: (template?.defaultProperties?.difficulty as any) || 'medium',
+      ...template?.defaultProperties
+    };
+    addNote(newNote);
+    setActiveNoteId(newNote.id);
+    setShowTemplateSelector(false);
+  };
+
+  const handleUpdateNote = (updates: Partial<Note>) => {
     if (!activeNote) return;
-    const blob = new Blob([activeNote.content], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${safeFilename(activeNote.title)}.html`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    setSaving(true);
+    updateNote({ ...activeNote, ...updates, updatedAt: Date.now() });
+    setTimeout(() => setSaving(false), 300);
   };
 
-  const addTag = () => {
+  const handleDuplicate = () => {
     if (!activeNote) return;
-    const cleaned = tagInput.trim().replace(/^#/, '');
-    if (!cleaned || activeNote.tags.includes(cleaned)) return;
-    patchActiveNote({ tags: [...activeNote.tags, cleaned] });
-    setTagInput('');
-  };
-
-  const syncEditor = () => {
-    if (!activeNote || !editorRef.current) return;
-    patchActiveNote({ content: editorRef.current.innerHTML || '<p></p>' });
-  };
-
-  const runCommand = (command: string, value?: string) => {
-    if (!editorRef.current) return;
-    editorRef.current.focus();
-    document.execCommand('styleWithCSS', false, 'true');
-    document.execCommand(command, false, value);
-    syncEditor();
-  };
-
-  const applyColor = (value: string, type: 'text' | 'highlight') => {
-    runCommand(type === 'text' ? 'foreColor' : 'hiliteColor', value);
+    const duplicate: Note = {
+      ...activeNote,
+      id: uuidv4(),
+      title: `${activeNote.title} (Copy)`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      pinned: false
+    };
+    addNote(duplicate);
+    setActiveNoteId(duplicate.id);
   };
 
   return (
-    <div className="space-y-8">
-      <SectionHeading
-        eyebrow="Knowledge Hub"
-        title="Capture, format, and revise notes without friction"
-        description="Keep study notes clean, searchable, and presentation-ready with a richer editor and a calmer workspace."
-      />
-
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[340px_1fr]">
-        <Card className="h-[calc(100vh-15rem)] overflow-hidden">
-          <div className="flex h-full flex-col">
-            <div className="space-y-4 border-b border-slate-100 pb-4 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Notes library</h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} visible</p>
-                </div>
-                <Button size="sm" onClick={createNote}>
-                  <Plus size={14} />
-                  New
-                </Button>
+    <div className="flex flex-col h-[calc(100vh-6rem)]">
+      {activeNote ? (
+        // Workspace View
+        <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Workspace Header */}
+          <div className="flex items-center justify-between px-8 py-4 border-b border-slate-50 dark:border-slate-900">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setActiveNoteId(null)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors text-slate-400"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium">My Vault /</span>
+                <span className="text-xs text-slate-900 dark:text-white font-bold">{activeNote.title}</span>
               </div>
-
-              <div className="relative">
-                <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input className="pl-11" placeholder="Search notes..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
-              </div>
-
-              <Button variant="ghost" size="sm" onClick={() => setShowTrash((value) => !value)} className="justify-start">
-                {showTrash ? 'Back to active notes' : 'Open trash'}
+              <span className="text-[10px] text-slate-300 ml-2">
+                {saving ? 'Saving...' : 'All changes saved'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => handleUpdateNote({ pinned: !activeNote.pinned })}>
+                <Pin size={16} className={activeNote.pinned ? 'text-sky-500 fill-sky-500' : ''} />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleDuplicate}>
+                <Copy size={16} />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-rose-500" onClick={() => handleUpdateNote({ trashed: true })}>
+                <Trash2 size={16} />
+              </Button>
+              <div className="h-6 w-px bg-slate-100 dark:bg-slate-800 mx-2" />
+              <Button size="sm">
+                <Share2 size={16} className="mr-2" />
+                Share
               </Button>
             </div>
-
-            <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
-              {filteredNotes.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                  No notes here yet. Create one to start your study vault.
-                </div>
-              ) : (
-                filteredNotes.map((note) => (
-                  <button
-                    key={note.id}
-                    type="button"
-                    onClick={() => setActiveNoteId(note.id)}
-                    style={{ background: note.color }}
-                    className={`w-full rounded-[24px] border p-4 text-left shadow-sm transition ${
-                      activeNote?.id === note.id ? 'border-sky-400 ring-4 ring-sky-100 dark:ring-sky-950' : 'border-slate-200 hover:border-sky-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="truncate font-medium text-slate-900">{note.title}</div>
-                      {note.pinned ? <Pin size={14} className="text-slate-700" /> : null}
-                    </div>
-                    <p className="mt-2 max-h-12 overflow-hidden text-sm text-slate-600">{truncate(stripHtml(note.content) || 'Empty note', 110)}</p>
-                  </button>
-                ))
-              )}
-            </div>
           </div>
-        </Card>
 
-        <Card className="min-h-[calc(100vh-15rem)] min-w-0 flex flex-col">
-          {!activeNote ? (
-            <div className="flex h-full min-h-[480px] flex-col items-center justify-center text-center">
-              <h3 className="text-2xl font-semibold text-slate-950 dark:text-white">Select a note or create a new one</h3>
-              <p className="mt-2 max-w-md text-sm text-slate-600 dark:text-slate-400">The new editor keeps the formatting tools visible while leaving the canvas uncluttered.</p>
-            </div>
-          ) : (
-            <div className="flex h-full min-h-[480px] flex-col">
-              <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 dark:border-slate-800 xl:flex-row xl:items-start xl:justify-between">
-                <div className="flex-1">
-                  <Input
-                    value={activeNote.title}
-                    onChange={(event) => patchActiveNote({ title: event.target.value })}
-                    placeholder="Untitled note"
-                    className="border-none bg-transparent px-0 py-0 text-3xl font-semibold tracking-tight shadow-none focus:ring-0"
-                  />
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge color="blue">{activeNoteWords} words</Badge>
-                    <Badge color="gray">{Math.max(1, Math.ceil(activeNoteWords / 200))} min read</Badge>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{saving ? 'Saving...' : 'Saved locally'}</span>
-                  </div>
-                </div>
+          {/* Workspace Content */}
+          <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-8 md:px-16 py-12 scrollbar-hide">
+              <div className="max-w-4xl mx-auto">
+                <input
+                  type="text"
+                  value={activeNote.title}
+                  onChange={(e) => handleUpdateNote({ title: e.target.value })}
+                  placeholder="Untitled Note"
+                  className="w-full text-5xl font-extrabold text-slate-950 dark:text-white bg-transparent border-none outline-none placeholder:text-slate-200 mb-8 tracking-tight"
+                />
+                
+                <NoteProperties 
+                  note={activeNote} 
+                  onChange={handleUpdateNote} 
+                />
 
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="secondary" onClick={handleAiSummarize} isLoading={summaryLoading}>
-                    {summaryLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                    AI Summarize
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={() => patchActiveNote({ pinned: !activeNote.pinned })}>
-                    <Pin size={14} />
-                    {activeNote.pinned ? 'Unpin' : 'Pin'}
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={exportNote}>
-                    <Download size={14} />
-                    Export
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-rose-600 dark:text-rose-300" onClick={() => patchActiveNote({ trashed: true })}>
-                    <Trash2 size={14} />
-                    Move to trash
-                  </Button>
-                </div>
-              </div>
+                <div className="h-px bg-slate-100 dark:bg-slate-800 w-full my-8" />
 
-              {aiSummaryByNote[activeNote.id] && !summaryDismissed[activeNote.id] ? (
-                <div className="mt-4 rounded-[20px] border border-cyan-200 bg-cyan-50/50 px-4 py-3 text-sm text-cyan-900 dark:border-cyan-700/60 dark:bg-cyan-950/35 dark:text-cyan-100">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300">
-                      <Sparkles size={13} />
-                      AI Summary
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-full border border-cyan-200 bg-white/85 px-2 py-1 text-[11px] text-cyan-700 dark:border-cyan-800 dark:bg-slate-900/70 dark:text-cyan-300"
-                      onClick={() => setSummaryDismissed((prev) => ({ ...prev, [activeNote.id]: true }))}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                  <p className="whitespace-pre-line leading-6">{aiSummaryByNote[activeNote.id]}</p>
-                </div>
-              ) : null}
-
-              {summaryError ? (
-                <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
-                  {summaryError}
-                </div>
-              ) : null}
-
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                {NOTE_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => patchActiveNote({ color })}
-                    style={{ background: color }}
-                    className={`h-9 w-9 rounded-full border shadow-sm ${activeNote.color === color ? 'ring-4 ring-sky-100 dark:ring-sky-950' : 'border-slate-200'}`}
-                  />
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setShowExtraPalette((value) => !value)}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-300"
-                >
-                  <Palette size={14} />
-                  More colors
-                  <ChevronDown size={14} className={`transition ${showExtraPalette ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-
-              {showExtraPalette ? (
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {EXTRA_NOTE_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => patchActiveNote({ color })}
-                      style={{ background: color }}
-                      className={`h-9 w-9 rounded-full border shadow-sm ${activeNote.color === color ? 'ring-4 ring-sky-100 dark:ring-sky-950' : 'border-slate-200'}`}
-                    />
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="mt-5 rounded-[24px] border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                  <Tag size={14} />
-                  Tags
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {activeNote.tags.length === 0 ? (
-                    <span className="text-sm text-slate-500 dark:text-slate-400">Add subject tags, units, or revision themes so notes stay easy to group.</span>
-                  ) : (
-                    activeNote.tags.map((tag) => (
-                      <span key={tag} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-200">
-                        #{tag}
-                        <button type="button" onClick={() => patchActiveNote({ tags: activeNote.tags.filter((item) => item !== tag) })}>
-                          <X size={12} />
-                        </button>
-                      </span>
-                    ))
-                  )}
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <Input
-                    placeholder="Add a tag"
-                    value={tagInput}
-                    onChange={(event) => setTagInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') addTag();
-                    }}
-                  />
-                  <Button size="sm" onClick={addTag}>
-                    Add
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-[26px] border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/45">
-                <div className="flex flex-wrap items-center gap-3">
-                  <ToolbarGroup title="Type">
-                    <select onChange={(event) => event.target.value && runCommand('fontName', event.target.value)} className={toolbarSelectClass}>
-                      <option value="">Font</option>
-                      {FONT_FAMILIES.map((item) => (
-                        <option key={item.label} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                    <select onChange={(event) => event.target.value && runCommand('fontSize', event.target.value)} className={toolbarSelectClass}>
-                      <option value="">Size</option>
-                      {FONT_SIZES.map((item) => (
-                        <option key={item.label} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ToolButton icon={Type} label="Paragraph" onClick={() => runCommand('formatBlock', '<p>')} />
-                    <ToolButton label="H1" onClick={() => runCommand('formatBlock', '<h1>')} />
-                    <ToolButton label="H2" onClick={() => runCommand('formatBlock', '<h2>')} />
-                  </ToolbarGroup>
-
-                  <ToolbarGroup title="Format">
-                    <ToolButton icon={Bold} label="Bold" onClick={() => runCommand('bold')} />
-                    <ToolButton icon={Italic} label="Italic" onClick={() => runCommand('italic')} />
-                    <ToolButton icon={Underline} label="Underline" onClick={() => runCommand('underline')} />
-                    <ToolButton icon={Strikethrough} label="Strike" onClick={() => runCommand('strikeThrough')} />
-                  </ToolbarGroup>
-
-                  <ToolbarGroup title="Align">
-                    <ToolButton icon={AlignLeft} label="Left" onClick={() => runCommand('justifyLeft')} />
-                    <ToolButton icon={AlignCenter} label="Center" onClick={() => runCommand('justifyCenter')} />
-                    <ToolButton icon={AlignRight} label="Right" onClick={() => runCommand('justifyRight')} />
-                    <ToolButton icon={List} label="Bullets" onClick={() => runCommand('insertUnorderedList')} />
-                    <ToolButton icon={ListOrdered} label="Numbered" onClick={() => runCommand('insertOrderedList')} />
-                  </ToolbarGroup>
-
-                  <ToolbarGroup title="Color">
-                    <button type="button" onClick={() => setShowTextPalette((value) => !value)} className={toolbarButtonClass}>
-                      <Type size={13} />
-                      Text color
-                    </button>
-                    <button type="button" onClick={() => setShowHighlightPalette((value) => !value)} className={toolbarButtonClass}>
-                      <Highlighter size={13} />
-                      Highlight
-                    </button>
-                  </ToolbarGroup>
-                </div>
-
-                {showTextPalette ? (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {TEXT_COLORS.map((color) => (
-                      <button key={color} type="button" onClick={() => applyColor(color, 'text')} style={{ background: color }} className="h-8 w-8 rounded-full border border-white shadow-sm" />
-                    ))}
-                  </div>
-                ) : null}
-
-                {showHighlightPalette ? (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {HIGHLIGHT_COLORS.map((color) => (
-                      <button key={color} type="button" onClick={() => applyColor(color, 'highlight')} style={{ background: color }} className="h-8 w-8 rounded-full border border-white shadow-sm" />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="mt-4 rounded-[28px] border border-slate-100 bg-white/75 p-5 shadow-inner dark:border-slate-800 dark:bg-slate-950/55">
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={syncEditor}
-                  className="min-h-[420px] max-w-full overflow-x-hidden break-words whitespace-pre-wrap outline-none [&_h1]:mb-3 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:min-h-[1.5rem]"
-                  style={{ fontFamily: 'Inter, ui-sans-serif, system-ui' }}
+                <BlockEditor 
+                  blocks={activeNote.blocks || []} 
+                  onChange={(blocks) => handleUpdateNote({ blocks })} 
                 />
               </div>
             </div>
-          )}
-        </Card>
-      </div>
+
+            {/* Sidebar for AI & Knowledge */}
+            <div className="w-80 border-l border-slate-50 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-900/10 p-6 overflow-y-auto hidden lg:block">
+              <div className="space-y-8">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                    <Sparkles size={14} className="text-sky-500" />
+                    AI Intelligence
+                  </h4>
+                  <div className="space-y-3">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      onClick={handleAiSummarize}
+                      isLoading={summaryLoading}
+                    >
+                      {summaryLoading ? <Loader2 size={14} className="mr-2 animate-spin" /> : <History size={14} className="mr-2" />}
+                      Generate Summary
+                    </Button>
+                    {aiSummary && (
+                      <div className="p-3 rounded-xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/30 text-[11px] text-sky-800 dark:text-sky-200 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold uppercase tracking-wider">AI Summary</span>
+                          <button onClick={() => setAiSummary(null)}><X size={12} /></button>
+                        </div>
+                        <p className="leading-relaxed">{aiSummary}</p>
+                      </div>
+                    )}
+                    <Button variant="secondary" size="sm" className="w-full justify-start" onClick={() => {}}>
+                      <BookMarked size={14} className="mr-2" />
+                      Create Flashcards
+                    </Button>
+                    <Button variant="secondary" size="sm" className="w-full justify-start" onClick={() => {}}>
+                      <LayoutGrid size={14} className="mr-2" />
+                      Generate Quiz
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                    <History size={14} />
+                    Linked Knowledge
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[11px] font-medium text-slate-500 mb-2">Backlinks</div>
+                      <div className="text-xs text-slate-400 italic">No notes link here yet</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-medium text-slate-500 mb-2">Related by Topic</div>
+                      <div className="space-y-2">
+                        {data.notes
+                          .filter(n => n.id !== activeNote.id && n.topic === activeNote.topic && activeNote.topic)
+                          .slice(0, 3)
+                          .map(n => (
+                            <button 
+                              key={n.id} 
+                              onClick={() => setActiveNoteId(n.id)}
+                              className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs hover:border-sky-200 transition"
+                            >
+                              <div className="font-medium text-slate-900 dark:text-white truncate">{n.title}</div>
+                              <div className="text-[10px] text-slate-400 mt-0.5">{n.subject}</div>
+                            </button>
+                          ))}
+                        {(!activeNote.topic || data.notes.filter(n => n.id !== activeNote.id && n.topic === activeNote.topic).length === 0) && (
+                          <div className="text-xs text-slate-400 italic">No related notes found</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Library View
+        <div className="space-y-8 h-full flex flex-col">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <SectionHeading
+              eyebrow="Knowledge Base"
+              title="Your Second Brain"
+              description="Organize your study material with structured blocks and rich properties."
+            />
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" onClick={() => setShowTemplateSelector(true)}>
+                <Sparkles size={18} className="mr-2" />
+                Templates
+              </Button>
+              <Button onClick={() => handleCreateNote()}>
+                <Plus size={18} className="mr-2" />
+                New Note
+              </Button>
+            </div>
+          </div>
+
+          <Card className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-[32px]">
+            {/* View Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 border-b border-slate-50 dark:border-slate-800">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    className="pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border-none text-sm outline-none w-64 focus:ring-2 focus:ring-sky-100 transition"
+                    placeholder="Search your notes..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="flex bg-slate-50 dark:bg-slate-900 p-1 rounded-xl">
+                  <ViewButton active={view === 'gallery'} onClick={() => setView('gallery')} icon={LayoutGrid} />
+                  <ViewButton active={view === 'list'} onClick={() => setView('list')} icon={ListIcon} />
+                  <ViewButton active={view === 'table'} onClick={() => setView('table')} icon={TableIcon} />
+                  <ViewButton active={view === 'board'} onClick={() => setView('board')} icon={Columns} />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                  <Filter size={14} />
+                  <select 
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="bg-transparent border-none outline-none font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                  <ArrowUpDown size={14} />
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-transparent border-none outline-none font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value="updatedAt">Last Edited</option>
+                    <option value="createdAt">Created Date</option>
+                    <option value="title">Alphabetical</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* List Area */}
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+              {filteredNotes.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mb-4">
+                    <BookMarked size={32} className="text-slate-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">No notes found</h3>
+                  <p className="text-slate-500 max-w-xs mt-2">Try adjusting your search or filters, or create a new note to get started.</p>
+                </div>
+              ) : (
+                <>
+                  {view === 'gallery' && <GalleryView notes={filteredNotes} activeNoteId={activeNoteId} onSelect={setActiveNoteId} />}
+                  {view === 'list' && <ListView notes={filteredNotes} activeNoteId={activeNoteId} onSelect={setActiveNoteId} />}
+                  {view === 'table' && <TableView notes={filteredNotes} onSelect={setActiveNoteId} />}
+                  {view === 'board' && <BoardView notes={filteredNotes} onSelect={setActiveNoteId} />}
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {showTemplateSelector && (
+        <NoteTemplateSelector 
+          onSelect={handleCreateNote} 
+          onClose={() => setShowTemplateSelector(false)} 
+        />
+      )}
     </div>
   );
 };
 
-const ToolbarGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-white/88 px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-950/72">
-    <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{title}</span>
-    {children}
-  </div>
-);
-
-const ToolButton = ({
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  icon?: React.ComponentType<{ size?: number }>;
-  label: string;
-  onClick: () => void;
-}) => (
-  <button type="button" onClick={onClick} className={toolbarButtonClass}>
-    {Icon ? <Icon size={13} /> : null}
-    {label}
+const ViewButton = ({ active, onClick, icon: Icon }: { active: boolean, onClick: () => void, icon: any }) => (
+  <button
+    onClick={onClick}
+    className={`p-1.5 rounded-lg transition-all ${
+      active ? 'bg-white dark:bg-slate-800 shadow-sm text-sky-500' : 'text-slate-400 hover:text-slate-600'
+    }`}
+  >
+    <Icon size={16} />
   </button>
 );
-
-const toolbarButtonClass =
-  'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/90 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-sky-200 hover:bg-white hover:text-slate-950 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-sky-800 dark:hover:bg-slate-800 dark:hover:text-white';
-
-const toolbarSelectClass =
-  'rounded-full border border-slate-200 bg-slate-50/90 px-3 py-2 text-xs font-medium text-slate-600 outline-none transition focus:border-sky-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300';
-
-const stripHtml = (value: string) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-
-const truncate = (value: string, length: number) => (value.length > length ? `${value.slice(0, length)}...` : value);
-
-const countWords = (value: string) => (value.trim() ? value.trim().split(/\s+/).length : 0);
-
-const safeFilename = (value: string) => value.replace(/[\\/:*?"<>|]+/g, '-').trim() || 'note';
 
 export default Notes;

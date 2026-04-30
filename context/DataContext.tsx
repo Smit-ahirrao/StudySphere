@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AppData, Task, Note, PlannerEvent, FocusSession, FileMeta } from '../types';
+import { AppData, Task, Note, PlannerEvent, FocusSession, FileMeta, Project, Section, Label } from '../types';
 import { loadData, saveData } from '../utils/storage';
 import {
   addTaskToTree,
@@ -8,6 +8,7 @@ import {
   deleteTaskFromTree,
   toggleTaskCompletion,
   setTaskCompletion,
+  uuidv4,
 } from '../utils/taskHelpers';
 
 interface DataContextType {
@@ -20,6 +21,15 @@ interface DataContextType {
   toggleTask: (id: string) => void;
   setTaskComplete: (id: string, completed: boolean) => void;
   deleteTask: (id: string) => void;
+  addProject: (project: Project) => void;
+  updateProject: (project: Project) => void;
+  deleteProject: (id: string) => void;
+  addSection: (section: Section) => void;
+  updateSection: (section: Section) => void;
+  deleteSection: (id: string) => void;
+  addLabel: (label: Label) => void;
+  updateLabel: (label: Label) => void;
+  deleteLabel: (id: string) => void;
   addNote: (note: Note) => void;
   updateNote: (note: Note) => void;
   deleteNote: (id: string) => void;
@@ -69,7 +79,25 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const deleteTask = (id: string) =>
     setData((prev) => ({ ...prev, tasks: deleteTaskFromTree(prev.tasks, id) }));
 
-  const addNote = (note: Note) => setData((prev) => ({ ...prev, notes: [note, ...prev.notes] }));
+  const addProject = (project: Project) => setData(prev => ({ ...prev, projects: [...prev.projects, project] }));
+  const updateProject = (updated: Project) => setData(prev => ({ ...prev, projects: prev.projects.map(p => p.id === updated.id ? updated : p) }));
+  const deleteProject = (id: string) => setData(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
+
+  const addSection = (section: Section) => setData(prev => ({ ...prev, sections: [...prev.sections, section] }));
+  const updateSection = (updated: Section) => setData(prev => ({ ...prev, sections: prev.sections.map(s => s.id === updated.id ? updated : s) }));
+  const deleteSection = (id: string) => setData(prev => ({ ...prev, sections: prev.sections.filter(s => s.id !== id) }));
+
+  const addLabel = (label: Label) => setData(prev => ({ ...prev, labels: [...prev.labels, label] }));
+  const updateLabel = (updated: Label) => setData(prev => ({ ...prev, labels: prev.labels.map(l => l.id === updated.id ? updated : l) }));
+  const deleteLabel = (id: string) => setData(prev => ({ ...prev, labels: prev.labels.filter(l => l.id !== id) }));
+
+  const addNote = (note: Note) => {
+    const formattedNote = {
+      ...note,
+      blocks: note.blocks || [{ id: uuidv4(), type: 'paragraph', content: note.content || '' }]
+    };
+    setData((prev) => ({ ...prev, notes: [formattedNote as Note, ...prev.notes] }));
+  };
 
   const updateNote = (updated: Note) =>
     setData((prev) => ({
@@ -153,6 +181,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setData((prev) => ({
       ...prev,
       tasks: [],
+      projects: [],
+      sections: [],
+      labels: [],
       notes: [],
       planner: [],
       focusHistory: [],
@@ -173,6 +204,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return {
         ...prev,
         tasks: filterTasks(prev.tasks),
+        projects: filterDemo(prev.projects),
+        sections: filterDemo(prev.sections),
+        labels: filterDemo(prev.labels),
         notes: filterDemo(prev.notes),
         planner: filterDemo(prev.planner),
         focusHistory: filterDemo(prev.focusHistory),
@@ -211,6 +245,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         toggleTask,
         setTaskComplete,
         deleteTask,
+        addProject,
+        updateProject,
+        deleteProject,
+        addSection,
+        updateSection,
+        deleteSection,
+        addLabel,
+        updateLabel,
+        deleteLabel,
         addNote,
         updateNote,
         deleteNote,
@@ -257,6 +300,22 @@ const buildDemoData = (base: AppData): AppData => {
     return date.toISOString().slice(0, 10);
   };
 
+  const demoProjects: Project[] = [
+    { id: 'demo-proj-1', name: 'University', color: 'blue', isDemo: true },
+    { id: 'demo-proj-2', name: 'Personal', color: 'emerald', isDemo: true }
+  ];
+
+  const demoSections: Section[] = [
+    { id: 'demo-sec-1', projectId: 'demo-proj-1', name: 'To Study', order: 0, isDemo: true },
+    { id: 'demo-sec-2', projectId: 'demo-proj-1', name: 'In Revision', order: 1, isDemo: true },
+    { id: 'demo-sec-3', projectId: 'demo-proj-1', name: 'Ready for Exam', order: 2, isDemo: true }
+  ];
+
+  const demoLabels: Label[] = [
+    { id: 'demo-label-1', name: 'urgent', color: 'red', isDemo: true },
+    { id: 'demo-label-2', name: 'deep-work', color: 'purple', isDemo: true }
+  ];
+
   const demoTasks: Task[] = [
     {
       id: 'demo-task-1',
@@ -264,6 +323,9 @@ const buildDemoData = (base: AppData): AppData => {
       completed: false,
       priority: 'high',
       dueDate: toDate(2),
+      projectId: 'demo-proj-1',
+      sectionId: 'demo-sec-1',
+      labels: ['demo-label-1', 'demo-label-2'],
       recurring: 'none',
       createdAt: now - 1000 * 60 * 60 * 30,
       notes: 'Focus on heaps, graphs, and recursion patterns.',
@@ -298,6 +360,8 @@ const buildDemoData = (base: AppData): AppData => {
       completed: false,
       priority: 'medium',
       dueDate: toDate(1),
+      projectId: 'demo-proj-1',
+      sectionId: 'demo-sec-2',
       recurring: 'none',
       createdAt: now - 1000 * 60 * 60 * 22,
       notes: 'Include error analysis and final chart annotation.',
@@ -356,8 +420,14 @@ const buildDemoData = (base: AppData): AppData => {
     {
       id: 'demo-note-1',
       title: 'Neural Networks quick map',
-      content:
-        '<h2>Neural Networks</h2><p><strong>Core idea:</strong> learn a function by adjusting weights through gradient descent.</p><ul><li>Forward pass computes predictions</li><li>Backpropagation updates parameters</li><li>Regularization reduces overfitting</li></ul><blockquote>Best exam cue: explain the role of activation functions.</blockquote>',
+      content: '<h2>Neural Networks</h2><p>Core idea: learn a function by adjusting weights through gradient descent.</p>',
+      blocks: [
+        { id: 'b1', type: 'h1', content: 'Neural Networks' },
+        { id: 'b2', type: 'paragraph', content: 'Core idea: learn a function by adjusting weights through gradient descent.' },
+        { id: 'b3', type: 'bullet', content: 'Forward pass computes predictions' },
+        { id: 'b4', type: 'bullet', content: 'Backpropagation updates parameters' },
+        { id: 'b5', type: 'callout', content: 'Best exam cue: explain the role of activation functions.' },
+      ],
       tags: ['AI', 'Revision'],
       createdAt: now - 1000 * 60 * 60 * 36,
       updatedAt: now - 1000 * 60 * 60 * 8,
@@ -365,12 +435,20 @@ const buildDemoData = (base: AppData): AppData => {
       color: '#eff6ff',
       trashed: false,
       isDemo: true,
+      status: 'completed',
+      type: 'lecture',
+      difficulty: 'medium'
     },
     {
       id: 'demo-note-2',
       title: 'Operating Systems crash recap',
-      content:
-        '<h2>Processes vs Threads</h2><p>Processes have isolated memory, threads share process memory and are lighter.</p><ol><li>Context switch cost is lower for threads</li><li>Race conditions happen in shared data access</li><li>Use mutexes/semaphores for synchronization</li></ol><p><em>Remember:</em> deadlock requires 4 conditions.</p>',
+      content: '<h2>Processes vs Threads</h2>',
+      blocks: [
+        { id: 'b6', type: 'h1', content: 'Processes vs Threads' },
+        { id: 'b7', type: 'paragraph', content: 'Processes have isolated memory, threads share process memory.' },
+        { id: 'b8', type: 'todo', content: 'Review mutexes and semaphores' },
+        { id: 'b9', type: 'code', content: 'pthread_create(&thread, NULL, function, NULL);' },
+      ],
       tags: ['OS', 'Systems'],
       createdAt: now - 1000 * 60 * 60 * 30,
       updatedAt: now - 1000 * 60 * 60 * 6,
@@ -378,6 +456,9 @@ const buildDemoData = (base: AppData): AppData => {
       color: '#f8fafc',
       trashed: false,
       isDemo: true,
+      status: 'in-progress',
+      type: 'summary',
+      difficulty: 'hard'
     },
   ];
 
@@ -448,6 +529,9 @@ const buildDemoData = (base: AppData): AppData => {
   return {
     ...base,
     tasks: demoTasks,
+    projects: demoProjects,
+    sections: demoSections,
+    labels: demoLabels,
     notes: demoNotes,
     focusHistory: demoFocusSessions,
     planner: demoPlanner,
