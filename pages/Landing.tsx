@@ -108,14 +108,20 @@ export default function Landing() {
   // --- MOUSE TRACKING FOR 3D HERO PARALLAX ---
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const smoothMouseX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const smoothMouseY = useSpring(mouseY, { stiffness: 50, damping: 20 });
-  const appRotateX = useTransform(smoothMouseY, [-1, 1], [10, -10]);
-  const appRotateY = useTransform(smoothMouseX, [-1, 1], [-10, 10]);
+  const smoothMouseX = useSpring(mouseX, { stiffness: 40, damping: 25, mass: 1.5 });
+  const smoothMouseY = useSpring(mouseY, { stiffness: 40, damping: 25, mass: 1.5 });
+  const appRotateX = useTransform(smoothMouseY, [-1, 1], [12, -12]);
+  const appRotateY = useTransform(smoothMouseX, [-1, 1], [-12, 12]);
+
+  // Spotlight effect tracking mouse
+  const spotlightX = useTransform(smoothMouseX, [-1, 1], [0, 100]);
+  const spotlightY = useTransform(smoothMouseY, [-1, 1], [0, 100]);
+  const spotlight = useMotionTemplate`radial-gradient(circle at ${spotlightX}% ${spotlightY}%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 80%)`;
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    const x = (e.clientX / window.innerWidth) * 2 - 1;
-    const y = (e.clientY / window.innerHeight) * 2 - 1;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
     mouseX.set(x);
     mouseY.set(y);
   };
@@ -304,8 +310,33 @@ export default function Landing() {
           <div className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center justify-center">
             <motion.div
               style={{ y: heroSceneY, scale: heroGlowScale }}
-              className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.56),rgba(255,255,255,0)_68%)] blur-3xl"
+              className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.48),rgba(255,255,255,0)_70%)] blur-3xl"
             />
+
+            {/* Atmospheric Particles */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  y: [0, -40, 0],
+                  x: [0, i % 2 === 0 ? 20 : -20, 0],
+                  opacity: [0.3, 0.6, 0.3],
+                }}
+                transition={{
+                  duration: 8 + i * 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 1.5,
+                }}
+                className="absolute h-2 w-2 rounded-full bg-sky-300/40 blur-[2px]"
+                style={{
+                  left: `${20 + i * 12}%`,
+                  top: `${30 + (i % 3) * 20}%`,
+                  x: useTransform(smoothMouseX, [-1, 1], [i * 10, -i * 10]),
+                  y: useTransform(smoothMouseY, [-1, 1], [i * 10, -i * 10]),
+                }}
+              />
+            ))}
 
             <motion.div
               style={{ 
@@ -315,11 +346,17 @@ export default function Landing() {
               }}
               initial={{ opacity: 0, scale: 0.8, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full max-w-[580px] [transform-style:preserve-3d] pt-10 lg:pt-0"
             >
               {/* Main App Window Glass */}
-              <div className="relative rounded-[32px] border border-white/80 bg-white/40 p-2 shadow-[0_42px_100px_-40px_rgba(14,165,233,0.3)] backdrop-blur-2xl">
+              <div className="relative rounded-[32px] border border-white/80 bg-white/40 p-2 shadow-[0_42px_100px_-40px_rgba(14,165,233,0.3)] backdrop-blur-2xl overflow-hidden">
+                {/* Spotlight Overlay */}
+                <motion.div 
+                  className="pointer-events-none absolute inset-0 z-10"
+                  style={{ background: spotlight }}
+                />
+
                 {/* Inner Window Chrome */}
                 <div className="relative overflow-hidden rounded-[26px] border border-white/60 bg-[linear-gradient(165deg,rgba(255,255,255,0.9),rgba(240,249,255,0.8))] shadow-inner">
                   {/* Fake Header */}
@@ -333,16 +370,21 @@ export default function Landing() {
 
                   {/* Body Grid */}
                   <div className="p-6 sm:p-8">
-                    <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Your workload, clarified" tone="bg-sky-100 text-sky-700" />
+                    <motion.div style={{ translateZ: 20 }}>
+                      <PanelHeader icon={LayoutDashboard} label="Dashboard" subtitle="Your workload, clarified" tone="bg-sky-100 text-sky-700" />
+                    </motion.div>
                     
                     <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5">
-                      <HeroMetric label="Focus" value="124h" tone="bg-sky-50" />
-                      <HeroMetric label="Tasks" value="18" tone="bg-cyan-50" />
-                      <HeroMetric label="Notes" value="42" tone="bg-white" />
-                      <HeroMetric label="Files" value="86" tone="bg-slate-50" />
+                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Focus" value="124h" tone="bg-sky-50" /></motion.div>
+                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Tasks" value="18" tone="bg-cyan-50" /></motion.div>
+                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Notes" value="42" tone="bg-white" /></motion.div>
+                      <motion.div style={{ translateZ: 30 }}><HeroMetric label="Files" value="86" tone="bg-slate-50" /></motion.div>
                     </div>
                     
-                    <div className="mt-6 rounded-[22px] border border-sky-100 bg-white/92 p-4 sm:p-5 shadow-inner">
+                    <motion.div 
+                      style={{ translateZ: 40 }}
+                      className="mt-6 rounded-[22px] border border-sky-100 bg-white/92 p-4 sm:p-5 shadow-inner"
+                    >
                       <div className="flex items-center justify-between text-sm">
                         <span className="font-medium text-slate-600">Consistency</span>
                         <span className="font-semibold text-sky-700">94%</span>
@@ -350,41 +392,58 @@ export default function Landing() {
                       <div className="mt-4 flex h-24 sm:h-28 items-end gap-2 rounded-[14px] bg-[linear-gradient(180deg,#f7fbff_0%,#edf6ff_100%)] px-3 pb-3 sm:px-4 sm:pb-4">
                         {[30, 48, 56, 74, 66, 90, 82].map((height, index) => (
                           <div key={index} className="flex-1">
-                            <div
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: `${height}%` }}
+                              transition={{ duration: 1, delay: 0.5 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
                               className={`rounded-t-[8px] bg-gradient-to-t ${index > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
-                              style={{ height: `${height}%` }}
                             />
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
 
                 {/* Parallax Floating Element 1 (Focus Mode) */}
                 <motion.div
-                  style={{ translateZ: 80 }}
+                  style={{ translateZ: 110 }}
                   className="absolute -right-4 sm:-right-12 top-10 sm:top-20 w-[240px] sm:w-[280px] rounded-[30px] border border-white/90 bg-white/95 p-5 sm:p-6 shadow-[0_34px_90px_-30px_rgba(16,185,129,0.35)] backdrop-blur-xl"
                 >
                   <PanelHeader icon={Clock3} label="Focus mode" subtitle="Active block" tone="bg-emerald-100 text-emerald-700" />
                   <div className="mt-5 sm:mt-6 rounded-[24px] bg-slate-950 p-4 sm:p-5 text-white">
-                    <div className="text-4xl sm:text-5xl font-semibold tracking-[-0.05em]">25:00</div>
+                    <motion.div 
+                      animate={{ opacity: [1, 0.7, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="text-4xl sm:text-5xl font-semibold tracking-[-0.05em]"
+                    >
+                      25:00
+                    </motion.div>
                     <div className="mt-3 sm:mt-4 h-2 w-full rounded-full bg-white/20">
-                      <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" />
+                      <motion.div 
+                        animate={{ width: ["0%", "66%"] }}
+                        transition={{ duration: 2, ease: "easeInOut" }}
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" 
+                      />
                     </div>
                   </div>
                 </motion.div>
 
                 {/* Parallax Floating Element 2 (Notes) */}
                 <motion.div
-                  style={{ translateZ: 140 }}
+                  style={{ translateZ: 160 }}
                   className="absolute -left-4 sm:-left-16 bottom-10 sm:bottom-16 w-[260px] sm:w-[300px] rounded-[30px] border border-white/90 bg-white/95 p-5 sm:p-6 shadow-[0_34px_90px_-30px_rgba(99,102,241,0.25)] backdrop-blur-xl"
                 >
                   <PanelHeader icon={StickyNote} label="Notes + AI" subtitle="Ideas connected" tone="bg-indigo-50 text-indigo-700" />
-                  <div className="mt-4 sm:mt-5 rounded-[20px] border border-slate-100 bg-slate-50 p-4">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.8 }}
+                    className="mt-4 sm:mt-5 rounded-[20px] border border-slate-100 bg-slate-50 p-4"
+                  >
                     <div className="text-sm font-semibold text-slate-900">Revision guide generated</div>
                     <div className="mt-2 text-sm leading-6 text-slate-500">Based on your recent 3 study sessions.</div>
-                  </div>
+                  </motion.div>
                 </motion.div>
 
               </div>
