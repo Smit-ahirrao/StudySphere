@@ -1,32 +1,35 @@
 import React from 'react';
-import { BrainCircuit, FileQuestion, ListChecks } from 'lucide-react';
+import { BrainCircuit, FileQuestion, ListChecks, CheckSquare } from 'lucide-react';
 
-export type StudyOutputTab = 'summary' | 'flashcards' | 'quiz';
+export type StudyOutputTab = 'summary' | 'flashcards' | 'quiz' | 'solutions';
 
 interface Props {
   activeTab: StudyOutputTab;
   onChange: (tab: StudyOutputTab) => void;
+  showSolutions?: boolean;
 }
 
 const tabs: Array<{
   id: StudyOutputTab;
   label: string;
   icon: React.ComponentType<{ size?: number }>;
+  condition?: (props: Props) => boolean;
 }> = [
-  { id: 'summary', label: 'Summary', icon: ListChecks },
-  { id: 'flashcards', label: 'Flashcards', icon: BrainCircuit },
-  { id: 'quiz', label: 'Quiz', icon: FileQuestion },
+  { id: 'summary', label: 'Summary', icon: ListChecks, condition: (p) => !p.showSolutions },
+  { id: 'flashcards', label: 'Flashcards', icon: BrainCircuit, condition: (p) => !p.showSolutions },
+  { id: 'quiz', label: 'Quiz', icon: FileQuestion, condition: (p) => !p.showSolutions },
+  { id: 'solutions', label: 'Solutions', icon: CheckSquare, condition: (p) => !!p.showSolutions },
 ];
 
-const OutputTabs: React.FC<Props> = ({ activeTab, onChange }) => (
+const OutputTabs: React.FC<Props> = (props) => (
   <div className="flex flex-wrap gap-2">
-    {tabs.map((tab) => {
-      const active = tab.id === activeTab;
+    {tabs.filter(t => t.condition ? t.condition(props) : true).map((tab) => {
+      const active = tab.id === props.activeTab;
       return (
         <button
           key={tab.id}
           type="button"
-          onClick={() => onChange(tab.id)}
+          onClick={() => props.onChange(tab.id)}
           className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
             active
               ? 'bg-slate-950 text-white shadow-md shadow-sky-500/10 dark:bg-sky-400 dark:text-slate-950'

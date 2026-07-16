@@ -42,8 +42,9 @@ interface DataContextType {
   deleteFile: (id: string) => void;
   recordQuizOutcome: (payload: { topic: string; correct: boolean; question?: string; explanation?: string }) => void;
   clearWeakArea: (topic: string) => void;
-  updateSettings: (settings: AppData['settings']) => void;
+    updateSettings: (settings: AppData['settings']) => void;
   importBackup: (jsonData: string) => boolean;
+  bulkUpdateTasks: (updates: Record<string, Partial<Task>>) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -69,6 +70,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const updateTask = (updated: Task) =>
     setData((prev) => ({ ...prev, tasks: updateTaskInTree(prev.tasks, updated) }));
+
+  const bulkUpdateTasks = (updates: Record<string, Partial<Task>>) => {
+    setData((prev) => {
+      // Single-pass: walk tree once, apply all matching updates
+      const applyAll = (list: Task[]): Task[] => {
+        return list.map(t => {
+          const fields = updates[t.id];
+          const updatedChildren = (t.children && t.children.length > 0)
+            ? applyAll(t.children)
+            : t.children;
+          if (fields) {
+            return { ...t, ...fields, children: updatedChildren };
+          }
+          if (updatedChildren !== t.children) {
+            return { ...t, children: updatedChildren };
+          }
+          return t;
+        });
+      };
+      return { ...prev, tasks: applyAll(prev.tasks) };
+    });
+  };
 
   const toggleTask = (id: string) =>
     setData((prev) => ({ ...prev, tasks: toggleTaskCompletion(prev.tasks, id) }));
@@ -242,6 +265,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         clearAllData,
         addTask,
         updateTask,
+        bulkUpdateTasks,
         toggleTask,
         setTaskComplete,
         deleteTask,

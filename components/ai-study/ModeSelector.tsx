@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Rocket, TimerReset } from 'lucide-react';
+import { Brain, Rocket, TimerReset, FileQuestion } from 'lucide-react';
 import { LearningMode } from '../../types';
 
 const MODES: Array<{
@@ -25,6 +25,12 @@ const MODES: Array<{
     label: 'Deep Learning',
     description: 'More explanation, concepts, and understanding checks.',
     icon: Brain,
+  },
+  {
+    id: 'question-solver',
+    label: 'Question Solver',
+    description: 'Provide a question bank, get professional solutions.',
+    icon: FileQuestion,
   },
 ];
 

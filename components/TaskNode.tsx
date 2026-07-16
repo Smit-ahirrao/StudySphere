@@ -71,7 +71,7 @@ export default function TaskNode({ task, onAddSubtask, onFocusTask, onToggle, on
   return (
     <div className="space-y-2.5" style={{ marginLeft: level === 0 ? 0 : 18 }}>
       <div
-        className={`group relative cursor-pointer rounded-[20px] border px-3.5 py-3 shadow-[0_4px_20px_-10px_rgba(15,23,42,0.1)] transition-all ${shellClass} ${isTopLevel ? '' : 'backdrop-blur-sm'}`}
+        className={`group relative cursor-pointer rounded-[20px] border px-3.5 py-3 shadow-[0_4px_20px_-10px_rgba(15,23,42,0.1)] transition-all priority-strip-${task.priority} ${shellClass} ${isTopLevel ? '' : 'backdrop-blur-sm'}`}
         onClick={() => onSelect?.(task)}
       >
         <div className="flex items-start gap-2.5">

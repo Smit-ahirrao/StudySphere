@@ -50,3 +50,60 @@ button {
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+/* Shimmer skeleton for AI loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ai-shimmer {
+  background: linear-gradient(90deg, rgba(148,163,184,0.08) 25%, rgba(148,163,184,0.18) 50%, rgba(148,163,184,0.08) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 16px;
+}
+.dark .ai-shimmer {
+  background: linear-gradient(90deg, rgba(51,65,85,0.3) 25%, rgba(71,85,105,0.45) 50%, rgba(51,65,85,0.3) 75%);
+  background-size: 200% 100%;
+}
+
+/* Slide-in-right for drawers */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fade-scale-in for modals */
+@keyframes fadeScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-fade-scale-in {
+  animation: fadeScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pulse-glow for AI active state */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.3); }
+  50% { box-shadow: 0 0 20px 4px rgba(56,189,248,0.15); }
+}
+.ai-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Subtle micro-interactions for modern aesthetic */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.2);
+}
+
+/* Priority accent strips */
+.priority-strip-high { border-left: 3px solid #f43f5e; }
+.priority-strip-medium { border-left: 3px solid #f59e0b; }
+.priority-strip-low { border-left: 3px solid transparent; }
+

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, LayoutList, KanbanSquare, Folder, Inbox, Sun, Calendar, Hash, Tag, Plus } from 'lucide-react';
+import { CalendarDays, LayoutList, KanbanSquare, Folder, Inbox, Sun, Calendar, Plus, ChevronDown, Filter } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import TaskNode from '../components/TaskNode';
 import QuickAddBar from '../components/QuickAddBar';
@@ -17,7 +17,7 @@ type FilterState =
   | { type: 'all' }
   | { type: 'project'; id: string };
 
-type ViewMode = 'list' | 'board' | 'calendar';
+type ViewMode = 'list' | 'board';
 
 export default function Tasks() {
   const { data, addTask, deleteTask, toggleTask, updateTask, addProject } = useData();
@@ -29,14 +29,31 @@ export default function Tasks() {
   const [undoToast, setUndoToast] = useState<{ message: string; action: () => void } | null>(null);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const allFlat = useMemo(() => flattenTasks(data.tasks), [data.tasks]);
 
   const selectedTask = useMemo(() => {
     if (!selectedTaskId) return null;
-    return flattenTasks(data.tasks).find(t => t.id === selectedTaskId) || null;
-  }, [selectedTaskId, data.tasks]);
+    return allFlat.find(t => t.id === selectedTaskId) || null;
+  }, [selectedTaskId, allFlat]);
+
+  // Task counts for nav badges
+  const counts = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomStr = tomorrow.toISOString().split('T')[0];
+
+    return {
+      inbox: data.tasks.filter(t => !t.projectId && !t.completed).length,
+      today: allFlat.filter(t => t.dueDate === today && !t.completed).length,
+      upcoming: allFlat.filter(t => t.dueDate && t.dueDate >= tomStr && !t.completed).length,
+      all: allFlat.filter(t => !t.completed).length,
+    };
+  }, [data.tasks, allFlat]);
 
   const handleAddQuickTask = (parsed: Partial<Task>) => {
-    // If we are in a specific project, assign it by default unless user specified otherwise
     let projectId = parsed.projectId;
     if (!projectId && filter.type === 'project') {
       projectId = filter.id;
@@ -45,7 +62,6 @@ export default function Tasks() {
       dueDate: parsed.dueDate,
       recurring: parsed.recurring,
     });
-    
     const finalTask = { ...newTask, ...parsed, title: newTask.title, projectId };
     addTask(finalTask);
   };
@@ -74,8 +90,6 @@ export default function Tasks() {
 
   const filteredTasks = useMemo(() => {
     let tasks = data.tasks;
-    
-    // Sort logic (can be expanded)
     tasks = [...tasks].sort((a, b) => {
       if (a.completed && !b.completed) return 1;
       if (!a.completed && b.completed) return -1;
@@ -103,7 +117,6 @@ export default function Tasks() {
     }
   }, [data.tasks, filter]);
 
-  // Derive title for main area
   const viewTitle = useMemo(() => {
     switch (filter.type) {
       case 'inbox': return 'Inbox';
@@ -114,90 +127,144 @@ export default function Tasks() {
     }
   }, [filter, data.projects]);
 
+  const navItems = [
+    { key: 'inbox', label: 'Inbox', icon: Inbox, count: counts.inbox, filter: { type: 'inbox' as const } },
+    { key: 'today', label: 'Today', icon: Sun, count: counts.today, filter: { type: 'today' as const } },
+    { key: 'upcoming', label: 'Upcoming', icon: Calendar, count: counts.upcoming, filter: { type: 'upcoming' as const } },
+    { key: 'all', label: 'All Tasks', icon: LayoutList, count: counts.all, filter: { type: 'all' as const } },
+  ];
+
+  const setFilterAndClose = (f: FilterState) => {
+    setFilter(f);
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="flex h-[calc(100vh-6rem)] gap-6">
-      
-      {/* Sidebar Navigation */}
-      <div className="w-64 flex-shrink-0 flex flex-col gap-6 overflow-y-auto pr-2">
+    <div className="flex h-[calc(100vh-6rem)] gap-0 lg:gap-6">
+
+      {/* Mobile filter pill bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center gap-2 overflow-x-auto border-t border-slate-200 bg-white/90 px-4 py-2.5 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90 lg:hidden">
+        {navItems.map(item => (
+          <button
+            key={item.key}
+            onClick={() => setFilter(item.filter)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+              filter.type === item.key
+                ? 'bg-sky-500 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}
+          >
+            <item.icon size={13} />
+            {item.label}
+            {item.count > 0 && (
+              <span className={`ml-0.5 rounded-full px-1.5 text-[10px] ${filter.type === item.key ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-700'}`}>{item.count}</span>
+            )}
+          </button>
+        ))}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+        >
+          <Filter size={12} /> Projects
+        </button>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden w-56 shrink-0 flex-col gap-5 overflow-y-auto pr-2 lg:flex">
         <div className="space-y-1">
-          <NavItem 
-            icon={<Inbox size={18} />} label="Inbox" 
-            active={filter.type === 'inbox'} 
-            onClick={() => setFilter({ type: 'inbox' })} 
-          />
-          <NavItem 
-            icon={<Sun size={18} />} label="Today" 
-            active={filter.type === 'today'} 
-            onClick={() => setFilter({ type: 'today' })} 
-          />
-          <NavItem 
-            icon={<Calendar size={18} />} label="Upcoming" 
-            active={filter.type === 'upcoming'} 
-            onClick={() => setFilter({ type: 'upcoming' })} 
-          />
-          <NavItem 
-            icon={<LayoutList size={18} />} label="All Tasks" 
-            active={filter.type === 'all'} 
-            onClick={() => setFilter({ type: 'all' })} 
-          />
+          {navItems.map(item => (
+            <NavItem
+              key={item.key}
+              icon={<item.icon size={16} />}
+              label={item.label}
+              count={item.count}
+              active={filter.type === item.key}
+              onClick={() => setFilter(item.filter)}
+            />
+          ))}
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between px-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+          <div className="mb-2 flex items-center justify-between px-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
             <span>Projects</span>
-            <button 
+            <button
               onClick={() => {
                 const name = window.prompt('Project Name:');
-                if (name) {
-                  addProject({ id: crypto.randomUUID(), name, color: 'sky' });
-                }
-              }} 
+                if (name) addProject({ id: crypto.randomUUID(), name, color: 'sky' });
+              }}
               className="hover:text-sky-500"
             >
-              <Plus size={14} />
+              <Plus size={13} />
             </button>
           </div>
           <div className="space-y-1">
             {data.projects?.map(proj => (
-              <NavItem 
+              <NavItem
                 key={proj.id}
-                icon={<Folder size={16} />} 
-                label={proj.name} 
-                active={filter.type === 'project' && filter.id === proj.id} 
-                onClick={() => setFilter({ type: 'project', id: proj.id })} 
+                icon={<Folder size={14} />}
+                label={proj.name}
+                active={filter.type === 'project' && filter.id === proj.id}
+                onClick={() => setFilter({ type: 'project', id: proj.id })}
               />
             ))}
           </div>
         </div>
       </div>
 
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <>
+          <div className="fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-y-0 left-0 z-[105] w-64 bg-white p-5 shadow-2xl dark:bg-slate-950 lg:hidden animate-slide-in-right" style={{ animationName: 'slideInLeft' }}>
+            <h3 className="mb-4 text-sm font-bold text-slate-900 dark:text-white">Projects</h3>
+            <div className="space-y-1">
+              {data.projects?.map(proj => (
+                <NavItem
+                  key={proj.id}
+                  icon={<Folder size={14} />}
+                  label={proj.name}
+                  active={filter.type === 'project' && filter.id === proj.id}
+                  onClick={() => setFilterAndClose({ type: 'project', id: proj.id })}
+                />
+              ))}
+              <button
+                onClick={() => {
+                  const name = window.prompt('Project Name:');
+                  if (name) addProject({ id: crypto.randomUUID(), name, color: 'sky' });
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <Plus size={14} /> New Project
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-inner dark:bg-slate-900/30">
-        
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200/50 px-8 py-5 dark:border-slate-800/50">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{viewTitle}</h2>
-          
+        <div className="flex items-center justify-between border-b border-slate-200/50 px-4 py-4 sm:px-8 sm:py-5 dark:border-slate-800/50 shrink-0">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">{viewTitle}</h2>
           <div className="flex rounded-lg bg-white p-1 shadow-sm dark:bg-slate-950">
-            <button onClick={() => setViewMode('list')} className={`rounded-md p-1.5 transition ${viewMode === 'list' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'}`}><LayoutList size={18} /></button>
-            <button onClick={() => setViewMode('board')} className={`rounded-md p-1.5 transition ${viewMode === 'board' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'}`}><KanbanSquare size={18} /></button>
-            <button onClick={() => setViewMode('calendar')} className={`rounded-md p-1.5 transition ${viewMode === 'calendar' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'}`}><CalendarDays size={18} /></button>
+            <button onClick={() => setViewMode('list')} className={`rounded-md p-1.5 transition ${viewMode === 'list' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'}`}><LayoutList size={16} /></button>
+            <button onClick={() => setViewMode('board')} className={`rounded-md p-1.5 transition ${viewMode === 'board' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'}`}><KanbanSquare size={16} /></button>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">
-          <div className="mx-auto max-w-4xl space-y-6">
-            
+        <div className="flex-1 overflow-y-auto px-4 py-5 pb-20 sm:px-8 sm:py-6 lg:pb-6">
+          <div className="mx-auto max-w-4xl space-y-5">
+
             <AIPlanningBar />
-            
             <AISummaryPanel />
-            
+
             <div className="flex gap-2">
               <div className="flex-1">
                 <QuickAddBar onAdd={handleAddQuickTask} />
               </div>
-              <button 
+              <button
                 onClick={() => setShowBulkAdd(true)}
                 className="rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400"
               >
@@ -206,12 +273,12 @@ export default function Tasks() {
             </div>
 
             {filteredTasks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 py-20 text-center dark:border-slate-800">
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 py-16 text-center dark:border-slate-800">
                 <div className="mb-4 rounded-full bg-slate-100 p-4 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
-                  <Inbox size={32} />
+                  <Inbox size={28} />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No tasks here</h3>
-                <p className="mt-1 text-sm text-slate-500">You're all caught up! Enjoy your free time or add a new task above.</p>
+                <p className="mt-1 text-sm text-slate-500">You're all caught up! Add a task above or use AI Goal Planner.</p>
               </div>
             ) : viewMode === 'list' ? (
               <div className="space-y-3">
@@ -228,34 +295,25 @@ export default function Tasks() {
                   />
                 ))}
               </div>
-            ) : viewMode === 'board' ? (
-              <BoardView 
-                tasks={filteredTasks} 
-                filter={filter} 
-                sections={data.sections} 
-                onSelect={(t) => setSelectedTaskId(t.id)} 
+            ) : (
+              <BoardView
+                tasks={filteredTasks}
+                filter={filter}
+                sections={data.sections}
+                onSelect={(t) => setSelectedTaskId(t.id)}
                 onToggle={toggleTask}
               />
-            ) : (
-              <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-                <CalendarDays size={48} className="mx-auto mb-4 opacity-20" />
-                Calendar view is currently in preview. Use List or Board to manage tasks.
-              </div>
             )}
           </div>
         </div>
-
       </div>
 
       {/* Undo Toast */}
       {undoToast && (
-        <div className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-2xl bg-slate-900 px-6 py-3 text-sm text-white shadow-2xl dark:bg-sky-600">
+        <div className="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-2xl bg-slate-900 px-6 py-3 text-sm text-white shadow-2xl dark:bg-sky-600 lg:bottom-8">
           <span>{undoToast.message}</span>
-          <button 
-            onClick={() => {
-              undoToast.action();
-              setUndoToast(null);
-            }}
+          <button
+            onClick={() => { undoToast.action(); setUndoToast(null); }}
             className="font-bold uppercase tracking-wider text-sky-400 hover:text-sky-300 dark:text-sky-100"
           >
             Undo
@@ -265,16 +323,16 @@ export default function Tasks() {
 
       {/* Bulk Add Modal */}
       {showBulkAdd && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900 animate-fade-scale-in">
             <h3 className="mb-4 text-xl font-bold dark:text-white">Bulk Add Tasks</h3>
-            <p className="mb-4 text-sm text-slate-500">Each line will become a separate task. You can paste lists from your notes or syllabus here.</p>
+            <p className="mb-4 text-sm text-slate-500">Each line will become a separate task.</p>
             <textarea
               autoFocus
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
               className="mb-6 h-64 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm outline-none focus:border-sky-400 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-              placeholder="Finish assignment&#10;Study for midterms&#10;Submit project proposal..."
+              placeholder={"Finish assignment\nStudy for midterms\nSubmit project proposal..."}
             />
             <div className="flex justify-end gap-3">
               <button onClick={() => setShowBulkAdd(false)} className="rounded-xl px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
@@ -285,9 +343,9 @@ export default function Tasks() {
       )}
 
       {/* Task Detail Drawer */}
-      <TaskDetailDrawer 
-        task={selectedTask} 
-        onClose={() => setSelectedTaskId(null)} 
+      <TaskDetailDrawer
+        task={selectedTask}
+        onClose={() => setSelectedTaskId(null)}
         onUpdate={updateTask}
         onDelete={(id) => {
           if (selectedTask) handleDeleteWithUndo(selectedTask);
@@ -298,65 +356,76 @@ export default function Tasks() {
   );
 }
 
-const NavItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick: () => void }) => (
-  <button 
+// Nav item with count badge
+const NavItem = ({ icon, label, active, onClick, count }: { icon: React.ReactNode, label: string, active?: boolean, onClick: () => void, count?: number }) => (
+  <button
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-      active 
-        ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300' 
+    className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium transition ${
+      active
+        ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300'
         : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-300'
     }`}
   >
-    {icon}
-    {label}
+    <div className="flex items-center gap-2.5">
+      {icon}
+      {label}
+    </div>
+    {count !== undefined && count > 0 && (
+      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+        active ? 'bg-sky-200/60 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
+      }`}>
+        {count}
+      </span>
+    )}
   </button>
 );
 
-// Simple Board View implementation
+// Board View with priority strips
 const BoardView = ({ tasks, filter, sections, onSelect, onToggle }: { tasks: Task[], filter: FilterState, sections: any[], onSelect: (t: Task) => void, onToggle: (id: string) => void }) => {
-  // If in a project, group by sections. Otherwise, group by Study State.
   const isProject = filter.type === 'project';
-  
+
   const columns = useMemo(() => {
     if (isProject) {
-      const projSections = sections.filter(s => s.projectId === filter.id).sort((a, b) => a.order - b.order);
+      const projSections = sections.filter(s => s.projectId === filter.id).sort((a: any, b: any) => a.order - b.order);
       const cols = [{ id: 'no-section', name: 'No Section', tasks: tasks.filter(t => !t.sectionId) }];
-      projSections.forEach(s => {
+      projSections.forEach((s: any) => {
         cols.push({ id: s.id, name: s.name, tasks: tasks.filter(t => t.sectionId === s.id) });
       });
-      return cols.filter(c => c.tasks.length > 0 || c.id !== 'no-section'); // hide 'No Section' if empty
+      return cols.filter(c => c.tasks.length > 0 || c.id !== 'no-section');
     } else {
       const states = ['To Study', 'In Revision', 'Ready for Exam'];
-      const cols = [
+      return [
         { id: 'no-state', name: 'No Status', tasks: tasks.filter(t => !states.includes(t.studyState || '')) },
         ...states.map(state => ({ id: state, name: state, tasks: tasks.filter(t => t.studyState === state) }))
       ];
-      return cols;
     }
   }, [tasks, filter, sections, isProject]);
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-4 overflow-x-auto pb-4 -mx-2">
       {columns.map(col => (
-        <div key={col.id} className="w-80 flex-shrink-0 space-y-3 rounded-2xl bg-slate-100/50 p-4 dark:bg-slate-800/30">
+        <div key={col.id} className="w-72 shrink-0 space-y-3 rounded-2xl bg-slate-100/50 p-4 dark:bg-slate-800/30">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">{col.name}</h3>
-            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-400">{col.tasks.length}</span>
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-400">{col.tasks.length}</span>
           </div>
-          
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {col.tasks.map(task => (
-              <div 
+              <div
                 key={task.id}
                 onClick={() => onSelect(task)}
-                className={`cursor-pointer rounded-xl border p-3 shadow-sm transition hover:border-sky-300 hover:shadow-md ${task.completed ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20' : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'}`}
+                className={`cursor-pointer rounded-xl border p-3 shadow-sm transition hover:border-sky-300 hover:shadow-md priority-strip-${task.priority} ${
+                  task.completed
+                    ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20'
+                    : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+                }`}
               >
                 <div className="flex items-start gap-2">
-                  <input type="checkbox" checked={task.completed} onChange={() => onToggle(task.id)} onClick={e => e.stopPropagation()} className="mt-1 flex-shrink-0 cursor-pointer" />
-                  <div>
-                    <p className={`text-sm font-medium ${task.completed ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>{task.title}</p>
-                    {(task.dueDate || task.priority) && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
+                  <input type="checkbox" checked={task.completed} onChange={() => onToggle(task.id)} onClick={e => e.stopPropagation()} className="mt-1 shrink-0 cursor-pointer" />
+                  <div className="min-w-0">
+                    <p className={`text-sm font-medium truncate ${task.completed ? 'text-slate-500 line-through dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>{task.title}</p>
+                    {(task.dueDate || task.priority === 'high') && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {task.priority === 'high' && <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-rose-700 dark:bg-rose-950 dark:text-rose-400">High</span>}
                         {task.dueDate && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">{task.dueDate}</span>}
                       </div>

@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 min-w-0 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="space-y-6 min-w-0 overflow-hidden">
-          <Card className="min-w-0 overflow-hidden border-none bg-[linear-gradient(145deg,rgba(14,165,233,0.12),rgba(99,102,241,0.12),rgba(255,255,255,0.9))] dark:bg-[linear-gradient(145deg,rgba(14,165,233,0.18),rgba(79,70,229,0.16),rgba(2,6,23,0.92))]">
+          <Card className="min-w-0 overflow-hidden bg-slate-50/80 border-transparent shadow-sm dark:bg-slate-900/40 dark:border-slate-800/50">
             <div className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -160,9 +160,9 @@ const Dashboard: React.FC = () => {
                   <span>{focusXp.currentRank.name}</span>
                   <span>{focusXp.nextRank ? focusXp.nextRank.name : 'Maxed out'}</span>
                 </div>
-                <div className="h-4 overflow-hidden rounded-full bg-white/75 shadow-inner dark:bg-slate-900/80">
+                <div className="h-3 overflow-hidden rounded-full bg-indigo-100/50 dark:bg-indigo-950/50">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-400 to-indigo-500 transition-all duration-700"
+                    className="h-full rounded-full bg-indigo-500 transition-all duration-700 dark:bg-indigo-400"
                     style={{ width: `${focusXp.progress}%` }}
                   />
                 </div>
@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
               <EmptyMessage title="No pending tasks yet" description="Add tasks and this space will surface your next highest-impact work." />
             ) : (
               urgentTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/50">
+                <div key={task.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-white px-4 py-4 hover-lift dark:border-slate-800 dark:bg-slate-900/50">
                   <div className="min-w-0 flex-1 pr-3">
                     <div className="truncate font-medium text-slate-900 dark:text-white">{task.title}</div>
                     <div className="mt-1 truncate text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">{task.priority} priority</div>
@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
               <EmptyMessage title="No notes captured" description="Your freshest ideas, summaries, and revision notes will appear here." />
             ) : (
               recentNotes.map((note) => (
-                <div key={note.id} className="rounded-3xl border border-slate-100 bg-white/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/55 min-w-0">
+                <div key={note.id} className="rounded-xl border border-slate-100 bg-white px-4 py-4 hover-lift dark:border-slate-800 dark:bg-slate-900/50 min-w-0">
                   <div className="truncate font-medium text-slate-900 dark:text-white">{note.title}</div>
                   <p className="mt-2 line-clamp-2 overflow-hidden text-sm text-slate-600 dark:text-slate-400">{stripHtml(note.content) || 'Empty note'}</p>
                 </div>
@@ -277,23 +277,30 @@ const MetricCard = ({
   caption: string;
   accent: 'cyan' | 'amber' | 'emerald' | 'violet';
 }) => {
-  const accents = {
-    cyan: 'from-cyan-400/18 to-sky-500/5 text-cyan-700 dark:text-cyan-300',
-    amber: 'from-amber-300/18 to-orange-400/5 text-amber-700 dark:text-amber-300',
-    emerald: 'from-emerald-400/18 to-teal-500/5 text-emerald-700 dark:text-emerald-300',
-    violet: 'from-violet-400/18 to-fuchsia-500/5 text-violet-700 dark:text-violet-300',
+  const cardStyles = {
+    cyan: 'bg-cyan-50/80 dark:bg-cyan-950/30 border-transparent',
+    amber: 'bg-amber-50/80 dark:bg-amber-950/30 border-transparent',
+    emerald: 'bg-emerald-50/80 dark:bg-emerald-950/30 border-transparent',
+    violet: 'bg-purple-50/80 dark:bg-purple-950/30 border-transparent',
+  };
+
+  const iconStyles = {
+    cyan: 'text-cyan-600 dark:text-cyan-400',
+    amber: 'text-amber-600 dark:text-amber-400',
+    emerald: 'text-emerald-600 dark:text-emerald-400',
+    violet: 'text-purple-600 dark:text-purple-400',
   };
 
   return (
-    <Card className={`border-none bg-gradient-to-br ${accents[accent]}`}>
+    <Card className={`${cardStyles[accent]} hover-lift shadow-sm`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{label}</p>
-          <div className="mt-2 text-4xl font-semibold text-slate-950 dark:text-white">{value}</div>
-          <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">{caption}</div>
+          <p className="text-[13px] font-medium text-slate-600 dark:text-slate-400">{label}</p>
+          <div className="mt-2 text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">{value}</div>
+          <div className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-500">{caption}</div>
         </div>
-        <div className="rounded-2xl bg-white/70 p-3 text-slate-900 shadow-sm dark:bg-slate-900/60 dark:text-white">
-          <Icon size={20} />
+        <div className={`rounded-full bg-white/60 backdrop-blur-sm p-2.5 shadow-sm dark:bg-slate-900/50 ${iconStyles[accent]}`}>
+          <Icon size={20} strokeWidth={2} />
         </div>
       </div>
     </Card>
@@ -314,11 +321,11 @@ const QuickLink = ({
   <button
     type="button"
     onClick={onClick}
-    className="flex items-center justify-between rounded-3xl border border-slate-100 bg-slate-50/70 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-sky-700 dark:hover:bg-slate-900"
+    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-4 text-left transition hover-lift dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
   >
     <div className="flex items-center gap-3">
-      <div className="rounded-2xl bg-white p-3 text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300">
-        <Icon size={18} />
+      <div className="rounded-full border border-slate-100 bg-slate-50 p-2.5 text-sky-600 dark:border-slate-800 dark:bg-slate-800 dark:text-sky-400">
+        <Icon size={18} strokeWidth={2} />
       </div>
       <div>
         <div className="font-medium text-slate-900 dark:text-white">{title}</div>

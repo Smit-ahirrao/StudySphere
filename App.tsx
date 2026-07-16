@@ -9,6 +9,7 @@ import Notes from './pages/Notes';
 import Planner from './pages/Planner';
 import Focus from './pages/Focus';
 import Files from './pages/Files';
+import StudyLab from './pages/StudyLab';
 import SplashScreen from './components/SplashScreen';
 
 const App: React.FC = () => {
@@ -29,6 +30,7 @@ const App: React.FC = () => {
             <Route path="/notes" element={<Notes />} />
             <Route path="/planner" element={<Planner />} />
             <Route path="/focus" element={<Focus />} />
+            <Route path="/study-lab" element={<StudyLab />} />
             <Route path="/files" element={<Files />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

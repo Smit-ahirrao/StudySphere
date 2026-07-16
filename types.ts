@@ -1,7 +1,7 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type PlannerLabel = 'study' | 'break' | 'personal';
 export type PlannerRepeat = 'none' | 'daily' | 'weekly' | 'monthly';
-export type LearningMode = 'quick-revision' | 'exam-mode' | 'deep-learning';
+export type LearningMode = 'quick-revision' | 'exam-mode' | 'deep-learning' | 'question-solver';
 
 export interface Project {
   id: string;
@@ -71,7 +71,8 @@ export type BlockType =
   | 'toc' 
   | 'image' 
   | 'file' 
-  | 'embed';
+  | 'embed'
+  | 'active-recall';
 
 export interface Block {
   id: string;
@@ -192,6 +193,26 @@ export interface QuizQuestion {
   suggestedSeconds?: number;
 }
 
+export interface DeepDiveExplanation {
+  concept: string;
+  explanation: string;
+  analogy: string;
+  emoji: string;
+}
+
+export interface ComparisonTable {
+  title: string;
+  headers: string[];
+  rows: string[][];
+}
+
+export interface QuestionSolution {
+  question: string;
+  answer: string;
+  marks?: number;
+  explanation?: string;
+}
+
 export interface StudyPack {
   keyTopics: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
@@ -200,6 +221,19 @@ export interface StudyPack {
   quiz: QuizQuestion[];
   studyPlan: string[];
   conceptChecks: string[];
+  modeUsed: LearningMode;
+  // Quick Revision specific
+  quickTips?: string[];
+  mnemonics?: string[];
+  // Exam Mode specific
+  examTraps?: string[];
+  formulaSheet?: string[];
+  // Deep Learning specific
+  deepDiveExplanations?: DeepDiveExplanation[];
+  comparisonTable?: ComparisonTable;
+  // Question Solver specific
+  questionSolutions?: QuestionSolution[];
+  heroImageUrl?: string;
 }
 
 export interface WeakArea {

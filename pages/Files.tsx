@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ArrowLeft, Download, Edit3, FileText, FolderPlus, Grid2X2, Image as ImageIcon, List, Search, Share2, Star, Trash2, Upload } from 'lucide-react';
-import AIStudyTool from '../components/ai-study/AIStudyTool';
+import { ArrowLeft, ArrowRight, Brain, Download, Edit3, FileText, FolderPlus, Grid2X2, Image as ImageIcon, List, Search, Share2, Sparkles, Star, Trash2, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Badge, Button, Card, Input, SectionHeading, Textarea } from '../components/UI';
 import { InteractiveFolder } from '../components/InteractiveFolder';
@@ -87,6 +87,7 @@ const getFolderColor = (folderName: string) => {
 
 const Files: React.FC = () => {
   const { addFile, deleteFile, updateFile } = useData();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [files, setFiles] = useState<StoredFile[]>([]);
@@ -307,27 +308,33 @@ const Files: React.FC = () => {
     alert('A local file reference summary was copied. Public link sharing is not supported because files stay on your device.');
   };
 
-  const studyFiles = useMemo(
-    () =>
-      files.map((file) => ({
-        id: file.id,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        file: file.blob instanceof File ? file.blob : new File([file.blob], file.name, { type: file.type, lastModified: file.uploadedAt }),
-      })),
-    [files]
-  );
-
   return (
     <div className="space-y-8">
       <SectionHeading
-        eyebrow="Study Lab"
-        title="Manage resources and generate revision packs in one flow"
-        description="Organize study material, then turn the right document into structured revision content without wasting space."
+        eyebrow="File Manager"
+        title="Organize your study resources in one place"
+        description="Upload, sort, and manage your documents. Use AI Study Lab to generate revision content from your files."
       />
 
-      <AIStudyTool files={studyFiles} onImportFiles={importFiles} />
+      {/* Study Lab Link Card */}
+      <button
+        onClick={() => navigate('/study-lab')}
+        className="group flex w-full items-center gap-4 rounded-[28px] border border-purple-200/60 bg-gradient-to-r from-purple-50 via-indigo-50 to-sky-50 p-5 text-left shadow-sm transition-all hover:shadow-lg hover:border-purple-300 dark:border-purple-900/40 dark:from-purple-950/20 dark:via-indigo-950/20 dark:to-sky-950/20 dark:hover:border-purple-800"
+      >
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 text-white shadow-md transition-transform group-hover:scale-110">
+          <Brain size={22} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Study Lab</h3>
+            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-950/40 dark:text-purple-400">New</span>
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Generate flashcards, quizzes, summaries, and chat with your documents using AI</p>
+        </div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:translate-x-1 dark:bg-slate-800">
+          <ArrowRight size={16} className="text-purple-600 dark:text-purple-400" />
+        </div>
+      </button>
 
       <div className="grid gap-10 lg:grid-cols-[260px_1fr]">
         {/* Sidebar */}

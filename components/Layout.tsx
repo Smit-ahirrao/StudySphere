@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
+  Brain,
   Calendar,
   CheckSquare,
   Command,
@@ -119,6 +120,7 @@ const Layout: React.FC = () => {
       { path: '/notes', label: 'Notes', icon: StickyNote },
       { path: '/planner', label: 'Planner', icon: Calendar },
       { path: '/focus', label: 'Focus', icon: Clock3 },
+      { path: '/study-lab', label: 'Study Lab', icon: Brain },
       { path: '/files', label: 'Files', icon: FolderOpen },
     ],
     []
@@ -127,7 +129,7 @@ const Layout: React.FC = () => {
   const paletteLinks = useMemo(
     () =>
       navItems
-        .filter((item) => ['/dashboard', '/tasks', '/planner', '/notes', '/focus', '/files'].includes(item.path))
+        .filter((item) => ['/dashboard', '/tasks', '/planner', '/notes', '/focus', '/study-lab', '/files'].includes(item.path))
         .filter((item) => item.label.toLowerCase().includes(paletteQuery.toLowerCase())),
     [navItems, paletteQuery]
   );
@@ -159,8 +161,8 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.10),_transparent_22%),linear-gradient(180deg,_#f7fafc_0%,_#edf3f8_48%,_#f5f7fb_100%)] text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.10),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(20,184,166,0.08),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0b1120_45%,_#111827_100%)] dark:text-slate-100">
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] dark:bg-[linear-gradient(180deg,rgba(8,15,35,0.72),transparent)]" />
+    <div className="min-h-screen bg-[linear-gradient(180deg,_#f0f7fb_0%,_#f8fafc_100%)] text-slate-900 transition-colors duration-300 dark:bg-[linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] dark:text-slate-100">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-96 bg-[linear-gradient(180deg,rgba(255,255,255,0.8),transparent)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.8),transparent)]" />
 
       <header className="sticky top-0 z-50 border-b border-white/70 bg-white/72 backdrop-blur-2xl dark:border-slate-800/90 dark:bg-slate-950/72">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -175,8 +177,8 @@ const Layout: React.FC = () => {
               </div>
             </NavLink>
 
-            <div className="hidden items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 lg:flex">
-                <Badge color="blue">{totalTasks === 0 ? 'Fresh Start' : `${completedTasks}/${totalTasks} Tasks`}</Badge>
+            <div className="hidden items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-2 shadow-sm hover-lift dark:border-slate-800 dark:bg-slate-900/70 lg:flex">
+                <Badge color="blue">{totalTasks === 0 ? 'Fresh Start 🌱' : `${completedTasks}/${totalTasks} Tasks`}</Badge>
               <span className="text-sm text-slate-600 dark:text-slate-300">{focusMinutesToday} min focused today</span>
             </div>
           </div>
@@ -187,7 +189,7 @@ const Layout: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+                  `flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition hover-lift ${
                     isActive
                       ? 'bg-slate-950 text-white shadow-lg shadow-sky-500/10 dark:bg-sky-400 dark:text-slate-950'
                       : 'text-slate-600 hover:bg-white hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white'

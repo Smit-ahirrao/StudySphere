@@ -15,7 +15,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+    'inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 hover-lift';
 
   const variants = {
     primary:
@@ -55,7 +55,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Card: React.FC<CardProps> = ({ children, className = '', title, action, ...props }) => (
   <div
-    className={`rounded-[28px] border border-white/70 bg-white/88 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.42)] backdrop-blur-xl dark:border-slate-800/90 dark:bg-slate-950/78 overflow-hidden ${className}`}
+    className={`rounded-[28px] border border-white/70 bg-white/88 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.42)] backdrop-blur-xl hover-lift dark:border-slate-800/90 dark:bg-slate-950/78 overflow-hidden ${className}`}
     {...props}
   >
     {(title || action) && (

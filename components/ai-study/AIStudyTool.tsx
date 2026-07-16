@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Brain, CheckCircle2, Loader2, Sparkles, Target, TrendingUp } from 'lucide-react';
+import { AlertCircle, Award, Brain, CheckCircle2, HelpCircle, Loader2, Sparkles, Target, TrendingUp } from 'lucide-react';
+import RichText from './RichText';
 import { useData } from '../../context/DataContext';
 import { LearningMode, QuizQuestion, StudyPack } from '../../types';
 import { extractTextFromStudyFile, generateStudyPack, isStudySupportedFile } from '../../utils/aiStudy';
@@ -89,7 +90,7 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
       });
 
       setStudyPack(generated);
-      setActiveTab('summary');
+      setActiveTab(mode === 'question-solver' ? 'solutions' : 'summary');
     } catch (generationError) {
       setError(generationError instanceof Error ? generationError.message : 'The AI study pipeline could not complete this request.');
     } finally {
@@ -214,7 +215,11 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                   ))}
                 </div>
 
-                <OutputTabs activeTab={activeTab} onChange={setActiveTab} />
+                <OutputTabs 
+                  activeTab={activeTab} 
+                  onChange={setActiveTab} 
+                  showSolutions={studyPack.modeUsed === 'question-solver' || (studyPack.questionSolutions?.length ?? 0) > 0}
+                />
 
                 {activeTab === 'summary' ? (
                   <div className="grid max-h-[720px] gap-4 overflow-y-auto pr-1 xl:grid-cols-[0.9fr_1.1fr]">
@@ -339,6 +344,54 @@ const AIStudyTool: React.FC<Props> = ({ files, onImportFiles }) => {
                         />
                       ))}
                     </div>
+                  </div>
+                ) : null}
+                {activeTab === 'solutions' && studyPack.questionSolutions ? (
+                  <div className="max-h-[720px] space-y-6 overflow-y-auto pr-1">
+                    {studyPack.questionSolutions.map((sol, idx) => (
+                      <Card key={idx} className="relative overflow-hidden">
+                        <div className="absolute right-0 top-0 h-24 w-24 translate-x-8 translate-y--8 rounded-full bg-sky-500/5 dark:bg-sky-400/5" />
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-400">
+                                <HelpCircle size={14} />
+                                Question {idx + 1}
+                              </div>
+                              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{sol.question}</h3>
+                            </div>
+                            {sol.marks && (
+                              <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                                <Award size={14} />
+                                {sol.marks} Marks
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="rounded-2xl bg-slate-50/50 p-5 dark:bg-slate-900/40">
+                            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle2 size={14} />
+                              Solution
+                            </div>
+                            <div className="text-sm leading-6 text-slate-700 dark:text-slate-300">
+                              <RichText text={sol.answer} />
+                            </div>
+                          </div>
+
+                          {sol.explanation && (
+                            <div className="flex gap-3 rounded-2xl border border-sky-100 bg-sky-50/30 p-4 dark:border-sky-900/30 dark:bg-sky-950/10">
+                              <div className="mt-0.5 text-sky-500">
+                                <Brain size={16} />
+                              </div>
+                              <div className="text-sm text-slate-600 dark:text-slate-300">
+                                <span className="font-semibold text-sky-700 dark:text-sky-400">Tutor Note: </span>
+                                {sol.explanation}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 ) : null}
               </div>

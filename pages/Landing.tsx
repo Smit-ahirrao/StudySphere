@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ComponentType, RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionTemplate, useScroll, useSpring, useTransform, useMotionValue, useAnimationFrame } from 'framer-motion';
+import { motion, useMotionTemplate, useScroll, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import {
   ArrowRight,
   BookOpen,
@@ -105,13 +105,13 @@ export default function Landing() {
   });
   const smoothExperience = useSpring(experienceProgress, { stiffness: 90, damping: 20, mass: 0.2 });
 
-  // --- 3D ORBITING CAROUSEL ---
+  // --- 3D ISOMETRIC PRODUCT SHOWCASE ---
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const smoothMouseX = useSpring(mouseX, { stiffness: 35, damping: 30, mass: 1.2 });
-  const smoothMouseY = useSpring(mouseY, { stiffness: 35, damping: 30, mass: 1.2 });
-  const sceneRotateX = useTransform(smoothMouseY, [-1, 1], [8, -8]);
-  const sceneRotateY = useTransform(smoothMouseX, [-1, 1], [-8, 8]);
+  const smoothMouseX = useSpring(mouseX, { stiffness: 50, damping: 30, mass: 0.8 });
+  const smoothMouseY = useSpring(mouseY, { stiffness: 50, damping: 30, mass: 0.8 });
+  const sceneRotateX = useTransform(smoothMouseY, [-1, 1], [4, -4]);
+  const sceneRotateY = useTransform(smoothMouseX, [-1, 1], [-6, 6]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -125,16 +125,6 @@ export default function Landing() {
     mouseX.set(0);
     mouseY.set(0);
   };
-
-  // Orbit angle state
-  const orbitAngle = useMotionValue(0);
-  const [isPaused, setIsPaused] = useState(false);
-
-  useAnimationFrame((_, delta) => {
-    if (!isPaused) {
-      orbitAngle.set(orbitAngle.get() + delta * 0.018);
-    }
-  });
 
   const heroSceneY = useTransform(smoothPage, [0, 0.18], [0, -70]);
   const heroGlowScale = useTransform(smoothPage, [0, 0.22], [0.9, 1.2]);
@@ -314,143 +304,194 @@ export default function Landing() {
 
           <div
             className="relative min-h-[640px] sm:min-h-[700px] lg:min-h-[760px] flex items-center justify-center"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => { setIsPaused(false); handleMouseLeave(); }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
           >
-            {/* Background glow */}
+            {/* Ambient glow */}
             <motion.div
               style={{ y: heroSceneY, scale: heroGlowScale }}
-              className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.35),rgba(255,255,255,0)_70%)] blur-3xl"
+              className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.28),rgba(186,230,253,0.1)_50%,rgba(255,255,255,0)_72%)] blur-3xl"
             />
 
-            {/* 3D Scene container */}
+            {/* 3D Scene — isometric perspective */}
             <motion.div
               style={{ rotateX: sceneRotateX, rotateY: sceneRotateY }}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative h-[520px] w-full max-w-[620px] [perspective:1200px] [transform-style:preserve-3d]"
-              onMouseMove={handleMouseMove}
+              className="relative w-full max-w-[640px] [perspective:1800px] [transform-style:preserve-3d]"
             >
-              {/* Central glowing core */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[5]">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                  className="h-32 w-32 rounded-full border border-sky-200/40"
-                />
-                <motion.div
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-2 rounded-full border border-dashed border-cyan-300/30"
-                />
-                <div className="absolute inset-4 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.5),rgba(14,165,233,0.15)_60%,transparent_80%)] blur-sm" />
-                <div className="absolute inset-[18px] rounded-full bg-white/90 shadow-[0_0_40px_rgba(56,189,248,0.4)] flex items-center justify-center">
-                  <BookOpen size={28} className="text-sky-600" />
-                </div>
-              </div>
-
-              {/* Orbit track ring */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[540px] rounded-[50%] border border-sky-100/50 [transform:rotateX(65deg)]" />
-
-              {/* Orbiting cards */}
-              <OrbitCard
-                angle={orbitAngle}
-                offsetDeg={0}
-                icon={LayoutDashboard}
-                label="Dashboard"
-                tone="bg-sky-100 text-sky-700"
-                accentShadow="rgba(14,165,233,0.4)"
+              {/* Main app window — the hero centerpiece */}
+              <motion.div
+                initial={{ opacity: 0, y: 60, rotateX: 8 }}
+                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+                className="[transform-style:preserve-3d]"
               >
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  <div className="rounded-xl bg-sky-50 p-2.5">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Focus</div>
-                    <div className="text-lg font-bold text-slate-900">124h</div>
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                  className="relative rounded-[28px] border border-white/70 bg-white/50 p-1.5 shadow-[0_60px_140px_-50px_rgba(14,165,233,0.25),0_20px_60px_-30px_rgba(15,23,42,0.12)] backdrop-blur-2xl [transform:perspective(1800px)_rotateX(8deg)_rotateY(-4deg)] [transform-style:preserve-3d]"
+                >
+                  {/* Window chrome */}
+                  <div className="overflow-hidden rounded-[22px] border border-white/50 bg-[linear-gradient(170deg,rgba(255,255,255,0.95),rgba(240,249,255,0.88))] shadow-inner">
+                    {/* Title bar */}
+                    <div className="flex items-center gap-3 border-b border-slate-100/60 bg-white/60 px-5 py-3.5 backdrop-blur-md">
+                      <div className="flex gap-1.5">
+                        <div className="h-2.5 w-2.5 rounded-full bg-rose-300/80" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-300/80" />
+                      </div>
+                      <div className="ml-4 flex-1 rounded-lg bg-slate-100/70 px-4 py-1.5 text-[11px] font-medium text-slate-400 tracking-wide">
+                        studysphere.app/dashboard
+                      </div>
+                    </div>
+
+                    {/* App body */}
+                    <div className="flex min-h-[380px]">
+                      {/* Sidebar */}
+                      <div className="hidden w-[180px] border-r border-slate-100/60 bg-white/50 p-4 sm:block">
+                        <div className="flex items-center gap-2.5 mb-6">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100">
+                            <BookOpen size={14} className="text-sky-600" />
+                          </div>
+                          <span className="text-sm font-bold text-slate-800 tracking-tight">StudySphere</span>
+                        </div>
+                        <nav className="space-y-1">
+                          {[
+                            { icon: LayoutDashboard, label: 'Dashboard', active: true },
+                            { icon: CheckSquare, label: 'Tasks', active: false },
+                            { icon: StickyNote, label: 'Notes', active: false },
+                            { icon: Clock3, label: 'Focus', active: false },
+                            { icon: Files, label: 'Files', active: false },
+                          ].map((item) => (
+                            <div
+                              key={item.label}
+                              className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium transition ${
+                                item.active
+                                  ? 'bg-sky-50 text-sky-700 shadow-sm'
+                                  : 'text-slate-500 hover:bg-slate-50'
+                              }`}
+                            >
+                              <item.icon size={14} />
+                              {item.label}
+                            </div>
+                          ))}
+                        </nav>
+                      </div>
+
+                      {/* Main content */}
+                      <div className="flex-1 p-5 sm:p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-base font-bold text-slate-900 tracking-tight">Good evening, Smit</div>
+                            <div className="text-xs text-slate-400 mt-0.5">Wednesday, April 30</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-sky-400 to-cyan-300 shadow-sm" />
+                          </div>
+                        </div>
+
+                        {/* Stats row */}
+                        <div className="mt-5 grid grid-cols-3 gap-3">
+                          {[
+                            { label: 'Focus today', value: '3.4h', color: 'text-sky-600' },
+                            { label: 'Tasks done', value: '7/12', color: 'text-emerald-600' },
+                            { label: 'Streak', value: '14d', color: 'text-amber-600' },
+                          ].map((stat) => (
+                            <div key={stat.label} className="rounded-2xl border border-slate-100/80 bg-white/80 p-3.5 shadow-sm">
+                              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{stat.label}</div>
+                              <div className={`mt-1.5 text-xl font-bold tracking-tight ${stat.color}`}>{stat.value}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Chart */}
+                        <div className="mt-4 rounded-2xl border border-slate-100/80 bg-white/80 p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-semibold text-slate-700">Weekly overview</span>
+                            <span className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">+18%</span>
+                          </div>
+                          <div className="flex h-20 items-end gap-1.5">
+                            {[35, 52, 44, 68, 72, 90, 78].map((h, i) => (
+                              <div key={i} className="flex-1">
+                                <motion.div
+                                  initial={{ height: 0 }}
+                                  animate={{ height: `${h}%` }}
+                                  transition={{ duration: 0.9, delay: 0.6 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                                  className={`rounded-md bg-gradient-to-t ${
+                                    i === 5 ? 'from-sky-600 to-cyan-300 shadow-sm shadow-sky-200' : 'from-slate-200 to-slate-100'
+                                  }`}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="rounded-xl bg-cyan-50 p-2.5">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Tasks</div>
-                    <div className="text-lg font-bold text-slate-900">18</div>
+                </motion.div>
+              </motion.div>
+
+              {/* Floating panel — Focus Timer (top right, higher Z) */}
+              <motion.div
+                initial={{ opacity: 0, x: 40, y: 20 }}
+                animate={{ opacity: 1, x: 0, y: 0 }}
+                transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute -right-6 -top-4 sm:-right-14 sm:-top-6 z-20 [transform-style:preserve-3d]"
+              >
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                  className="w-[200px] sm:w-[230px] rounded-[24px] border border-white/80 bg-white/95 p-4 sm:p-5 shadow-[0_30px_80px_-20px_rgba(16,185,129,0.3)] backdrop-blur-xl [transform:translateZ(80px)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-900">Focus</span>
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
+                      <Clock3 size={13} className="text-emerald-700" />
+                    </div>
                   </div>
-                </div>
-                <div className="mt-3 flex h-14 items-end gap-1 rounded-xl bg-slate-50/80 px-2 pb-2">
-                  {[30, 48, 56, 74, 66, 90, 82].map((h, i) => (
-                    <div key={i} className="flex-1">
+                  <div className="mt-3 rounded-xl bg-slate-950 px-4 py-3 text-white">
+                    <div className="text-2xl sm:text-3xl font-bold tracking-tighter">25:00</div>
+                    <div className="mt-2 h-1.5 w-full rounded-full bg-white/15 overflow-hidden">
                       <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: `${h}%` }}
-                        transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                        className={`rounded-t bg-gradient-to-t ${i > 4 ? 'from-sky-600 to-cyan-300' : 'from-slate-300 to-slate-100'}`}
+                        animate={{ width: ['10%', '72%'] }}
+                        transition={{ duration: 4, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }}
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300"
                       />
                     </div>
-                  ))}
-                </div>
-              </OrbitCard>
-
-              <OrbitCard
-                angle={orbitAngle}
-                offsetDeg={90}
-                icon={Clock3}
-                label="Focus Mode"
-                tone="bg-emerald-100 text-emerald-700"
-                accentShadow="rgba(16,185,129,0.4)"
-              >
-                <div className="mt-3 rounded-2xl bg-slate-950 p-4 text-white">
-                  <motion.div
-                    animate={{ opacity: [1, 0.6, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="text-3xl font-bold tracking-tighter"
-                  >
-                    25:00
-                  </motion.div>
-                  <div className="mt-3 h-1.5 w-full rounded-full bg-white/15">
-                    <motion.div
-                      animate={{ width: ['0%', '66%'] }}
-                      transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }}
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300"
-                    />
                   </div>
-                </div>
-              </OrbitCard>
+                  <div className="mt-2.5 text-[10px] font-medium text-slate-400 uppercase tracking-widest">Deep work · Session 3</div>
+                </motion.div>
+              </motion.div>
 
-              <OrbitCard
-                angle={orbitAngle}
-                offsetDeg={180}
-                icon={StickyNote}
-                label="Notes + AI"
-                tone="bg-indigo-50 text-indigo-700"
-                accentShadow="rgba(99,102,241,0.35)"
+              {/* Floating panel — AI Notes (bottom left, highest Z) */}
+              <motion.div
+                initial={{ opacity: 0, x: -40, y: -20 }}
+                animate={{ opacity: 1, x: 0, y: 0 }}
+                transition={{ duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute -bottom-4 -left-6 sm:-bottom-6 sm:-left-14 z-20 [transform-style:preserve-3d]"
               >
-                <div className="mt-3 space-y-2">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/90 p-2.5">
-                    <div className="text-xs font-semibold text-slate-800">Revision guide</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Auto-generated from notes</div>
-                  </div>
-                  <div className="rounded-xl border border-slate-100 bg-white p-2.5">
-                    <div className="text-xs font-semibold text-slate-800">Study pack</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Flashcards + outlines</div>
-                  </div>
-                </div>
-              </OrbitCard>
-
-              <OrbitCard
-                angle={orbitAngle}
-                offsetDeg={270}
-                icon={CheckSquare}
-                label="Tasks"
-                tone="bg-teal-50 text-teal-700"
-                accentShadow="rgba(20,184,166,0.35)"
-              >
-                <div className="mt-3 space-y-1.5">
-                  {['Linear Algebra Ch.5', 'CS Project Draft', 'Lab Report'].map((task, i) => (
-                    <div key={i} className="flex items-center gap-2 rounded-xl bg-slate-50/80 px-3 py-2">
-                      <div className={`h-3 w-3 rounded border-2 ${i === 0 ? 'border-teal-500 bg-teal-500' : 'border-slate-300'}`}>
-                        {i === 0 && <CheckSquare size={8} className="text-white" />}
-                      </div>
-                      <span className={`text-xs font-medium ${i === 0 ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{task}</span>
+                <motion.div
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  className="w-[220px] sm:w-[260px] rounded-[24px] border border-white/80 bg-white/95 p-4 sm:p-5 shadow-[0_30px_80px_-20px_rgba(99,102,241,0.25)] backdrop-blur-xl [transform:translateZ(120px)]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-900">Notes + AI</span>
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+                      <Sparkles size={13} className="text-indigo-600" />
                     </div>
-                  ))}
-                </div>
-              </OrbitCard>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2.5">
+                      <div className="text-xs font-semibold text-slate-800">Revision guide ready</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">From 3 study sessions</div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl bg-indigo-50/60 px-3 py-2">
+                      <Brain size={12} className="text-indigo-500" />
+                      <span className="text-[11px] font-medium text-indigo-700">AI generated · 2 min ago</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -569,31 +610,52 @@ export default function Landing() {
           </div>
         </section>
 
-        <section ref={systemRef} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <section ref={systemRef} className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 overflow-hidden">
+          {/* Decorative ambient orb */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.5, ease: 'easeOut' }}
+            className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(125,211,252,0.15),rgba(186,230,253,0.08)_50%,transparent_72%)] blur-3xl"
+          />
+
+          <div className="relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div className="max-w-xl">
               <motion.div
-                initial={{ opacity: 0, y: 22 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 22, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/88 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-sm"
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="inline-flex items-center gap-2 rounded-full border border-sky-200/60 bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-[0_0_20px_-6px_rgba(56,189,248,0.3)]"
               >
-                <ShieldCheck size={14} />
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <ShieldCheck size={14} />
+                </motion.div>
                 Visual system
               </motion.div>
+
               <motion.h2
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-6 text-4xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-5xl"
               >
-                Bright, calm, and engineered to feel composed under pressure.
+                Bright, calm, and engineered to feel{' '}
+                <span className="bg-gradient-to-r from-sky-600 via-cyan-500 to-emerald-500 bg-clip-text text-transparent">
+                  composed under pressure.
+                </span>
               </motion.h2>
+
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.05 }}
+                transition={{ delay: 0.2, duration: 0.7 }}
                 className="mt-5 text-lg leading-8 text-slate-600"
               >
                 The interface keeps depth, contrast, and motion working together so the product feels premium without becoming flashy or exhausting.
@@ -603,13 +665,27 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="mt-8 rounded-[34px] border border-white/90 bg-white/86 p-6 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.35)]"
+                transition={{ delay: 0.3, duration: 0.7 }}
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="group mt-8 relative rounded-[34px] border border-white/90 bg-white/86 p-6 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.35)] overflow-hidden cursor-default"
               >
+                {/* Animated gradient accent bar */}
+                <motion.div
+                  className="absolute top-0 left-0 h-1 bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-400"
+                  initial={{ width: '0%' }}
+                  whileInView={{ width: '100%' }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                />
+
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+                  <motion.div
+                    whileHover={{ rotate: 8, scale: 1.1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-cyan-50 text-sky-700 shadow-sm"
+                  >
                     <CalendarRange size={22} />
-                  </div>
+                  </motion.div>
                   <div>
                     <div className="text-lg font-semibold text-slate-950">Built for long sessions</div>
                     <p className="mt-2 text-sm leading-7 text-slate-600">
@@ -617,6 +693,9 @@ export default function Landing() {
                     </p>
                   </div>
                 </div>
+
+                {/* Hover shimmer */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
               </motion.div>
             </div>
 
@@ -624,18 +703,46 @@ export default function Landing() {
               {pillars.map((pillar, index) => (
                 <motion.article
                   key={pillar.title}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 32, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
-                  transition={{ duration: 0.65, delay: index * 0.05 }}
-                  whileHover={{ y: -8, rotateX: 2, rotateY: index % 2 === 0 ? -2 : 2 }}
-                  className="rounded-[32px] border border-white/86 bg-white/82 p-6 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.4)] backdrop-blur-xl"
+                  transition={{ duration: 0.7, delay: 0.1 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -10, scale: 1.03 }}
+                  className="group relative overflow-hidden rounded-[32px] border border-white/86 bg-white/82 p-6 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.4)] backdrop-blur-xl cursor-default [perspective:600px]"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_16px_40px_-22px_rgba(15,23,42,0.6)]">
+                  {/* Hover gradient border glow */}
+                  <div className="pointer-events-none absolute inset-0 rounded-[32px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-sky-200/20 via-transparent to-emerald-200/20" />
+
+                  {/* Icon with animated gradient */}
+                  <motion.div
+                    whileHover={{ rotate: -6, scale: 1.15 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+                    className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-[0_16px_40px_-22px_rgba(15,23,42,0.6)]"
+                  >
                     <pillar.icon size={20} />
-                  </div>
-                  <h3 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{pillar.title}</h3>
+                    {/* Subtle pulse ring on hover */}
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl border border-sky-400/50"
+                        initial={false}
+                        animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
+                    </div>
+                  </motion.div>
+
+                  <h3 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950 group-hover:text-sky-700 transition-colors duration-300">
+                    {pillar.title}
+                  </h3>
                   <p className="mt-3 text-base leading-7 text-slate-600">{pillar.text}</p>
+
+                  {/* Bottom accent line that grows on hover */}
+                  <div className="absolute bottom-0 left-6 right-6 h-0.5 rounded-full overflow-hidden">
+                    <div className="h-full w-0 group-hover:w-full transition-all duration-700 bg-gradient-to-r from-sky-400 to-emerald-400" />
+                  </div>
+
+                  {/* Hover shimmer effect */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/30 to-transparent" />
                 </motion.article>
               ))}
             </div>
@@ -648,18 +755,33 @@ export default function Landing() {
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-[38px] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.94),rgba(240,249,255,0.88),rgba(224,242,254,0.74))] p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)]"
+              whileHover={{ y: -6, scale: 1.01 }}
+              className="group relative overflow-hidden rounded-[38px] border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.94),rgba(240,249,255,0.88),rgba(224,242,254,0.74))] p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)] cursor-default"
             >
-              <div className="absolute -right-8 top-0 h-36 w-36 rounded-full bg-sky-200/60 blur-3xl" />
+              {/* Animated glow orb */}
+              <motion.div
+                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -right-8 top-0 h-36 w-36 rounded-full bg-sky-200/60 blur-3xl"
+              />
               <div className="relative z-10">
                 <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-sky-700">
-                  <Brain size={18} />
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Brain size={18} />
+                  </motion.div>
                   Designed for cognition
                 </div>
                 <p className="mt-6 max-w-2xl text-2xl leading-10 text-slate-700">
-                  The page constantly feels active, but never frantic. Motion highlights hierarchy, reinforces progress, and keeps the eye moving through the workspace naturally.
+                  The page constantly feels{' '}
+                  <span className="font-semibold text-slate-900">active, but never frantic.</span>{' '}
+                  Motion highlights hierarchy, reinforces progress, and keeps the eye moving through the workspace naturally.
                 </p>
               </div>
+              {/* Shimmer */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
             </motion.div>
 
             <motion.div
@@ -667,18 +789,38 @@ export default function Landing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.08 }}
-              className="rounded-[38px] border border-white/90 bg-white/86 p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)]"
+              whileHover={{ y: -6, scale: 1.01 }}
+              className="group relative overflow-hidden rounded-[38px] border border-white/90 bg-white/86 p-8 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)] cursor-default"
             >
               <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">
                 <Files size={18} />
                 Inside the workspace
               </div>
-              <div className="mt-6 grid gap-4">
-                <FeatureRow icon={LayoutDashboard} label="A dashboard that clarifies the whole week" />
-                <FeatureRow icon={CheckSquare} label="Task structure that actually keeps moving" />
-                <FeatureRow icon={StickyNote} label="Notes that connect instead of pile up" />
-                <FeatureRow icon={Clock3} label="Focus rituals that feel motivating" />
+              <div className="mt-6 grid gap-3">
+                {[
+                  { icon: LayoutDashboard, label: 'A dashboard that clarifies the whole week' },
+                  { icon: CheckSquare, label: 'Task structure that actually keeps moving' },
+                  { icon: StickyNote, label: 'Notes that connect instead of pile up' },
+                  { icon: Clock3, label: 'Focus rituals that feel motivating' },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.15 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ x: 6, scale: 1.02 }}
+                    className="flex items-center gap-3 rounded-[22px] border border-slate-100 bg-slate-50/80 px-4 py-3 transition-colors hover:border-sky-200 hover:bg-sky-50/50 cursor-default"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+                      <item.icon size={18} />
+                    </div>
+                    <div className="font-medium text-slate-700">{item.label}</div>
+                  </motion.div>
+                ))}
               </div>
+              {/* Shimmer */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
             </motion.div>
           </div>
         </section>
@@ -823,64 +965,3 @@ function toneClass(tint: string) {
   }
 }
 
-function OrbitCard({
-  angle,
-  offsetDeg,
-  icon: Icon,
-  label,
-  tone,
-  accentShadow,
-  children,
-}: {
-  angle: import('framer-motion').MotionValue<number>;
-  offsetDeg: number;
-  icon: ComponentType<{ size?: number; className?: string }>;
-  label: string;
-  tone: string;
-  accentShadow: string;
-  children: React.ReactNode;
-}) {
-  const offsetRad = (offsetDeg * Math.PI) / 180;
-  const radiusX = 260;
-  const radiusZ = 160;
-  const verticalSpread = 120;
-
-  const x = useTransform(angle, (a) => Math.cos(a + offsetRad) * radiusX);
-  const z = useTransform(angle, (a) => Math.sin(a + offsetRad) * radiusZ);
-  const yOffset = useTransform(angle, (a) => -Math.sin(a + offsetRad) * verticalSpread);
-
-  // Depth-based scale and opacity
-  const depthScale = useTransform(z, [-radiusZ, radiusZ], [0.7, 1.1]);
-  const depthOpacity = useTransform(z, [-radiusZ, radiusZ], [0.4, 1]);
-  const depthBlur = useTransform(z, [-radiusZ, 0, radiusZ], [3, 0.5, 0]);
-  const zIndex = useTransform(z, [-radiusZ, radiusZ], [1, 20]);
-
-  const blur = useMotionTemplate`blur(${depthBlur}px)`;
-
-  return (
-    <motion.div
-      style={{
-        x,
-        y: yOffset,
-        scale: depthScale,
-        opacity: depthOpacity,
-        filter: blur,
-        zIndex,
-      }}
-      className="absolute left-1/2 top-1/2 -ml-[110px] -mt-[100px] w-[220px]"
-    >
-      <div
-        className="rounded-[26px] border border-white/85 bg-white/92 p-4 backdrop-blur-2xl"
-        style={{ boxShadow: `0 30px 80px -30px ${accentShadow}` }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-bold tracking-tight text-slate-900">{label}</div>
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${tone}`}>
-            <Icon size={15} />
-          </div>
-        </div>
-        {children}
-      </div>
-    </motion.div>
-  );
-}

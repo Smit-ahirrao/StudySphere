@@ -8,11 +8,6 @@ import {
   Plus,
   Search,
   Trash2,
-  Sparkles,
-  LayoutGrid,
-  List as ListIcon,
-  Table as TableIcon,
-  Columns,
   Archive,
   ArrowLeft,
   Copy,
@@ -23,16 +18,17 @@ import {
   Filter,
   ArrowUpDown,
   BookMarked,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { Note, NoteTemplate, Block } from '../types';
-import { Badge, Button, Card, Input, SectionHeading } from '../components/UI';
+import { Badge, Button, Card, Input } from '../components/UI';
 import { summarizeNoteContent } from '../utils/aiStudy';
 import BlockEditor from '../components/notes/BlockEditor';
-import NoteProperties from '../components/notes/NoteProperties';
-import { ListView, GalleryView, TableView, BoardView } from '../components/notes/NoteViews';
 import NoteTemplateSelector from '../components/notes/NoteTemplateSelector';
+import AIChatTutor from '../components/ai-study/AIChatTutor';
+import { PanelRightOpen, PanelRightClose, BookOpen } from 'lucide-react';
 
 const Notes: React.FC = () => {
   const { data, addNote, updateNote, deleteNote } = useData();
@@ -42,6 +38,7 @@ const Notes: React.FC = () => {
   const [view, setView] = useState<'list' | 'table' | 'gallery' | 'board'>('gallery');
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showResearchPane, setShowResearchPane] = useState(false);
   
   // Filtering & Sorting
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -133,49 +130,97 @@ const Notes: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
-      {activeNote ? (
-        // Workspace View
-        <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Workspace Header */}
-          <div className="flex items-center justify-between px-8 py-4 border-b border-slate-50 dark:border-slate-900">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setActiveNoteId(null)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors text-slate-400"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 font-medium">My Vault /</span>
-                <span className="text-xs text-slate-900 dark:text-white font-bold">{activeNote.title}</span>
-              </div>
-              <span className="text-[10px] text-slate-300 ml-2">
-                {saving ? 'Saving...' : 'All changes saved'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => handleUpdateNote({ pinned: !activeNote.pinned })}>
-                <Pin size={16} className={activeNote.pinned ? 'text-sky-500 fill-sky-500' : ''} />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleDuplicate}>
-                <Copy size={16} />
-              </Button>
-              <Button variant="ghost" size="sm" className="text-rose-500" onClick={() => handleUpdateNote({ trashed: true })}>
-                <Trash2 size={16} />
-              </Button>
-              <div className="h-6 w-px bg-slate-100 dark:bg-slate-800 mx-2" />
-              <Button size="sm">
-                <Share2 size={16} className="mr-2" />
-                Share
-              </Button>
-            </div>
+    <div className="flex h-[calc(100vh-6rem)] gap-4">
+      {/* LEFT SIDEBAR (Library) */}
+      <div className="w-[320px] flex-shrink-0 flex flex-col bg-white/60 dark:bg-slate-950/60 backdrop-blur-md rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800/50">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <BookMarked size={20} className="text-sky-500" />
+              My Vault
+            </h2>
+            <Button size="sm" onClick={() => handleCreateNote()}>
+              <Plus size={16} />
+            </Button>
           </div>
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-none text-sm outline-none focus:ring-2 focus:ring-sky-100 transition"
+              placeholder="Search notes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        {/* Sidebar List */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-hide">
+          {filteredNotes.length === 0 ? (
+             <div className="text-center py-8 text-sm text-slate-400">No notes found</div>
+          ) : (
+            filteredNotes.map(note => (
+              <button
+                key={note.id}
+                onClick={() => setActiveNoteId(note.id)}
+                className={`w-full group flex flex-col items-start gap-1 rounded-2xl px-4 py-3 text-left transition ${
+                  activeNoteId === note.id ? 'bg-sky-50 dark:bg-sky-950/30 ring-1 ring-sky-200 dark:ring-sky-800 shadow-sm' : 'hover:bg-white dark:hover:bg-slate-900 hover-lift border border-transparent hover:border-slate-100 dark:hover:border-slate-800'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className={`font-semibold truncate ${activeNoteId === note.id ? 'text-sky-900 dark:text-sky-100' : 'text-slate-900 dark:text-white'}`}>
+                    {note.title}
+                  </span>
+                  {note.pinned && <Pin size={12} className="text-sky-500 flex-shrink-0" />}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                  {note.blocks?.[0]?.content || 'Empty note'}
+                </p>
+                <div className="flex items-center gap-2 mt-2 text-[10px] font-medium text-slate-400">
+                  <span>{new Date(note.updatedAt).toLocaleDateString()}</span>
+                  {note.subject && <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">{note.subject}</span>}
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
 
-          {/* Workspace Content */}
-          <div className="flex-1 flex overflow-hidden">
+      {/* RIGHT MAIN CANVAS (Editor) */}
+      <div className="flex-1 flex flex-col bg-white dark:bg-slate-950 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden relative">
+        {activeNote ? (
+          <>
+            {/* Editor Header */}
+            <div className="flex items-center justify-between px-8 py-4 border-b border-slate-50 dark:border-slate-900 bg-white/50 backdrop-blur-md dark:bg-slate-950/50 sticky top-0 z-10">
+              <div className="flex items-center gap-4">
+                <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wider">
+                  {saving ? 'Saving...' : 'All changes saved'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleUpdateNote({ pinned: !activeNote.pinned })}>
+                  <Pin size={16} className={activeNote.pinned ? 'text-sky-500 fill-sky-500' : ''} />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => {}}>
+                  <Settings size={16} />
+                </Button>
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+                <Button variant="ghost" size="sm" onClick={handleDuplicate}>
+                  <Copy size={16} />
+                </Button>
+                <Button variant="ghost" size="sm" className="text-rose-500" onClick={() => handleUpdateNote({ trashed: true })}>
+                  <Trash2 size={16} />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setShowResearchPane(!showResearchPane)} className={showResearchPane ? 'text-sky-500 bg-sky-50 dark:bg-sky-950/30' : ''}>
+                  {showResearchPane ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+                </Button>
+              </div>
+            </div>
+
+            {/* Editor Content */}
             <div className="flex-1 overflow-y-auto px-8 md:px-16 py-12 scrollbar-hide">
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-3xl mx-auto">
                 <input
                   type="text"
                   value={activeNote.title}
@@ -184,12 +229,7 @@ const Notes: React.FC = () => {
                   className="w-full text-5xl font-extrabold text-slate-950 dark:text-white bg-transparent border-none outline-none placeholder:text-slate-200 mb-8 tracking-tight"
                 />
                 
-                <NoteProperties 
-                  note={activeNote} 
-                  onChange={handleUpdateNote} 
-                />
-
-                <div className="h-px bg-slate-100 dark:bg-slate-800 w-full my-8" />
+                <div className="h-px bg-slate-100 dark:bg-slate-800 w-full my-6" />
 
                 <BlockEditor 
                   blocks={activeNote.blocks || []} 
@@ -197,175 +237,38 @@ const Notes: React.FC = () => {
                 />
               </div>
             </div>
-
-            {/* Sidebar for AI & Knowledge */}
-            <div className="w-80 border-l border-slate-50 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-900/10 p-6 overflow-y-auto hidden lg:block">
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                    <Sparkles size={14} className="text-sky-500" />
-                    AI Intelligence
-                  </h4>
-                  <div className="space-y-3">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      className="w-full justify-start" 
-                      onClick={handleAiSummarize}
-                      isLoading={summaryLoading}
-                    >
-                      {summaryLoading ? <Loader2 size={14} className="mr-2 animate-spin" /> : <History size={14} className="mr-2" />}
-                      Generate Summary
-                    </Button>
-                    {aiSummary && (
-                      <div className="p-3 rounded-xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/30 text-[11px] text-sky-800 dark:text-sky-200 animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold uppercase tracking-wider">AI Summary</span>
-                          <button onClick={() => setAiSummary(null)}><X size={12} /></button>
-                        </div>
-                        <p className="leading-relaxed">{aiSummary}</p>
-                      </div>
-                    )}
-                    <Button variant="secondary" size="sm" className="w-full justify-start" onClick={() => {}}>
-                      <BookMarked size={14} className="mr-2" />
-                      Create Flashcards
-                    </Button>
-                    <Button variant="secondary" size="sm" className="w-full justify-start" onClick={() => {}}>
-                      <LayoutGrid size={14} className="mr-2" />
-                      Generate Quiz
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                    <History size={14} />
-                    Linked Knowledge
-                  </h4>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-[11px] font-medium text-slate-500 mb-2">Backlinks</div>
-                      <div className="text-xs text-slate-400 italic">No notes link here yet</div>
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-medium text-slate-500 mb-2">Related by Topic</div>
-                      <div className="space-y-2">
-                        {data.notes
-                          .filter(n => n.id !== activeNote.id && n.topic === activeNote.topic && activeNote.topic)
-                          .slice(0, 3)
-                          .map(n => (
-                            <button 
-                              key={n.id} 
-                              onClick={() => setActiveNoteId(n.id)}
-                              className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs hover:border-sky-200 transition"
-                            >
-                              <div className="font-medium text-slate-900 dark:text-white truncate">{n.title}</div>
-                              <div className="text-[10px] text-slate-400 mt-0.5">{n.subject}</div>
-                            </button>
-                          ))}
-                        {(!activeNote.topic || data.notes.filter(n => n.id !== activeNote.id && n.topic === activeNote.topic).length === 0) && (
-                          <div className="text-xs text-slate-400 italic">No related notes found</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+            <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mb-4">
+              <Sparkles size={32} className="text-slate-300" />
             </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Create space for your thoughts</h3>
+            <p className="text-slate-500 max-w-sm mt-3 leading-relaxed">
+              Select a note from your vault on the left, or create a new one to start writing. Use Magic Slash commands inside the editor to study smarter.
+            </p>
+            <Button className="mt-8 shadow-md" onClick={() => handleCreateNote()}>
+              <Plus size={18} className="mr-2" /> Create New Note
+            </Button>
           </div>
-        </div>
-      ) : (
-        // Library View
-        <div className="space-y-8 h-full flex flex-col">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <SectionHeading
-              eyebrow="Knowledge Base"
-              title="Your Second Brain"
-              description="Organize your study material with structured blocks and rich properties."
-            />
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" onClick={() => setShowTemplateSelector(true)}>
-                <Sparkles size={18} className="mr-2" />
-                Templates
-              </Button>
-              <Button onClick={() => handleCreateNote()}>
-                <Plus size={18} className="mr-2" />
-                New Note
-              </Button>
+        )}
+      </div>
+
+      {/* RESEARCH PANE (Right Slide-in) */}
+      {showResearchPane && activeNote && (
+        <div className="w-[400px] flex-shrink-0 flex flex-col bg-slate-50/80 dark:bg-slate-900/40 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+            <div className="flex items-center gap-2">
+              <BookOpen size={18} className="text-sky-500" />
+              <span className="font-bold text-slate-900 dark:text-white">Research & AI</span>
             </div>
+            <button onClick={() => setShowResearchPane(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400">
+              <X size={16} />
+            </button>
           </div>
-
-          <Card className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-[32px]">
-            {/* View Controls */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 border-b border-slate-50 dark:border-slate-800">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    className="pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border-none text-sm outline-none w-64 focus:ring-2 focus:ring-sky-100 transition"
-                    placeholder="Search your notes..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex bg-slate-50 dark:bg-slate-900 p-1 rounded-xl">
-                  <ViewButton active={view === 'gallery'} onClick={() => setView('gallery')} icon={LayoutGrid} />
-                  <ViewButton active={view === 'list'} onClick={() => setView('list')} icon={ListIcon} />
-                  <ViewButton active={view === 'table'} onClick={() => setView('table')} icon={TableIcon} />
-                  <ViewButton active={view === 'board'} onClick={() => setView('board')} icon={Columns} />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                  <Filter size={14} />
-                  <select 
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="bg-transparent border-none outline-none font-bold text-slate-900 dark:text-white"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="draft">Draft</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-                <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                  <ArrowUpDown size={14} />
-                  <select 
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-transparent border-none outline-none font-bold text-slate-900 dark:text-white"
-                  >
-                    <option value="updatedAt">Last Edited</option>
-                    <option value="createdAt">Created Date</option>
-                    <option value="title">Alphabetical</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* List Area */}
-            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-              {filteredNotes.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mb-4">
-                    <BookMarked size={32} className="text-slate-300" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">No notes found</h3>
-                  <p className="text-slate-500 max-w-xs mt-2">Try adjusting your search or filters, or create a new note to get started.</p>
-                </div>
-              ) : (
-                <>
-                  {view === 'gallery' && <GalleryView notes={filteredNotes} activeNoteId={activeNoteId} onSelect={setActiveNoteId} />}
-                  {view === 'list' && <ListView notes={filteredNotes} activeNoteId={activeNoteId} onSelect={setActiveNoteId} />}
-                  {view === 'table' && <TableView notes={filteredNotes} onSelect={setActiveNoteId} />}
-                  {view === 'board' && <BoardView notes={filteredNotes} onSelect={setActiveNoteId} />}
-                </>
-              )}
-            </div>
-          </Card>
+          <div className="flex-1 overflow-hidden relative">
+            <AIChatTutor documentText={blocksToText(activeNote.blocks)} fileName={activeNote.title} />
+          </div>
         </div>
       )}
 
@@ -378,16 +281,5 @@ const Notes: React.FC = () => {
     </div>
   );
 };
-
-const ViewButton = ({ active, onClick, icon: Icon }: { active: boolean, onClick: () => void, icon: any }) => (
-  <button
-    onClick={onClick}
-    className={`p-1.5 rounded-lg transition-all ${
-      active ? 'bg-white dark:bg-slate-800 shadow-sm text-sky-500' : 'text-slate-400 hover:text-slate-600'
-    }`}
-  >
-    <Icon size={16} />
-  </button>
-);
 
 export default Notes;
